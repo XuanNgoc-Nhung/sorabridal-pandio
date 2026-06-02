@@ -598,15 +598,33 @@
                 });
             }
 
+            function refreshCalendarLayout() {
+                if (!calendar) return;
+                requestAnimationFrame(function () {
+                    calendar.updateSize();
+                    requestAnimationFrame(function () {
+                        calendar.updateSize();
+                    });
+                });
+            }
+
+            function hideMobileMonthLayout() {
+                root.classList.remove('is-mobile-month');
+                if (mobileMonthEl) mobileMonthEl.classList.add('d-none');
+            }
+
             function syncMobileMonthLayout() {
                 if (!mobileMonthEl) return;
+                var wasMobileMonth = root.classList.contains('is-mobile-month');
                 if (shouldUseMobileMonthLayout()) {
                     root.classList.add('is-mobile-month');
                     mobileMonthEl.classList.remove('d-none');
                     renderMobileMonthTable();
                 } else {
-                    root.classList.remove('is-mobile-month');
-                    mobileMonthEl.classList.add('d-none');
+                    hideMobileMonthLayout();
+                    if (wasMobileMonth) {
+                        refreshCalendarLayout();
+                    }
                 }
             }
 
@@ -702,16 +720,6 @@
                 if (listBtn) {
                     listBtn.classList.toggle('fc-button-active', active);
                 }
-            }
-
-            function refreshCalendarLayout() {
-                if (!calendar) return;
-                requestAnimationFrame(function () {
-                    calendar.updateSize();
-                    requestAnimationFrame(function () {
-                        calendar.updateSize();
-                    });
-                });
             }
 
             function activateListView() {
@@ -1026,6 +1034,9 @@
                     if (listModeActive) return;
                     if (arg.view.type === 'dayGridMonth' || arg.view.type === 'dayGridWeek') {
                         refreshCalendarLayout();
+                        if (arg.view.type === 'dayGridWeek') {
+                            setTimeout(function () { calendar.updateSize(); }, 0);
+                        }
                     }
                 },
                 datesSet: function () {
@@ -1047,6 +1058,9 @@
             window.addEventListener('resize', syncMobileMonthLayoutDebounced);
 
             calendarEl.addEventListener('click', function (e) {
+                if (e.target.closest('.fc-dayGridWeek-button') && !listModeActive && root.classList.contains('is-mobile-month')) {
+                    hideMobileMonthLayout();
+                }
                 if (!listModeActive) return;
                 if (e.target.closest('.fc-dayGridMonth-button')) {
                     deactivateListView('dayGridMonth');
