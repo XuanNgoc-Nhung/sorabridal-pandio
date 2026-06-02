@@ -1,0 +1,436 @@
+/* Trang chủ – mobile: lề đồng nhất 30px, section gọn hơn */
+
+@media (max-width: 768px) {
+  body.page-home {
+    --home-inset: 30px;
+  }
+
+  /* Lề ngang: viền viewport → nội dung */
+  body.page-home header .container,
+  .page-home .container {
+    padding-left: var(--home-inset);
+    padding-right: var(--home-inset);
+  }
+
+  /* Lề dọc: viền section → nội dung (banner không áp dụng) */
+  .page-home > section:not(.home-banner),
+  .page-home section.hero,
+  .page-home .ba-section {
+    padding-top: var(--home-inset);
+    padding-bottom: var(--home-inset);
+  }
+
+  .page-home > section.home-banner {
+    padding: 0 !important;
+    margin: 0;
+  }
+
+  .page-home .home-banner-slide {
+    height: min(72vh, 480px);
+    min-height: 360px;
+  }
+
+  .page-home .home-banner-content {
+    justify-content: flex-end;
+    padding-bottom: 0;
+  }
+
+  .page-home .home-banner-title {
+    font-size: 1.65rem;
+    margin-bottom: 10px;
+  }
+
+  .page-home .home-banner-desc {
+    font-size: 0.86rem;
+    margin-bottom: 18px;
+    line-height: 1.65;
+  }
+
+  .page-home .home-banner-cta {
+    font-size: 0.82rem;
+    padding: 10px 20px;
+  }
+
+  .page-home .home-banner-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .page-home .home-banner-nav.prev {
+    left: 12px;
+  }
+
+  .page-home .home-banner-nav.next {
+    right: 12px;
+  }
+
+  .page-home .home-banner-dots {
+    bottom: 14px;
+  }
+
+  .page-home .home-banner-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(42, 31, 23, 0.15) 0%,
+      rgba(42, 31, 23, 0.55) 45%,
+      rgba(42, 31, 23, 0.82) 100%
+    );
+  }
+
+  .page-home .home-banner-slide.is-active .home-banner-part {
+    animation-duration: 0.75s;
+    animation-delay: calc(0.1s + var(--banner-i, 0) * 0.1s);
+  }
+
+  .page-home .ba-section {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Gỡ khoảng cách thừa từ user-custom */
+  .page-home .reveal-anim {
+    padding-bottom: 0 !important;
+  }
+
+  .page-home .section-head,
+  .page-home .ba-header.section-head {
+    margin-bottom: 20px !important;
+  }
+
+  .page-home .ba-header {
+    margin-bottom: 20px !important;
+  }
+
+  .page-home .ba-intro {
+    margin-bottom: 24px;
+  }
+
+  .page-home .ba-intro p {
+    font-size: 0.86rem;
+    line-height: 1.65;
+  }
+
+  /* Typography – thu nhỏ */
+  .page-home .sec-title {
+    font-size: 1.75rem;
+  }
+
+  .page-home .sec-tag {
+    font-size: 0.5rem !important;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    opacity: 0.85;
+  }
+
+  .page-home .sec-sub {
+    font-size: 0.7rem;
+    margin-top: 8px;
+  }
+
+  /* Hero */
+  .page-home .hero {
+    padding: var(--home-inset) 0;
+  }
+
+  .page-home .hero-grid {
+    gap: 24px;
+  }
+
+  .page-home .hero-title {
+    font-size: 1.9rem;
+    margin-bottom: 12px;
+  }
+
+  .page-home .hero-typed-line {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+
+  .page-home .hero-desc {
+    font-size: 0.86rem;
+    margin-bottom: 18px;
+    line-height: 1.65;
+  }
+
+  .page-home .hero-actions {
+    margin-bottom: 22px;
+    gap: 10px;
+  }
+
+  .page-home .hero-actions .btn {
+    padding: 10px 20px;
+    font-size: 0.82rem;
+  }
+
+  .page-home .hero-divider {
+    margin-bottom: 18px;
+  }
+
+  .page-home .hero-stats {
+    gap: 12px 16px;
+  }
+
+  .page-home .stat-num {
+    font-size: 1.65rem !important;
+  }
+
+  .page-home .stat-label {
+    font-size: 0.72rem;
+  }
+
+  .page-home .hero-img-main img {
+    height: 240px;
+  }
+
+  .page-home .hero-float-img {
+    width: 100px;
+    right: 8px;
+    bottom: -12px;
+  }
+
+  /* About: văn bản trước, hình sau */
+  .page-home .about-grid {
+    gap: 24px;
+  }
+
+  .page-home .about-content {
+    order: 1;
+  }
+
+  .page-home .about-img-wrap {
+    order: 2;
+  }
+
+  .page-home .about-img-main img {
+    height: 260px;
+  }
+
+  .page-home .about-quote {
+    font-size: 1.05rem !important;
+    margin-bottom: 16px;
+  }
+
+  .page-home .sig-name {
+    font-size: 1rem !important;
+  }
+
+  .page-home .quote-open {
+    font-size: 3.5rem;
+  }
+
+  /* Studio cards */
+  .page-home .card-grid {
+    gap: 16px;
+  }
+
+  .page-home .studio-card h4 {
+    font-size: 1.05rem !important;
+  }
+
+  .page-home .studio-card-body {
+    padding: 12px 14px 16px;
+  }
+
+  .page-home .studio-card-body p {
+    font-size: 0.82rem;
+  }
+
+  /* Collection */
+  .page-home .col-slide {
+    padding: 0;
+  }
+
+  .page-home .col-layout {
+    gap: 20px;
+  }
+
+  .page-home .watermark {
+    font-size: 3rem;
+    margin-bottom: -18px;
+  }
+
+  .page-home .outer-nav {
+    margin-top: 14px;
+  }
+
+  /* Before / after */
+  .page-home .ba-grid {
+    gap: 22px;
+  }
+
+  .page-home .ba-card-label {
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .page-home .ba-slider-wrap {
+    height: 260px;
+  }
+
+  /* Video */
+  .page-home .video-section {
+    margin-top: 0;
+  }
+
+  .page-home .video-inner {
+    height: 340px;
+  }
+
+  .page-home .video-title {
+    font-size: 1.65rem;
+  }
+
+  .page-home .video-sub {
+    font-size: 0.84rem;
+    margin-bottom: 22px;
+  }
+
+  .page-home .video-stats {
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Pricing */
+  .page-home .price-intro {
+    padding: 22px 18px;
+    margin-bottom: 24px;
+  }
+
+  .page-home .price-intro h3 {
+    font-size: 1.2rem;
+  }
+
+  .page-home .price-intro p {
+    font-size: 0.84rem;
+  }
+
+  .page-home .price-card {
+    padding: 22px 18px;
+  }
+
+  .page-home .price-name {
+    font-size: 1.2rem;
+  }
+
+  .page-home .price-amount {
+    font-size: 1.75rem !important;
+    margin: 10px 0;
+  }
+
+  .page-home .price-features {
+    margin: 14px 0 18px;
+  }
+
+  .page-home .price-features li {
+    font-size: 0.82rem;
+    padding: 5px 0;
+  }
+
+  /* Reviews */
+  .page-home .rev-card {
+    padding: 20px 18px;
+  }
+
+  .page-home .rev-text {
+    font-size: 0.84rem;
+    margin-bottom: 16px;
+  }
+
+  .page-home .review-grid {
+    margin-bottom: 24px !important;
+  }
+
+  /* Steps */
+  .page-home .steps-row {
+    margin-top: 24px;
+    gap: 20px;
+  }
+
+  .page-home .step-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .page-home .step-item h3 {
+    font-size: 0.98rem;
+  }
+
+  .page-home .step-item p {
+    font-size: 0.78rem;
+  }
+
+  /* CTA */
+  .page-home .cta-band {
+    padding: 28px var(--home-inset);
+    gap: 20px;
+  }
+
+  .page-home .cta-title {
+    font-size: 1.45rem;
+  }
+
+  .page-home .cta-sub {
+    font-size: 0.84rem;
+  }
+
+  .page-home .cta-offer {
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .page-home .cta-pct {
+    font-size: 2.2rem;
+  }
+
+  /* Blog */
+  .page-home .blog-grid {
+    gap: 18px;
+  }
+
+  .page-home .blog-body {
+    padding: 14px 16px 18px;
+  }
+
+  .page-home .blog-body h4 {
+    font-size: 1.05rem;
+  }
+
+  .page-home .view-all {
+    margin-top: 24px;
+  }
+
+  .page-home .btn {
+    padding: 10px 22px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-home .hero-title {
+    font-size: 1.65rem;
+  }
+
+  .page-home .sec-title {
+    font-size: 1.35rem;
+  }
+
+  .page-home .hero-img-main img {
+    height: 210px;
+  }
+
+  .page-home .ba-slider-wrap {
+    height: 220px;
+  }
+
+  .page-home .video-inner {
+    height: 300px;
+  }
+
+  .page-home .cta-title {
+    font-size: 1.3rem;
+  }
+}

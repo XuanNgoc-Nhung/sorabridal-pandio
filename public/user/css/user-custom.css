@@ -1,0 +1,44 @@
+.text-pink{
+    color: #be4b5f;
+}
+.price-amount{
+    font-family: 'Great Vibes', cursive !important;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin: 16px 0;
+    line-height: 1;
+}
+.nav-links>li>a{
+    font-size: 18px;
+}
+.stat-num{
+    font-size: 40px;
+}
+.about-quote{
+    font-size: 24px;
+}
+.sig-name{
+    font-size: 24px;
+}
+.sec-tag{
+    font-size: 20px;
+    opacity: 0.6;
+}
+section{
+    /* padding: 80px 0; */
+}
+.reveal-anim{
+    padding-bottom: 80px !important;
+}
+.studio-card h4{
+    font-size: 24px;
+    font-family: 'Cormorant Garamond',serif;
+    color: #be4b5f;
+}
+.ba-header{
+    margin-bottom: 0px;    
+}
+.ba-section{
+    padding:0px;
+}

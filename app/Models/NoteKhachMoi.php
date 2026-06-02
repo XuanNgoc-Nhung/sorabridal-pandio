@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+class NoteKhachMoi extends Model
+{
+    use HasFactory;
+
+    public const TRANG_THAI_DANG_TU_VAN = 'dang_tu_van';
+
+    public const TRANG_THAI_DA_HEN_LICH = 'da_hen_lich';
+
+    public const TRANG_THAI_DA_DEN = 'da_den';
+
+    public const TRANG_THAI_DA_CHOT = 'da_chot';
+
+    public const TRANG_THAI_KHONG_CHOT = 'khong_chot';
+
+    public const SAP_XEP_CREATED_AT = 'created_at';
+
+    public const SAP_XEP_NGAY_HEN_LICH = 'ngay_hen_lich';
+
+    public const SAP_XEP_NGAY_DEN_THUC_TE = 'ngay_den_thuc_te';
+
+    public const SAP_XEP_TEN_KHACH = 'ten_khach';
+
+    public const SAP_XEP_SO_DIEN_THOAI = 'so_dien_thoai';
+
+    public const SAP_XEP_NGUON_KHACH = 'nguon_khach';
+
+    public const SAP_XEP_TRANG_THAI = 'trang_thai';
+
+    public const SAP_XEP_MAC_DINH = self::SAP_XEP_CREATED_AT;
+
+    /** @var array<string, string> */
+    public const SAP_XEP_OPTIONS = [
+        self::SAP_XEP_CREATED_AT => 'Ngày tạo',
+        self::SAP_XEP_NGAY_HEN_LICH => 'Ngày hẹn lịch',
+        self::SAP_XEP_NGAY_DEN_THUC_TE => 'Ngày đến thực tế',
+        self::SAP_XEP_TEN_KHACH => 'Tên khách',
+        self::SAP_XEP_SO_DIEN_THOAI => 'Số điện thoại',
+        self::SAP_XEP_NGUON_KHACH => 'Nguồn khách',
+        self::SAP_XEP_TRANG_THAI => 'Trạng thái',
+    ];
+
+    protected $table = 'note_khach_moi';
+
+    protected $fillable = [
+        'ten_khach',
+        'so_dien_thoai',
+        'phu_trach_sale_id',
+        'ngay_hen_lich',
+        'ngay_den_thuc_te',
+        'nguon_khach',
+        'nguoi_tao_id',
+        'trang_thai',
+        'ly_do_khong_chot',
+    ];
+
+    protected $casts = [
+        'ngay_hen_lich' => 'date',
+        'ngay_den_thuc_te' => 'date',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function trangThaiLabels(): array
+    {
+        return [
+            self::TRANG_THAI_DANG_TU_VAN => 'Đang tư vấn',
+            self::TRANG_THAI_DA_HEN_LICH => 'Đã hẹn lịch',
+            self::TRANG_THAI_DA_DEN => 'Đã đến',
+            self::TRANG_THAI_DA_CHOT => 'Đã chốt',
+            self::TRANG_THAI_KHONG_CHOT => 'Không chốt',
+        ];
+    }
+
+    public function phuTrachSale(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'phu_trach_sale_id');
+    }
+
+    public function phuTrachSales(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'note_khach_moi_phu_trach_sale', 'note_khach_moi_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function phuTrachSaleNhanVienIds(): array
+    {
+        $userIds = $this->phuTrachSales->pluck('id')->filter()->values();
+        if ($userIds->isEmpty() && $this->phu_trach_sale_id) {
+            $userIds = collect([$this->phu_trach_sale_id]);
+        }
+
+        if ($userIds->isEmpty()) {
+            return [];
+        }
+
+        return NhanVien::query()
+            ->whereIn('user_id', $userIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    public function nguoiTao(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'nguoi_tao_id');
+    }
+
+    public function getTrangThaiLabelAttribute(): string
+    {
+        if ($this->trang_thai === null || $this->trang_thai === '') {
+            return '—';
+        }
+
+        return self::trangThaiLabels()[$this->trang_thai] ?? $this->trang_thai;
+    }
+}

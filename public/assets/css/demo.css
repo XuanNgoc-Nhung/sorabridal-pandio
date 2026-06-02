@@ -1,0 +1,237 @@
+/*
+* demo.css
+* File include item demo only specific css only
+******************************************************************************/
+
+/* Toàn hệ thống admin: chữ sans gọn (kiểu Tahoma) + tương phản WCAG 2 AA (≥4.5:1) chữ/nền */
+:root,
+[data-bs-theme='light'] {
+  --bs-font-sans-serif: Tahoma, "Segoe UI", Verdana, Geneva, sans-serif;
+  /* Chữ đậm hơn một bậc + primary/link tối hơn: chữ trắng trên nút & link trên nền sáng đạt 4.5:1 */
+  --bs-primary: #5b4fc9;
+  --bs-primary-rgb: 91, 79, 201;
+  --bs-link-color: #5b4fc9;
+  --bs-link-hover-color: #4a3fb0;
+  --bs-link-color-rgb: 91, 79, 201;
+  --bs-link-hover-color-rgb: 74, 63, 176;
+  --bs-secondary-color: #5f5d67;
+  --bs-secondary-color-rgb: 95, 93, 103;
+  --bs-tertiary-color: rgba(95, 93, 103, 0.92);
+}
+
+[data-bs-theme='dark'] {
+  --bs-primary: #5b4fc9;
+  --bs-primary-rgb: 91, 79, 201;
+  --bs-link-color: #a29bfa;
+  --bs-link-hover-color: #c9c2fc;
+  --bs-link-color-rgb: 162, 155, 250;
+  --bs-link-hover-color-rgb: 201, 194, 252;
+  --bs-secondary-color: #a8a7c0;
+  --bs-secondary-color-rgb: 168, 167, 192;
+  --bs-tertiary-color: rgba(203, 202, 220, 0.9);
+}
+
+.menu .app-brand.demo {
+  height: 64px;
+}
+
+.app-brand-logo.demo svg {
+  width: 34px;
+  height: 24px;
+}
+
+.app-brand-text.demo {
+  font-size: 1.375rem;
+}
+
+/* ! For .layout-navbar-fixed added fix padding top to .layout-page */
+/* Default navbar */
+.layout-navbar-fixed .layout-wrapper:not(.layout-without-menu) .layout-page {
+  padding-top: 64px !important;
+}
+.layout-navbar-fixed .layout-wrapper:not(.layout-horizontal):not(.layout-without-menu) .layout-page {
+  padding-top: 72px !important;
+}
+/* Navbar page z-index issue solution */
+.content-wrapper .navbar {
+  z-index: auto;
+}
+
+/*
+* Content
+******************************************************************************/
+
+.demo-blocks > * {
+  display: block !important;
+}
+
+.demo-inline-spacing > * {
+  margin: 1rem 0.375rem 0 0 !important;
+}
+
+/* ? .demo-vertical-spacing class is used to have vertical margins between elements. To remove margin-top from the first-child, use .demo-only-element class with .demo-vertical-spacing class. For example, we have used this class in forms-input-groups.html file. */
+.demo-vertical-spacing > * {
+  margin-top: 1rem !important;
+  margin-bottom: 0 !important;
+}
+.demo-vertical-spacing.demo-only-element > :first-child {
+  margin-top: 0 !important;
+}
+
+.demo-vertical-spacing-lg > * {
+  margin-top: 1.875rem !important;
+  margin-bottom: 0 !important;
+}
+.demo-vertical-spacing-lg.demo-only-element > :first-child {
+  margin-top: 0 !important;
+}
+
+.demo-vertical-spacing-xl > * {
+  margin-top: 5rem !important;
+  margin-bottom: 0 !important;
+}
+.demo-vertical-spacing-xl.demo-only-element > :first-child {
+  margin-top: 0 !important;
+}
+
+/* Dropdown buttons going out of small screens */
+@media (max-width: 576px) {
+  #dropdown-variation-demo .btn-group .text-truncate {
+    width: 254px;
+    position: relative;
+  }
+  #dropdown-variation-demo .btn-group .text-truncate::after {
+    position: absolute;
+    top: 45%;
+    right: 0.65rem;
+  }
+}
+
+/*
+* Layout demo
+******************************************************************************/
+
+.layout-demo-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  margin-top: 1rem;
+}
+.layout-demo-placeholder img {
+  width: 900px;
+}
+.layout-demo-info {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/*
+ * Modal tìm kiếm menu admin (Ctrl+K) — rộng hơn, lưới 3 cột, cuộn dọc
+ ******************************************************************************/
+.aa-DetachedOverlay .aa-DetachedContainer.admin-menu-search-modal {
+  inline-size: min(960px, 94vw);
+  max-block-size: min(78vh, 40rem);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 767.98px) {
+  .aa-DetachedOverlay .aa-DetachedContainer.admin-menu-search-modal {
+    inline-size: min(94vw, 600px);
+  }
+}
+
+.aa-DetachedOverlay .admin-menu-search-modal .admin-menu-search-panel {
+  min-block-size: 0;
+}
+
+.aa-DetachedOverlay .admin-menu-search-scroll {
+  max-block-size: calc(min(78vh, 40rem) - 4.5rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.aa-DetachedOverlay .admin-menu-search-section {
+  margin-block-end: 1.25rem;
+}
+
+.aa-DetachedOverlay .admin-menu-search-section:last-child {
+  margin-block-end: 0;
+}
+
+.aa-DetachedOverlay .admin-menu-search-section-heading,
+.aa-DetachedOverlay .suggestion-section .search-headings {
+  display: block;
+  padding-inline: 0.25rem;
+}
+
+.aa-DetachedOverlay .admin-menu-search-items-grid .aa-Item {
+  margin-inline: 0;
+  block-size: 100%;
+}
+
+.aa-DetachedOverlay .admin-menu-search-items-grid .aa-Item > a,
+.aa-DetachedOverlay .admin-menu-search-link.suggestion-item {
+  block-size: 100%;
+  min-block-size: 2.75rem;
+  padding-block: 0.625rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+}
+
+.aa-DetachedOverlay .admin-menu-search-items-grid .aa-Item > a:hover,
+.aa-DetachedOverlay .admin-menu-search-items-grid .aa-Item[aria-selected='true'],
+.aa-DetachedOverlay .admin-menu-search-link.suggestion-item:hover,
+.aa-DetachedOverlay .admin-menu-search-link.suggestion-item:focus-visible {
+  border-color: var(--bs-primary);
+  background: var(--bs-primary-bg-subtle);
+}
+
+.aa-DetachedOverlay .admin-menu-search-items-grid .aa-Item svg {
+  display: none;
+}
+
+.aa-DetachedOverlay .admin-menu-search-label {
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.aa-DetachedOverlay .admin-menu-search-scroll--results .aa-Source {
+  margin-block-end: 1rem;
+}
+
+.aa-DetachedOverlay .admin-menu-search-scroll--results .aa-Source:last-child {
+  margin-block-end: 0;
+}
+
+.aa-DetachedOverlay .admin-menu-search-scroll--results .aa-List {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-inline: 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .aa-DetachedOverlay .admin-menu-search-scroll--results .aa-List {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .aa-DetachedOverlay .admin-menu-search-scroll--results .aa-List {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.aa-DetachedOverlay .search-no-results-wrapper {
+  block-size: auto;
+  min-block-size: 12rem;
+}

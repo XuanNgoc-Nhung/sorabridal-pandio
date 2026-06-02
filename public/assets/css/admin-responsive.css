@@ -1,0 +1,327 @@
+/**
+ * Admin: tablet & mobile — chữ nhỏ hơn, dòng gọn hơn, bảng ít padding hơn.
+ * Breakpoints theo Bootstrap 5: lg ≥992px, sm ≥576px.
+ */
+
+/**
+ * Bảng admin — tông hồng chỉ khi giao diện sáng (html[data-bs-theme="light"], body.pink).
+ * Chế độ tối dùng màu bảng mặc định của Bootstrap.
+ */
+[data-bs-theme='light'] .pink .table,
+[data-bs-theme='light'] .pink table.dataTable {
+  --bs-table-bg: #fffafb;
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-border-color: rgba(233, 30, 99, 0.1);
+}
+
+[data-bs-theme='light'] .pink .table-responsive.border {
+  background-color: #fffafb;
+  border-color: rgba(233, 30, 99, 0.15) !important;
+}
+
+[data-bs-theme='light'] .pink .table thead th,
+[data-bs-theme='light'] .pink table.dataTable thead th,
+[data-bs-theme='light'] .pink table.dataTable thead td {
+  background-color: #ffe4ef;
+  color: #ad1457;
+  border-color: rgba(233, 30, 99, 0.12);
+  padding: 0.5rem 0.5rem !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+[data-bs-theme='light'] .pink .table tbody td,
+[data-bs-theme='light'] .pink table.dataTable tbody td,
+[data-bs-theme='light'] .pink table.dataTable tbody th {
+  padding: 0.3rem 0.45rem !important;
+  background-color: #fffafb;
+  border-color: rgba(233, 30, 99, 0.08);
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+[data-bs-theme='light'] .pink .table tbody tr:hover td,
+[data-bs-theme='light'] .pink table.dataTable tbody tr:hover td,
+[data-bs-theme='light'] .pink table.dataTable tbody tr:hover th {
+  background-color: #ffecf2;
+}
+
+[data-bs-theme='light'] .pink .table td .bg-body-secondary.rounded.border {
+  background-color: #fff0f5 !important;
+  border-color: rgba(233, 30, 99, 0.12) !important;
+}
+
+@media (max-width: 991.98px) {
+  html {
+    font-size: 87.5%;
+  }
+
+  body,
+  .layout-wrapper {
+    line-height: 1.38;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+
+  h1,
+  .h1 {
+    font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.5rem);
+    line-height: 1.25;
+  }
+
+  h2,
+  .h2 {
+    font-size: clamp(1.15rem, 1.05rem + 0.3vw, 1.35rem);
+    line-height: 1.28;
+  }
+
+  h3,
+  .h3 {
+    font-size: clamp(1.05rem, 1rem + 0.2vw, 1.2rem);
+    line-height: 1.3;
+  }
+
+  h4,
+  .h4 {
+    font-size: 1.05rem;
+    line-height: 1.32;
+  }
+
+  h5,
+  .h5 {
+    font-size: 0.9375rem;
+    line-height: 1.33;
+  }
+
+  h6,
+  .h6 {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .container-p-y:not([class^='pt-'], [class*=' pt-']) {
+    padding-block-start: 1rem !important;
+  }
+
+  .container-p-y:not([class^='pb-'], [class*=' pb-']) {
+    padding-block-end: 1rem !important;
+  }
+
+  .card .card-header,
+  .card .card-body,
+  .card .card-footer {
+    padding: 0.75rem 14px;
+  }
+
+  .breadcrumb {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+  }
+
+  .nav,
+  .navbar {
+    --bs-nav-link-font-size: 14px;
+  }
+
+  .form-label,
+  label {
+    margin-bottom: 0.25rem;
+    font-size: 14px;
+  }
+
+  .form-control,
+  .form-select,
+  .input-group-text {
+    padding: 0.375rem 0.5rem;
+    font-size: 14px;
+  }
+
+  textarea.form-control {
+    min-height: calc(2.5 * 1.2em);
+  }
+
+  /* Nút trong admin: không thu nhỏ — kích thước cố định ở cuối file (.layout-wrapper .btn) */
+
+  .badge {
+    font-size: 0.7em;
+  }
+
+  .small,
+  small {
+    font-size: 0.8em;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 0.85rem 1rem !important;
+  }
+
+  .modal-body {
+    padding: 0.85rem 1rem;
+  }
+
+  /* Bảng: giảm khoảng cách chữ ↔ viền ô */
+  .table > :not(caption) > * > * {
+    padding: 0.3rem 0.4rem !important;
+    line-height: 1.35;
+    vertical-align: middle;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .table thead th {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  table.dataTable > thead > tr > th,
+  table.dataTable > thead > tr > td,
+  table.dataTable > tbody > tr > th,
+  table.dataTable > tbody > tr > td,
+  table.dataTable > tfoot > tr > th,
+  table.dataTable > tfoot > tr > td {
+    padding: 0.3rem 0.4rem !important;
+    line-height: 1.35;
+  }
+
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_info,
+  .dataTables_wrapper .dataTables_paginate {
+    font-size: 14px;
+  }
+
+  .select2-container--default .select2-selection--single,
+  .select2-container--default .select2-selection--multiple {
+    min-height: 2.125rem;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  html {
+    font-size: 81.25%;
+  }
+
+  body,
+  .layout-wrapper {
+    line-height: 1.34;
+  }
+
+  .card .card-header,
+  .card .card-body,
+  .card .card-footer {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.22rem 0.3rem !important;
+    line-height: 1.32;
+  }
+
+  table.dataTable > thead > tr > th,
+  table.dataTable > thead > tr > td,
+  table.dataTable > tbody > tr > th,
+  table.dataTable > tbody > tr > td,
+  table.dataTable > tfoot > tr > th,
+  table.dataTable > tfoot > tr > td {
+    padding: 0.22rem 0.3rem !important;
+    line-height: 1.32;
+  }
+  .modal-dialog{
+    margin: 0 auto;
+  }
+
+  [data-bs-theme='light'] .pink .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-bs-theme='light'] .pink .table thead th,
+  [data-bs-theme='light'] .pink .table tbody td:not(.text-break),
+  [data-bs-theme='light'] .pink table.dataTable thead th,
+  [data-bs-theme='light'] .pink table.dataTable tbody td:not(.text-break) {
+    white-space: nowrap;
+  }
+
+  [data-bs-theme='light'] .pink .table tbody td.text-break,
+  [data-bs-theme='light'] .pink table.dataTable tbody td.text-break {
+    white-space: normal;
+  }
+}
+
+.card-header{
+    padding: 12px 1.5rem;
+}
+
+.row > * {
+  /* margin-top:0; */
+}
+
+/**
+ * Admin — nút cùng chiều cao input (desktop 14px), không đổi khi responsive.
+ * Dùng px thay vì em/rem để không bị ảnh hưởng bởi html { font-size: 87.5% } trên tablet/mobile.
+ */
+.layout-wrapper {
+  --admin-btn-font-size: 14px;
+  --admin-btn-padding-x: 12px;
+  /* line-height 1.5×14px + padding-y 0.375rem×2 (10.5px) + border 2px */
+  --admin-control-height: 33.5px;
+}
+
+.layout-wrapper .btn:not(.btn-icon):not(.btn-link):not(.btn-close):not(.btn-lg) {
+  height: var(--admin-control-height);
+  min-height: var(--admin-control-height);
+  font-size: var(--admin-btn-font-size);
+  line-height: 1.5;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: var(--admin-btn-padding-x);
+  padding-right: var(--admin-btn-padding-x);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.layout-wrapper .input-group > .btn:not(.btn-icon) {
+  align-self: stretch;
+}
+
+.layout-wrapper .admin-filter-row .admin-filter-actions .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .layout-wrapper .btn:not(.btn-icon):not(.btn-link):not(.btn-close):not(.btn-lg) {
+    height: var(--admin-control-height);
+    min-height: var(--admin-control-height);
+    font-size: var(--admin-btn-font-size);
+    line-height: 1.5;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: var(--admin-btn-padding-x);
+    padding-right: var(--admin-btn-padding-x);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .layout-wrapper .btn:not(.btn-icon):not(.btn-link):not(.btn-close):not(.btn-lg) {
+    height: var(--admin-control-height);
+    min-height: var(--admin-control-height);
+    font-size: var(--admin-btn-font-size);
+    line-height: 1.5;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: var(--admin-btn-padding-x);
+    padding-right: var(--admin-btn-padding-x);
+  }
+}
+.form-label{
+  font-size: 14px;
+}
