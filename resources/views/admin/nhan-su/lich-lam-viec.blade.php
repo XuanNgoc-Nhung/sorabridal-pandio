@@ -34,6 +34,20 @@
                     </div>
                 @endif
                 <div id="calendar" class="admin-work-calendar"></div>
+                <div id="ws-lich-mobile-month" class="ws-lich-mobile-month d-none" aria-label="Lịch tháng (mobile)">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm ws-lich-mobile-month-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="ws-lich-mobile-month__col-thu">Thứ</th>
+                                    <th scope="col" class="ws-lich-mobile-month__col-ngay">Ngày</th>
+                                    <th scope="col" class="ws-lich-mobile-month__col-work">Công việc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wsLichMobileMonthBody"></tbody>
+                        </table>
+                    </div>
+                </div>
                 <div id="ws-lich-list-view" class="ws-lich-list-view d-none" aria-label="Danh sách lịch làm việc">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <div class="text-muted small mb-0" id="wsLichListSummary">Đang tải...</div>
@@ -279,6 +293,9 @@
             if (!Calendar || !dayGridPlugin || !interactionPlugin) return;
 
             var listViewEl = document.getElementById('ws-lich-list-view');
+            var mobileMonthEl = document.getElementById('ws-lich-mobile-month');
+            var mobileMonthBodyEl = document.getElementById('wsLichMobileMonthBody');
+            var mobileMonthMq = window.matchMedia('(max-width: 767.98px)');
             var listBodyEl = document.getElementById('wsLichListBody');
             var listPaginationEl = document.getElementById('wsLichListPagination');
             var listSummaryEl = document.getElementById('wsLichListSummary');
@@ -492,6 +509,115 @@
 
             var weekDayLabels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
+            function formatDateKey(date) {
+                var y = date.getFullYear();
+                var m = String(date.getMonth() + 1).padStart(2, '0');
+                var d = String(date.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + d;
+            }
+
+            function shouldUseMobileMonthLayout() {
+                return mobileMonthMq.matches
+                    && !listModeActive
+                    && calendar
+                    && calendar.view
+                    && calendar.view.type === 'dayGridMonth';
+            }
+
+            function getContractsForDate(dateStr) {
+                if (!calendar) return [];
+                var events = calendar.getEvents();
+                for (var i = 0; i < events.length; i++) {
+                    var ev = events[i];
+                    var start = ev.start;
+                    if (!start) continue;
+                    if (formatDateKey(start) === dateStr) {
+                        return (ev.extendedProps || {}).contracts || [];
+                    }
+                }
+                return [];
+            }
+
+            function renderMobileMonthTable() {
+                if (!mobileMonthBodyEl || !mobileMonthEl || !calendar || !calendar.view) return;
+
+                var view = calendar.view;
+                var start = new Date(view.activeStart);
+                var end = new Date(view.activeEnd);
+                var monthRef = view.currentStart ? new Date(view.currentStart) : start;
+                var displayMonth = monthRef.getMonth();
+                var displayYear = monthRef.getFullYear();
+
+                mobileMonthBodyEl.innerHTML = '';
+                var cursor = new Date(start);
+
+                while (cursor < end) {
+                    var dateKey = formatDateKey(cursor);
+                    var thu = weekDayLabels[cursor.getDay()] || '';
+                    var dd = String(cursor.getDate()).padStart(2, '0');
+                    var mm = String(cursor.getMonth() + 1).padStart(2, '0');
+                    var isOtherMonth = cursor.getMonth() !== displayMonth || cursor.getFullYear() !== displayYear;
+
+                    var tr = document.createElement('tr');
+                    tr.setAttribute('data-date', dateKey);
+                    if (isOtherMonth) tr.classList.add('is-other-month');
+
+                    var thuTd = document.createElement('td');
+                    thuTd.className = 'ws-lich-mobile-month__thu';
+                    thuTd.textContent = thu;
+
+                    var ngayTd = document.createElement('td');
+                    ngayTd.className = 'ws-lich-mobile-month__ngay';
+                    ngayTd.textContent = dd + '/' + mm;
+
+                    var workTd = document.createElement('td');
+                    workTd.className = 'ws-lich-mobile-month__work';
+                    var contractsDom = buildDayContractsDom(getContractsForDate(dateKey), 0);
+                    if (contractsDom) {
+                        workTd.appendChild(contractsDom);
+                    } else {
+                        var empty = document.createElement('span');
+                        empty.className = 'ws-lich-mobile-month__empty';
+                        empty.textContent = '—';
+                        workTd.appendChild(empty);
+                    }
+
+                    tr.appendChild(thuTd);
+                    tr.appendChild(ngayTd);
+                    tr.appendChild(workTd);
+                    mobileMonthBodyEl.appendChild(tr);
+
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+
+                mobileMonthBodyEl.querySelectorAll('tr[data-date]').forEach(function (tr) {
+                    tr.addEventListener('click', function () {
+                        var dateStr = tr.getAttribute('data-date');
+                        if (dateStr) openWorkDayModal(dateStr);
+                    });
+                });
+            }
+
+            function syncMobileMonthLayout() {
+                if (!mobileMonthEl) return;
+                if (shouldUseMobileMonthLayout()) {
+                    root.classList.add('is-mobile-month');
+                    mobileMonthEl.classList.remove('d-none');
+                    renderMobileMonthTable();
+                } else {
+                    root.classList.remove('is-mobile-month');
+                    mobileMonthEl.classList.add('d-none');
+                }
+            }
+
+            var syncMobileMonthLayoutDebounced = (function () {
+                var timer = null;
+                return function () {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(syncMobileMonthLayout, 120);
+                };
+            })();
+
             function formatWeekDayHeader(date) {
                 var d = date.getDay();
                 var label = weekDayLabels[d] || '';
@@ -594,6 +720,7 @@
                 }
                 listModeActive = true;
                 root.classList.add('is-list-mode');
+                syncMobileMonthLayout();
                 if (listViewEl) listViewEl.classList.remove('d-none');
                 root.querySelectorAll('.fc-dayGridMonth-button, .fc-dayGridWeek-button').forEach(function (btn) {
                     btn.classList.remove('fc-button-active');
@@ -607,6 +734,7 @@
 
                 listModeActive = false;
                 root.classList.remove('is-list-mode');
+                syncMobileMonthLayout();
                 if (listViewEl) listViewEl.classList.add('d-none');
                 setListToolbarActive(false);
 
@@ -858,7 +986,10 @@
                     appendLocParams(params);
                     fetch(baseUrl + '?' + params.toString(), { method: 'GET' })
                         .then(function (r) { return r.json(); })
-                        .then(function (data) { successCallback(normalizeCalendarEvents(data)); })
+                        .then(function (data) {
+                            successCallback(normalizeCalendarEvents(data));
+                            requestAnimationFrame(syncMobileMonthLayout);
+                        })
                         .catch(function (e) { failureCallback(e); });
                 },
                 eventContent: function (arg) {
@@ -891,12 +1022,14 @@
                     openWorkDayModal(y + '-' + m + '-' + day);
                 },
                 viewDidMount: function (arg) {
+                    syncMobileMonthLayout();
                     if (listModeActive) return;
                     if (arg.view.type === 'dayGridMonth' || arg.view.type === 'dayGridWeek') {
                         refreshCalendarLayout();
                     }
                 },
                 datesSet: function () {
+                    syncMobileMonthLayout();
                     if (listModeActive) {
                         loadListDanhSach(1);
                     }
@@ -904,6 +1037,14 @@
             });
 
             calendar.render();
+            syncMobileMonthLayout();
+
+            if (typeof mobileMonthMq.addEventListener === 'function') {
+                mobileMonthMq.addEventListener('change', syncMobileMonthLayoutDebounced);
+            } else if (typeof mobileMonthMq.addListener === 'function') {
+                mobileMonthMq.addListener(syncMobileMonthLayoutDebounced);
+            }
+            window.addEventListener('resize', syncMobileMonthLayoutDebounced);
 
             calendarEl.addEventListener('click', function (e) {
                 if (!listModeActive) return;
@@ -924,6 +1065,7 @@
                 el.addEventListener('change', function () {
                     updateLocClearButton();
                     calendar.refetchEvents();
+                    syncMobileMonthLayout();
                     if (listModeActive) loadListDanhSach(1);
                 });
             });
@@ -935,6 +1077,7 @@
                     });
                     updateLocClearButton();
                     calendar.refetchEvents();
+                    syncMobileMonthLayout();
                     if (listModeActive) loadListDanhSach(1);
                 });
             }
