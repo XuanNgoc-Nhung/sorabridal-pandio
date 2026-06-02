@@ -73,10 +73,25 @@ class DiemDanhController extends Controller
         return view('admin.diem-danh.diem-danh', compact('danhSach', 'canCheckIn', 'canCheckOut'));
     }
 
+    /** @var array<string, string> */
+    private const CHAM_CONG_SAP_XEP_OPTIONS = [
+        User::SAP_XEP_HO_TEN => 'Họ tên',
+        User::SAP_XEP_ID => 'Mới nhất',
+    ];
+
     public function chamCong(Request $request)
     {
-        $month = (int) $request->query('month', now()->month);
-        $year = (int) $request->query('year', now()->year);
+        $validated = $request->validate([
+            'month' => 'nullable|integer|min:1|max:12',
+            'year' => 'nullable|integer|min:2000|max:2100',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'trang_thai' => 'nullable|in:da_cham,chua_cham',
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(self::CHAM_CONG_SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]);
+
+        $month = (int) ($validated['month'] ?? now()->month);
+        $year = (int) ($validated['year'] ?? now()->year);
 
         if ($month < 1 || $month > 12) {
             $month = now()->month;
@@ -84,6 +99,14 @@ class DiemDanhController extends Controller
         if ($year < 2000 || $year > 2100) {
             $year = now()->year;
         }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? User::SAP_XEP_HO_TEN;
+        if (! array_key_exists($sapXepTheo, self::CHAM_CONG_SAP_XEP_OPTIONS)) {
+            $sapXepTheo = User::SAP_XEP_HO_TEN;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+        $trangThai = $validated['trang_thai'] ?? '';
+        $userIdLoc = isset($validated['user_id']) ? (int) $validated['user_id'] : null;
 
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end = (clone $start)->endOfMonth();
@@ -96,24 +119,34 @@ class DiemDanhController extends Controller
         $startStr = $start->format('Y-m-d');
         $endStr = $end->format('Y-m-d');
 
-        // User có chấm công trong tháng (bất kể role) để đảm bảo hiển thị đủ
-        $userIdsCoChamCong = ChamCong::query()
+        $userIdsCoChamCongTrongThang = ChamCong::query()
             ->whereBetween('ngay_diem_danh', [$startStr, $endStr])
             ->distinct()
             ->pluck('user_id');
 
-        $nhanVien = User::query()
-            ->where(function ($q) use ($userIdsCoChamCong) {
-                $q->where('role', User::ROLE_NHAN_VIEN)
-                    ->orWhereIn('id', $userIdsCoChamCong);
-            })
-            ->orderBy('name')
-            ->get();
+        $nhanVienQuery = User::query()->whereHas('nhanVien');
+
+        if ($userIdLoc !== null) {
+            $nhanVienQuery->where('id', $userIdLoc);
+        }
+
+        if ($trangThai === 'da_cham') {
+            $nhanVienQuery->whereIn('id', $userIdsCoChamCongTrongThang);
+        } elseif ($trangThai === 'chua_cham') {
+            $nhanVienQuery->whereNotIn('id', $userIdsCoChamCongTrongThang);
+        }
+
+        if ($sapXepTheo === User::SAP_XEP_HO_TEN) {
+            $nhanVienQuery->orderBy('name', $thuTu);
+        } else {
+            $nhanVienQuery->orderBy('id', $thuTu);
+        }
+
+        $nhanVien = $nhanVienQuery->get();
 
         $chamCong = ChamCong::query()
             ->with(['user', 'diemDanh'])
             ->whereBetween('ngay_diem_danh', [$startStr, $endStr])
-            ->whereIn('user_id', $nhanVien->pluck('id'))
             ->get();
 
         $bangChamCong = [];
@@ -126,6 +159,11 @@ class DiemDanhController extends Controller
             $bangChamCong[$dateKey][$record->user_id] = $record;
         }
 
+        $danhSachNhanVienLoc = User::query()
+            ->whereHas('nhanVien')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
         return view('admin.diem-danh.cham-cong', [
             'month' => $month,
             'year' => $year,
@@ -134,6 +172,12 @@ class DiemDanhController extends Controller
             'ngayTrongThang' => $ngayTrongThang,
             'nhanVien' => $nhanVien,
             'bangChamCong' => $bangChamCong,
+            'danhSachNhanVienLoc' => $danhSachNhanVienLoc,
+            'userIdLoc' => $userIdLoc,
+            'trangThai' => $trangThai,
+            'sapXepTheo' => $sapXepTheo,
+            'thuTu' => $thuTu,
+            'chamCongSapXepOptions' => self::CHAM_CONG_SAP_XEP_OPTIONS,
         ]);
     }
 
