@@ -86,6 +86,14 @@ class DichVuLe extends Model
     }
 
     /**
+     * Phòng ban phụ trách dịch vụ.
+     */
+    public function phongBan(): BelongsTo
+    {
+        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
+    }
+
+    /**
      * Lọc dịch vụ có chứa phòng ban (theo id hoặc mã phòng ban cũ).
      */
     public function scopeCoPhongBan($query, int $phongBanId, ?string $maPhongBan = null)
