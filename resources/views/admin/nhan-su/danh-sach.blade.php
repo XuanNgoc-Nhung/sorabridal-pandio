@@ -37,7 +37,7 @@
                            id="tu_khoa"
                            name="tu_khoa"
                            value="{{ old('tu_khoa', request('tu_khoa')) }}"
-                           placeholder="Họ tên, SĐT, CCCD, email...">
+                           placeholder="Nhập...">
                     @error('tu_khoa')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -77,7 +77,7 @@
                 </div>
                 <div class="col-6 col-md-3 col-lg-2 d-flex flex-wrap gap-2 align-items-end admin-filter-actions">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i> Lọc
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Tìm kiếm
                     </button>
                     @if($hasFilter)
                     <a href="{{ route('admin.nhan-su.danh-sach') }}" class="btn btn-outline-secondary">Bỏ lọc</a>
@@ -171,7 +171,7 @@
                                        data-gioi-tinh="{{ e($nv?->gioi_tinh ?? '') }}"
                                        data-ngay-sinh="{{ $nv?->ngay_sinh?->format('Y-m-d') ?? '' }}"
                                        data-cccd="{{ e($nv?->cccd ?? '') }}"
-                                       data-role="{{ (int)($item->role ?? 0) }}"
+                                       data-role="{{ $item->role !== null && $item->role !== '' ? (string) $item->role : '' }}"
                                        data-vi-tri="{{ e($nv?->vi_tri_lam_viec ?? '') }}"
                                        data-phong-ban-ids="{{ $nv?->phongBans->pluck('id')->values()->toJson() }}"
                                        data-ngay-vao-cong-ty="{{ $nv?->ngay_vao_cong_ty?->format('Y-m-d') ?? '' }}"
@@ -702,6 +702,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var suaErrorDiv = document.getElementById('sua_hinh_anh_error');
     var suaObjectUrl = null;
 
+    function setAdminSelect2Value(selectId, value) {
+        var el = document.getElementById(selectId);
+        if (!el) return;
+        var v = value || '';
+        el.value = v;
+        if ($ && $.fn.select2 && $(el).data('select2')) {
+            $(el).val(v || null).trigger('change');
+        }
+    }
+
     if (modalSua) {
         modalSua.addEventListener('show.bs.modal', function(e) {
             var btn = e.relatedTarget;
@@ -711,10 +721,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_ho_ten').value = btn.getAttribute('data-name') || '';
             document.getElementById('sua_email').value = btn.getAttribute('data-email') || '';
             document.getElementById('sua_so_dien_thoai').value = btn.getAttribute('data-phone') || '';
-            document.getElementById('sua_gioi_tinh').value = btn.getAttribute('data-gioi-tinh') || '';
+            setAdminSelect2Value('sua_gioi_tinh', btn.getAttribute('data-gioi-tinh'));
             if (window.setAdminDateInput) setAdminDateInput('sua_ngay_sinh', btn.getAttribute('data-ngay-sinh') || ''); else document.getElementById('sua_ngay_sinh').value = btn.getAttribute('data-ngay-sinh') || '';
             document.getElementById('sua_cccd').value = btn.getAttribute('data-cccd') || '';
-            document.getElementById('sua_vai_tro').value = btn.getAttribute('data-role') || '';
+            setAdminSelect2Value('sua_vai_tro', btn.getAttribute('data-role'));
             document.getElementById('sua_vi_tri').value = btn.getAttribute('data-vi-tri') || '';
             var phongBanIds = [];
             try {
