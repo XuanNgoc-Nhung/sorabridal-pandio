@@ -28,7 +28,7 @@
 
           <ul class="menu-inner py-1">
             @php
-              // Danh sách menu hiển thị = các mục nằm trong sidebarDsMenu (build từ nhanVien.ds_menu tại AppServiceProvider)
+              // Menu sidebar: lọc theo vai_tro.ds_menu (user.role → ma_vai_tro), build tại AppServiceProvider
               $menusFromSidebarDsMenu = $sidebarMenuItems ?? [];
             @endphp
             @foreach($menusFromSidebarDsMenu as $item)

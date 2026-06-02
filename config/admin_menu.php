@@ -2,7 +2,7 @@
 
 /**
  * Cấu trúc menu sidebar admin.
- * Mỗi tài khoản (nhân viên) chỉ thấy các mục có route nằm trong nhan_vien.ds_menu.
+ * Mỗi tài khoản chỉ thấy các mục có route nằm trong vai_tro.ds_menu (theo user.role → ma_vai_tro).
  * Admin thấy toàn bộ.
  */
 return [

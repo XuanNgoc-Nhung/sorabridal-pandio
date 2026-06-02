@@ -109,6 +109,34 @@ class User extends Authenticatable
     }
 
     /**
+     * Vai trò hệ thống (menu sidebar) — user.role khớp vai_tro.ma_vai_tro.
+     */
+    public function vaiTro(): HasOne
+    {
+        return $this->hasOne(VaiTro::class, 'ma_vai_tro', 'role');
+    }
+
+    /**
+     * Danh sách route menu sidebar từ bảng vai_tro (theo user.role → ma_vai_tro).
+     *
+     * @return array<string>
+     */
+    public function sidebarDsMenuFromVaiTro(): array
+    {
+        if ($this->role === null) {
+            return [];
+        }
+
+        $vaiTro = $this->relationLoaded('vaiTro')
+            ? $this->vaiTro
+            : VaiTro::query()->where('ma_vai_tro', (string) $this->role)->first();
+
+        $menu = $vaiTro?->ds_menu;
+
+        return is_array($menu) ? $menu : [];
+    }
+
+    /**
      * Một user có thể có một hồ sơ nhân viên.
      */
     public function nhanVien(): HasOne

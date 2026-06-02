@@ -110,10 +110,9 @@ class CheckRoute
             return $next($request);
         }
 
-        $rawDsMenu = $user?->nhanVien?->ds_menu;
-        $ds_menu = is_array($rawDsMenu) ? $rawDsMenu : [];
+        $ds_menu = $user ? $user->sidebarDsMenuFromVaiTro() : [];
 
-        if ($rawDsMenu === null || $ds_menu === []) {
+        if ($ds_menu === []) {
             return redirect()->route(self::UNAUTHORIZED_ROUTE);
         }
 

@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      * Sidebar: danh sách menu đầy đủ lấy từ config (admin_menu).
-     * Chỉ hiển thị các mục có route nằm trong nhan_vien.ds_menu.
+     * Chỉ hiển thị các mục có route nằm trong vai_tro.ds_menu (theo user.role → ma_vai_tro).
      */
     public function boot(): void
     {
@@ -27,10 +27,10 @@ class AppServiceProvider extends ServiceProvider
             // Log::debug('[Sidebar] View composer bắt đầu', ['view' => $view->name()]);
 
             $user = auth()->user();
-            // ds_menu: danh sách route được phép xem (từ bảng nhan_vien)
+            // ds_menu: danh sách route được phép xem (từ vai_tro theo user.role → ma_vai_tro)
             $ds_menu = [];
-            if ($user && $user->nhanVien) {
-                $ds_menu = self::normalizeDsMenu((array) ($user->nhanVien->ds_menu ?? []));
+            if ($user) {
+                $ds_menu = self::normalizeDsMenu($user->sidebarDsMenuFromVaiTro());
             }
 
             // Log::debug('[Sidebar] User & ds_menu', [
@@ -104,7 +104,7 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Lấy menu đầy đủ từ config, chỉ giữ lại mục có route nằm trong ds_menu.
-     * @param array<string> $ds_menu nhan_vien.ds_menu
+     * @param array<string> $ds_menu vai_tro.ds_menu
      */
     private static function filterMenuByDsMenu(array $ds_menu): array
     {
