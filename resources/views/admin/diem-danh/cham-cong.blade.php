@@ -9,6 +9,7 @@
         || filled($trangThai ?? null)
         || $sapXepTheo !== $sapXepTheoMacDinh
         || $thuTu !== 'asc';
+    $thangLoc = $thang ?? sprintf('%04d-%02d', (int) ($year ?? now()->year), (int) ($month ?? now()->month));
 @endphp
 <div class="d-flex flex-column gap-3">
     <div class="card mb-0">
@@ -17,24 +18,14 @@
         <form method="GET" action="{{ route('admin.diem-danh.cham-cong') }}">
             <div class="row g-3 align-items-end admin-filter-row">
                 <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label" for="month">Tháng</label>
-                    <select class="select2-admin form-select" id="month" name="month" data-placeholder="Chọn tháng">
-                        @for($m = 1; $m <= 12; $m++)
-                            <option value="{{ $m }}" @selected((int)($month ?? now()->month) === $m)>
-                                Tháng {{ $m }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label" for="year">Năm</label>
-                    <input type="number"
+                    <label class="form-label" for="cham_cong_thang">Tháng / năm</label>
+                    <input type="text"
                            class="form-control"
-                           id="year"
-                           name="year"
-                           min="2000"
-                           max="2100"
-                           value="{{ (int)($year ?? now()->year) }}">
+                           id="cham_cong_thang"
+                           placeholder="Chọn tháng/năm"
+                           autocomplete="off"
+                           value="">
+                    <input type="hidden" name="thang" id="cham_cong_thang_value" value="{{ $thangLoc }}">
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label" for="user_id">Nhân viên</label>
@@ -75,9 +66,9 @@
                         <i class="fa-solid fa-magnifying-glass me-1"></i> Lọc
                     </button>
                     @if($hasFilter)
-                    <a href="{{ route('admin.diem-danh.cham-cong', ['month' => $month, 'year' => $year]) }}" class="btn btn-outline-secondary">Bỏ lọc</a>
+                    {{-- <a href="{{ route('admin.diem-danh.cham-cong', ['thang' => $thangLoc]) }}" class="btn btn-outline-secondary">Bỏ lọc</a> --}}
                     @endif
-                    <a href="{{ route('admin.diem-danh.cham-cong') }}" class="btn btn-outline-secondary">Tháng hiện tại</a>
+                    <a href="{{ route('admin.diem-danh.cham-cong') }}" class="btn btn-outline-secondary">Tháng này</a>
                 </div>
                 {{-- <div class="col-12 col-lg-auto ms-lg-auto">
                     <div class="text-muted">
@@ -178,6 +169,7 @@
 </div>
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.css') }}" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
 <style>
 .table-wrapper-bordered {
@@ -192,6 +184,130 @@
     border: 1px solid var(--bs-border-color, #dee2e6);
 }
 .gio-ra { color: #e8590c; }
+/* Chỉ chọn tháng/năm — ẩn lưới ngày (Bootstrap Daterangepicker) */
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar thead tr:not(:first-child),
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar tbody,
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar thead th.prev,
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar thead th.next,
+.daterangepicker.cham-cong-thang-nam-picker .drp-buttons {
+    display: none !important;
+}
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar {
+    border: 0;
+}
+.daterangepicker.cham-cong-thang-nam-picker .drp-calendar thead th.month {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+}
+.daterangepicker.cham-cong-thang-nam-picker .monthselect,
+.daterangepicker.cham-cong-thang-nam-picker .yearselect {
+    font-size: 0.9375rem;
+    padding: 0.35rem 0.5rem;
+}
 </style>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.js') }}"></script>
+<script>
+(function () {
+    if (window.__chamCongThangPickerInit) return;
+    window.__chamCongThangPickerInit = true;
+
+    var $ = window.jQuery;
+    if (!$ || !$.fn.daterangepicker || typeof moment === 'undefined') return;
+
+    var $inp = $('#cham_cong_thang');
+    var $hidden = $('#cham_cong_thang_value');
+    var $form = $inp.closest('form');
+    if (!$inp.length || !$hidden.length) return;
+
+    function monthFromHidden() {
+        var v = ($hidden.val() || '').trim();
+        if (!v) return moment().startOf('month');
+        var m = moment(v + '-01', 'YYYY-MM-DD', true);
+        return m.isValid() ? m.startOf('month') : moment().startOf('month');
+    }
+
+    function syncLabel(m) {
+        $inp.val(m && m.isValid() ? m.format('MM/YYYY') : '');
+    }
+
+    function syncHidden(m) {
+        if (m && m.isValid()) {
+            $hidden.val(m.clone().startOf('month').format('YYYY-MM'));
+        }
+    }
+
+    function monthFromPicker(picker) {
+        var $container = picker.container;
+        var month = parseInt($container.find('.monthselect').val(), 10);
+        var year = parseInt($container.find('.yearselect').val(), 10);
+        if (Number.isNaN(month) || Number.isNaN(year)) {
+            return picker.startDate.clone().startOf('month');
+        }
+        return moment({ year: year, month: month, day: 1 }).startOf('month');
+    }
+
+    function applyMonthYear(picker, closePicker) {
+        var m = monthFromPicker(picker);
+        picker.setStartDate(m.clone());
+        picker.setEndDate(m.clone());
+        syncHidden(m);
+        syncLabel(m);
+        if (closePicker) {
+            picker.hide();
+        }
+    }
+
+    var startMonth = monthFromHidden();
+
+    $inp.daterangepicker({
+        singleDatePicker: true,
+        showDropdowns: true,
+        minYear: 2000,
+        maxYear: 2100,
+        autoApply: true,
+        autoUpdateInput: false,
+        opens: 'right',
+        startDate: startMonth.clone(),
+        locale: {
+            format: 'MM/YYYY',
+            applyLabel: 'Áp dụng',
+            cancelLabel: 'Hủy',
+            firstDay: 1,
+            monthNames: [
+                'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+            ]
+        }
+    });
+
+    syncLabel(startMonth);
+
+    $inp.on('show.daterangepicker', function (ev, picker) {
+        picker.container.addClass('cham-cong-thang-nam-picker');
+        picker.container.find('.monthselect, .yearselect')
+            .off('change.chamCongThang')
+            .on('change.chamCongThang', function () {
+                applyMonthYear(picker, true);
+            });
+    });
+
+    $inp.on('apply.daterangepicker', function (ev, picker) {
+        applyMonthYear(picker, false);
+    });
+
+    if ($form.length) {
+        $form.on('submit', function () {
+            var drp = $inp.data('daterangepicker');
+            if (drp) {
+                applyMonthYear(drp, false);
+            }
+        });
+    }
+})();
+</script>
 @endpush
 @endsection

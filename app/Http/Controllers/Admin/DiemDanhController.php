@@ -82,6 +82,7 @@ class DiemDanhController extends Controller
     public function chamCong(Request $request)
     {
         $validated = $request->validate([
+            'thang' => 'nullable|date_format:Y-m',
             'month' => 'nullable|integer|min:1|max:12',
             'year' => 'nullable|integer|min:2000|max:2100',
             'user_id' => 'nullable|integer|exists:users,id',
@@ -90,8 +91,14 @@ class DiemDanhController extends Controller
             'thu_tu' => 'nullable|in:asc,desc',
         ]);
 
-        $month = (int) ($validated['month'] ?? now()->month);
-        $year = (int) ($validated['year'] ?? now()->year);
+        if (! empty($validated['thang'])) {
+            $thangCarbon = Carbon::createFromFormat('Y-m', $validated['thang']);
+            $month = $thangCarbon->month;
+            $year = $thangCarbon->year;
+        } else {
+            $month = (int) ($validated['month'] ?? now()->month);
+            $year = (int) ($validated['year'] ?? now()->year);
+        }
 
         if ($month < 1 || $month > 12) {
             $month = now()->month;
@@ -99,6 +106,8 @@ class DiemDanhController extends Controller
         if ($year < 2000 || $year > 2100) {
             $year = now()->year;
         }
+
+        $thang = sprintf('%04d-%02d', $year, $month);
 
         $sapXepTheo = $validated['sap_xep_theo'] ?? User::SAP_XEP_HO_TEN;
         if (! array_key_exists($sapXepTheo, self::CHAM_CONG_SAP_XEP_OPTIONS)) {
@@ -165,6 +174,7 @@ class DiemDanhController extends Controller
             ->get(['id', 'name', 'email']);
 
         return view('admin.diem-danh.cham-cong', [
+            'thang' => $thang,
             'month' => $month,
             'year' => $year,
             'start' => $start,
