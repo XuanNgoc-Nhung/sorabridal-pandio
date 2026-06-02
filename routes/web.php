@@ -187,6 +187,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         // Route::post('/ngan-hang-thanh-toan', [AdminHeThong::class, 'storeNganHangThanhToan'])->name('he-thong.ngan-hang-thanh-toan.store');
         // Route::put('/ngan-hang-thanh-toan/{nganHangThanhToan}', [AdminHeThong::class, 'updateNganHangThanhToan'])->name('he-thong.ngan-hang-thanh-toan.update');
         // Route::delete('/ngan-hang-thanh-toan/{nganHangThanhToan}', [AdminHeThong::class, 'destroyNganHangThanhToan'])->name('he-thong.ngan-hang-thanh-toan.destroy');
+        Route::get('/vai-tro', [AdminHeThong::class, 'vaiTro'])->name('he-thong.vai-tro');
+        Route::post('/vai-tro', [AdminHeThong::class, 'storeVaiTro'])->name('he-thong.vai-tro.store');
+        Route::put('/vai-tro/{vaiTro}', [AdminHeThong::class, 'updateVaiTro'])->name('he-thong.vai-tro.update');
+        Route::delete('/vai-tro/{vaiTro}', [AdminHeThong::class, 'destroyVaiTro'])->name('he-thong.vai-tro.destroy');
         Route::get('/phong-ban', [AdminHeThong::class, 'phongBan'])->name('he-thong.phong-ban');
         Route::post('/phong-ban', [AdminHeThong::class, 'storePhongBan'])->name('he-thong.phong-ban.store');
         Route::put('/phong-ban/{phongBan}', [AdminHeThong::class, 'updatePhongBan'])->name('he-thong.phong-ban.update');

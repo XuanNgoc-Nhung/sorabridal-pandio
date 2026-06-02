@@ -139,14 +139,15 @@ return [
     [
         'stt' => 15,
         'type' => 'group',
-        'routes' => ['admin.he-thong.phong-ban', 'admin.he-thong.tai-lieu', 'admin.he-thong.logs'],
+        'routes' => ['admin.he-thong.vai-tro', 'admin.he-thong.phong-ban', 'admin.he-thong.tai-lieu', 'admin.he-thong.logs'],
         'route_prefix' => 'admin.he-thong.',
         'label' => 'Hệ thống',
         'icon' => 'ti tabler-building',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.he-thong.phong-ban', 'label' => 'Phòng ban'],
-            ['stt' => 2, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu'],
-            ['stt' => 3, 'route' => 'admin.he-thong.logs', 'label' => 'Logs'],
+            ['stt' => 1, 'route' => 'admin.he-thong.vai-tro', 'label' => 'Vai trò'],
+            ['stt' => 2, 'route' => 'admin.he-thong.phong-ban', 'label' => 'Phòng ban'],
+            ['stt' => 3, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu'],
+            ['stt' => 4, 'route' => 'admin.he-thong.logs', 'label' => 'Logs'],
         ],
     ],
 ];

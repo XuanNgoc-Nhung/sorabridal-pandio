@@ -7,6 +7,8 @@ use App\Models\NganHangThanhToan;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\TaiLieu;
+use App\Models\VaiTro;
+use App\Support\AdminMenuPermissions;
 use App\Support\AdminPagination;
 use App\Support\UserActionLogReader;
 use Carbon\Carbon;
@@ -129,6 +131,114 @@ class HeThongController extends Controller
         return redirect()
             ->route('admin.he-thong.ngan-hang-thanh-toan')
             ->with('success', 'Đã xoá ngân hàng thanh toán.');
+    }
+
+    public function vaiTro(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]);
+
+        $query = VaiTro::query();
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        if ($search !== '') {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($qb) use ($like) {
+                $qb->where('ten_vai_tro', 'like', $like)
+                    ->orWhere('ma_vai_tro', 'like', $like);
+            });
+        }
+
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+        $query->orderBy('id', $thuTu);
+
+        $danhSach = $query->paginate(AdminPagination::perPage())->withQueryString();
+        $adminGetRoutes = AdminMenuPermissions::routesForForm();
+
+        return view('admin.he-thong.vai-tro', compact('danhSach', 'adminGetRoutes'));
+    }
+
+    public function storeVaiTro(Request $request)
+    {
+        $request->validate([
+            'ma_vai_tro' => ['required', 'string', 'max:50', Rule::unique('vai_tro', 'ma_vai_tro')],
+            'ten_vai_tro' => 'required|string|max:255',
+            'mo_ta' => 'nullable|string',
+            'ghi_chu' => 'nullable|string',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|max:255',
+        ], [
+            'ma_vai_tro.required' => 'Vui lòng nhập mã vai trò.',
+            'ma_vai_tro.string' => 'Mã vai trò phải là chuỗi ký tự.',
+            'ma_vai_tro.max' => 'Mã vai trò không được quá 50 ký tự.',
+            'ma_vai_tro.unique' => 'Mã vai trò đã tồn tại, vui lòng chọn mã khác.',
+            'ten_vai_tro.required' => 'Vui lòng nhập tên vai trò.',
+            'ten_vai_tro.string' => 'Tên vai trò phải là chuỗi ký tự.',
+            'ten_vai_tro.max' => 'Tên vai trò không được quá 255 ký tự.',
+            'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
+            'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
+            'permissions.array' => 'Danh sách menu không hợp lệ.',
+            'permissions.*.string' => 'Mỗi menu phải là chuỗi ký tự.',
+            'permissions.*.max' => 'Mỗi menu không được quá 255 ký tự.',
+        ]);
+
+        VaiTro::create([
+            'ma_vai_tro' => $request->input('ma_vai_tro'),
+            'ten_vai_tro' => $request->input('ten_vai_tro'),
+            'mo_ta' => $request->input('mo_ta'),
+            'ghi_chu' => $request->input('ghi_chu'),
+            'ds_menu' => AdminMenuPermissions::buildDsMenu($request->input('permissions')),
+        ]);
+
+        return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã thêm vai trò thành công.');
+    }
+
+    public function updateVaiTro(Request $request, VaiTro $vaiTro)
+    {
+        $request->validate([
+            'ma_vai_tro' => ['required', 'string', 'max:50', Rule::unique('vai_tro', 'ma_vai_tro')->ignore($vaiTro->id)],
+            'ten_vai_tro' => 'required|string|max:255',
+            'mo_ta' => 'nullable|string',
+            'ghi_chu' => 'nullable|string',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|max:255',
+            'vai_tro_id' => 'nullable|integer',
+        ], [
+            'ma_vai_tro.required' => 'Vui lòng nhập mã vai trò.',
+            'ma_vai_tro.string' => 'Mã vai trò phải là chuỗi ký tự.',
+            'ma_vai_tro.max' => 'Mã vai trò không được quá 50 ký tự.',
+            'ma_vai_tro.unique' => 'Mã vai trò đã tồn tại, vui lòng chọn mã khác.',
+            'ten_vai_tro.required' => 'Vui lòng nhập tên vai trò.',
+            'ten_vai_tro.string' => 'Tên vai trò phải là chuỗi ký tự.',
+            'ten_vai_tro.max' => 'Tên vai trò không được quá 255 ký tự.',
+            'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
+            'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
+            'permissions.array' => 'Danh sách menu không hợp lệ.',
+            'permissions.*.string' => 'Mỗi menu phải là chuỗi ký tự.',
+            'permissions.*.max' => 'Mỗi menu không được quá 255 ký tự.',
+        ]);
+
+        $vaiTro->update([
+            'ma_vai_tro' => $request->input('ma_vai_tro'),
+            'ten_vai_tro' => $request->input('ten_vai_tro'),
+            'mo_ta' => $request->input('mo_ta'),
+            'ghi_chu' => $request->input('ghi_chu'),
+            'ds_menu' => AdminMenuPermissions::buildDsMenu(
+                $request->input('permissions'),
+                $vaiTro->ds_menu ?? []
+            ),
+        ]);
+
+        return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã cập nhật vai trò thành công.');
+    }
+
+    public function destroyVaiTro(VaiTro $vaiTro)
+    {
+        $vaiTro->delete();
+
+        return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã xóa vai trò.');
     }
 
     public function phongBan(Request $request)

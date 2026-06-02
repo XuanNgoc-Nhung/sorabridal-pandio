@@ -58,6 +58,11 @@ class CheckRoute
             'admin.concept.concept.update',
             'admin.concept.concept.destroy',
         ],
+        'admin.he-thong.vai-tro' => [
+            'admin.he-thong.vai-tro.store',
+            'admin.he-thong.vai-tro.update',
+            'admin.he-thong.vai-tro.destroy',
+        ],
         'admin.he-thong.phong-ban' => [
             'admin.he-thong.phong-ban.store',
             'admin.he-thong.phong-ban.update',

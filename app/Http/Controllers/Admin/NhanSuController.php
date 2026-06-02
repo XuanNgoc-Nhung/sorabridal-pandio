@@ -8,6 +8,7 @@ use App\Models\HopDongCuoi;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\User;
+use App\Support\AdminMenuPermissions;
 use App\Support\AdminPagination;
 use App\Support\HopDongCuoiLocTienDoFilter;
 use Carbon\Carbon;
@@ -15,7 +16,6 @@ use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -679,10 +679,7 @@ class NhanSuController extends Controller
             ->paginate(AdminPagination::perPage())
             ->withQueryString();
 
-        $adminGetRoutes = collect($this->adminGetRoutesPhanQuyenMetadata())
-            ->filter(fn (array $r) => ! empty($r['description']))
-            ->values()
-            ->all();
+        $adminGetRoutes = AdminMenuPermissions::routesForForm();
 
         return view('admin.nhan-su.phan-quyen', compact('danhSach', 'adminGetRoutes'));
     }
@@ -703,24 +700,9 @@ class NhanSuController extends Controller
 
         $user = User::findOrFail($request->user_id);
 
-        $describedNames = collect($this->adminGetRoutesPhanQuyenMetadata())
-            ->filter(fn (array $r) => ! empty($r['description']))
-            ->pluck('name')
-            ->all();
-
-        $submitted = collect($request->input('permissions', []))
-            ->filter(fn (string $name) => in_array($name, $describedNames, true))
-            ->values()
-            ->all();
-
         $nhanVien = $user->nhanVien;
         $existing = $nhanVien ? ($nhanVien->ds_menu ?? []) : [];
-        $preservedKhongMoTa = collect($existing)
-            ->filter(fn ($name) => is_string($name) && ! in_array($name, $describedNames, true))
-            ->values()
-            ->all();
-
-        $dsMenu = array_values(array_unique(array_merge($preservedKhongMoTa, $submitted)));
+        $dsMenu = AdminMenuPermissions::buildDsMenu($request->input('permissions'), $existing);
 
         if (! $nhanVien) {
             NhanVien::create([
@@ -1291,48 +1273,4 @@ class NhanSuController extends Controller
         return back()->with('success', 'Đã cập nhật link file edit.');
     }
 
-    /** @return array<int, array{name: string, uri: string, description: string}> */
-    private function adminGetRoutesPhanQuyenMetadata(): array
-    {
-        $menuItems = config('admin_menu', []);
-
-        return collect($menuItems)
-            ->flatMap(function (array $item) {
-                if (($item['type'] ?? null) === 'single' && ! empty($item['route'])) {
-                    return [[
-                        'name' => $item['route'],
-                        'description' => (string) ($item['label'] ?? $item['route']),
-                    ]];
-                }
-
-                if (($item['type'] ?? null) === 'group' && ! empty($item['children']) && is_array($item['children'])) {
-                    return collect($item['children'])
-                        ->filter(fn (array $child) => ! empty($child['route']))
-                        ->map(function (array $child) use ($item) {
-                            $groupLabel = (string) ($item['label'] ?? 'Nhóm');
-                            $childLabel = (string) ($child['label'] ?? $child['route']);
-
-                            return [
-                                'name' => $child['route'],
-                                'description' => $groupLabel.' / '.$childLabel,
-                            ];
-                        });
-                }
-
-                return [];
-            })
-            ->unique('name')
-            ->map(function (array $menuRoute) {
-                $name = (string) $menuRoute['name'];
-                $route = Route::getRoutes()->getByName($name);
-
-                return [
-                    'name' => $name,
-                    'uri' => $route ? '/'.ltrim($route->uri(), '/') : '—',
-                    'description' => (string) ($menuRoute['description'] ?? $name),
-                ];
-            })
-            ->values()
-            ->all();
-    }
 }

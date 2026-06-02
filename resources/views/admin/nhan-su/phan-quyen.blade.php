@@ -122,27 +122,7 @@
                         <span class="text-muted">Nhân sự:</span>
                         <strong id="modalPhanQuyenUserName">—</strong>
                     </p>
-                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
-                        <span class="small text-muted mb-0">Menu</span>
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="checkbox" id="permCheckAll" title="Chọn/bỏ chọn tất cả">
-                            <label class="form-check-label small" for="permCheckAll">Chọn tất cả</label>
-                        </div>
-                    </div>
-                    <div class="list-group list-group-flush border rounded" style="max-height: 60vh; overflow-y: auto;">
-                        @forelse($adminGetRoutes ?? [] as $route)
-                        <div class="list-group-item d-flex align-items-start gap-2 py-2 px-3">
-                            <input class="form-check-input mt-1 flex-shrink-0 perm-checkbox" type="checkbox"
-                                   name="permissions[]" value="{{ $route['name'] }}" id="perm-{{ Str::slug($route['name']) }}">
-                            <label class="form-check-label flex-grow-1 mb-0 small cursor-pointer" for="perm-{{ Str::slug($route['name']) }}">
-                                <span class="d-block fw-medium text-body">{{ $route['description'] }}</span>
-                                <span class="d-block text-muted font-monospace" style="font-size: 0.8rem;">{{ $route['uri'] }}</span>
-                            </label>
-                        </div>
-                        @empty
-                        <div class="list-group-item text-muted text-center py-3">Chưa có menu nào trong cấu hình sidebar admin.</div>
-                        @endforelse
-                    </div>
+                    @include('admin.components.menu-permissions-list', ['adminGetRoutes' => $adminGetRoutes ?? []])
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -172,7 +152,7 @@
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
 }
-#modalPhanQuyen .cursor-pointer {
+#modalPhanQuyen .menu-perm-label {
     cursor: pointer;
 }
 </style>
