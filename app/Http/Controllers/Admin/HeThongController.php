@@ -9,6 +9,7 @@ use App\Models\PhongBan;
 use App\Models\TaiLieu;
 use App\Support\AdminPagination;
 use App\Support\UserActionLogReader;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -410,5 +411,27 @@ class HeThongController extends Controller
             'search',
             'coFileLog',
         ));
+    }
+
+    public function destroyLogs(Request $request)
+    {
+        $validated = $request->validate([
+            'ngay' => 'required|date_format:Y-m-d',
+        ]);
+
+        $ngay = $validated['ngay'];
+
+        if (! UserActionLogReader::deleteLogFile($ngay)) {
+            return redirect()
+                ->route('admin.he-thong.logs', ['ngay' => $ngay])
+                ->with('error', 'Không tìm thấy file log cho ngày đã chọn.');
+        }
+
+        $availableDates = UserActionLogReader::availableDates();
+        $redirectNgay = $availableDates[0] ?? now()->format('Y-m-d');
+
+        return redirect()
+            ->route('admin.he-thong.logs', ['ngay' => $redirectNgay])
+            ->with('success', 'Đã xóa file log ngày '.Carbon::parse($ngay)->format('d/m/Y').'.');
     }
 }

@@ -58,6 +58,16 @@ class UserActionLogReader
         return null;
     }
 
+    public static function deleteLogFile(string $date): bool
+    {
+        $path = self::resolveLogPath($date);
+        if ($path === null || ! File::isFile($path)) {
+            return false;
+        }
+
+        return File::delete($path);
+    }
+
     /**
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */

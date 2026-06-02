@@ -196,5 +196,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/tai-lieu', [AdminHeThong::class, 'storeTaiLieu'])->name('he-thong.tai-lieu.store');
         Route::delete('/tai-lieu/{taiLieu}', [AdminHeThong::class, 'destroyTaiLieu'])->name('he-thong.tai-lieu.destroy');
         Route::get('/logs', [AdminHeThong::class, 'logs'])->name('he-thong.logs');
+        Route::delete('/logs', [AdminHeThong::class, 'destroyLogs'])->name('he-thong.logs.destroy');
     });
 });

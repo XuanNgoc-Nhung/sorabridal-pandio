@@ -18,7 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append([
+        $middleware->web(append: [
+            \App\Http\Middleware\LogUserAction::class,
+        ]);
+
+        $middleware->api(append: [
             \App\Http\Middleware\LogUserAction::class,
         ]);
 
@@ -45,6 +49,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // ValidationException đã được Laravel xử lý (redirect + errors)
             if ($e instanceof ValidationException) {
                 return null;
+            }
+
+            // Chrome DevTools tự gọi khi mở F12 — không phải lỗi ứng dụng
+            if ($request->is('.well-known/appspecific/com.chrome.devtools.json')) {
+                return response('', 404);
             }
 
             if ($e instanceof AuthenticationException) {

@@ -11,6 +11,19 @@
     $hasFilter = ($userId ?? null) !== null || filled($search ?? null);
 @endphp
 <div class="d-flex flex-column gap-3">
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-0" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    @endif
+
     <div class="card mb-0">
         <div class="card-body">
             <form action="{{ route('admin.he-thong.logs') }}" method="GET">
@@ -48,13 +61,18 @@
                                value="{{ $search }}"
                                placeholder="Đường dẫn, tên, method...">
                     </div>
-                    <div class="col-6 col-md-3 col-lg-2 d-flex flex-wrap gap-2 align-items-end admin-filter-actions">
+                    <div class="col-12 col-md-auto d-flex flex-wrap gap-2 align-items-end admin-filter-actions">
                         <button type="submit" class="btn btn-primary">
                             <i class="fa-solid fa-magnifying-glass me-1"></i> Lọc
                         </button>
                         @if($hasFilter)
                         <a href="{{ route('admin.he-thong.logs', ['ngay' => $ngay]) }}" class="btn btn-outline-secondary">Bỏ lọc</a>
                         @endif
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                id="btnXoaLogNgay">
+                            <i class="fa-solid fa-trash me-1"></i> Xóa log ngày
+                        </button>
                     </div>
                 </div>
             </form>
@@ -150,4 +168,82 @@
         </div>
     </div>
 </div>
+
+<form id="form-xoa-log-ngay" action="{{ route('admin.he-thong.logs.destroy') }}" method="POST" class="d-none">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="ngay" id="ngay-xoa-log" value="{{ $ngay }}">
+</form>
+
+<div class="modal fade" id="modalXacNhanXoaLogNgay" tabindex="-1" aria-labelledby="modalXacNhanXoaLogNgayLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-confirm-xoa">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalXacNhanXoaLogNgayLabel">Xác nhận xóa log</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn xóa toàn bộ file log ngày
+                <span class="fw-medium" id="ngayLogCanXoa">{{ \Carbon\Carbon::parse($ngay)->format('d/m/Y') }}</span>?
+                <div class="form-text mt-2">
+                    Thao tác này xóa file <code id="tenFileLogCanXoa">laravel-{{ $ngay }}.log</code> và không thể hoàn tác.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="btnXacNhanXoaLogNgay">
+                    <i class="fa-solid fa-trash me-1"></i> Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var selectNgay = document.getElementById('ngay');
+    var btnXoaLogNgay = document.getElementById('btnXoaLogNgay');
+    var btnXacNhanXoaLogNgay = document.getElementById('btnXacNhanXoaLogNgay');
+    var modalXacNhanXoaLogNgay = document.getElementById('modalXacNhanXoaLogNgay');
+    var ngayLogCanXoa = document.getElementById('ngayLogCanXoa');
+    var tenFileLogCanXoa = document.getElementById('tenFileLogCanXoa');
+    var inputNgayXoaLog = document.getElementById('ngay-xoa-log');
+    var formXoaLogNgay = document.getElementById('form-xoa-log-ngay');
+
+    function syncNgayXoaLog() {
+        if (! selectNgay) {
+            return;
+        }
+
+        var ngay = selectNgay.value;
+        var label = selectNgay.options[selectNgay.selectedIndex]?.text.trim() || ngay;
+
+        if (inputNgayXoaLog) {
+            inputNgayXoaLog.value = ngay;
+        }
+        if (ngayLogCanXoa) {
+            ngayLogCanXoa.textContent = label;
+        }
+        if (tenFileLogCanXoa) {
+            tenFileLogCanXoa.textContent = 'laravel-' + ngay + '.log';
+        }
+    }
+
+    if (btnXoaLogNgay && modalXacNhanXoaLogNgay) {
+        btnXoaLogNgay.addEventListener('click', function() {
+            syncNgayXoaLog();
+            bootstrap.Modal.getOrCreateInstance(modalXacNhanXoaLogNgay).show();
+        });
+    }
+
+    if (btnXacNhanXoaLogNgay && formXoaLogNgay) {
+        btnXacNhanXoaLogNgay.addEventListener('click', function() {
+            syncNgayXoaLog();
+            formXoaLogNgay.submit();
+        });
+    }
+});
+</script>
+@endpush

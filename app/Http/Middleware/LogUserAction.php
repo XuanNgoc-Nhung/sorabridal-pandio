@@ -33,12 +33,11 @@ class LogUserAction
     {
         $response = $next($request);
 
-        if ($request->routeIs('admin.he-thong.logs')) {
+        if (! $request->route() || $request->routeIs('admin.he-thong.logs', 'admin.he-thong.logs.destroy')) {
             return $response;
         }
 
         $user = $request->user();
-        $route = $request->route();
 
         Log::info('User action', [
             'user' => $user

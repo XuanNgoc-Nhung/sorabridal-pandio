@@ -68,6 +68,9 @@ class CheckRoute
             'admin.he-thong.tai-lieu.store',
             'admin.he-thong.tai-lieu.destroy',
         ],
+        'admin.he-thong.logs' => [
+            'admin.he-thong.logs.destroy',
+        ],
         'admin.bao-cao.ads' => [
             'admin.bao-cao.ads.store',
             'admin.bao-cao.ads.update',
