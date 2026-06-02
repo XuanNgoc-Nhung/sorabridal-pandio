@@ -8,6 +8,7 @@ use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\TaiLieu;
 use App\Support\AdminPagination;
+use App\Support\UserActionLogReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -368,5 +369,46 @@ class HeThongController extends Controller
         return redirect()
             ->route('admin.he-thong.tai-lieu')
             ->with('success', 'Đã xóa tài liệu.');
+    }
+
+    public function logs(Request $request)
+    {
+        $validated = $request->validate([
+            'ngay' => 'nullable|date_format:Y-m-d',
+            'user_id' => 'nullable|integer|min:1',
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $availableDates = UserActionLogReader::availableDates();
+        $ngay = $validated['ngay'] ?? ($availableDates[0] ?? now()->format('Y-m-d'));
+
+        if (! in_array($ngay, $availableDates, true) && $availableDates !== []) {
+            $ngay = $availableDates[0];
+        }
+
+        $userId = isset($validated['user_id']) ? (int) $validated['user_id'] : null;
+        $search = isset($validated['search']) ? trim((string) $validated['search']) : null;
+        if ($search === '') {
+            $search = null;
+        }
+
+        $danhSach = UserActionLogReader::paginate(
+            $ngay,
+            AdminPagination::perPage($request),
+            max(1, (int) $request->query('page', 1)),
+            $userId,
+            $search,
+        );
+
+        $coFileLog = UserActionLogReader::resolveLogPath($ngay) !== null;
+
+        return view('admin.he-thong.logs', compact(
+            'danhSach',
+            'availableDates',
+            'ngay',
+            'userId',
+            'search',
+            'coFileLog',
+        ));
     }
 }

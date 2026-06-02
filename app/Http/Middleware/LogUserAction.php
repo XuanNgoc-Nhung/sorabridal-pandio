@@ -33,6 +33,10 @@ class LogUserAction
     {
         $response = $next($request);
 
+        if ($request->routeIs('admin.he-thong.logs')) {
+            return $response;
+        }
+
         $user = $request->user();
         $route = $request->route();
 
