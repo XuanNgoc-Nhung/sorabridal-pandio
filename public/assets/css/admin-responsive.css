@@ -233,8 +233,12 @@
     padding: 0.22rem 0.3rem !important;
     line-height: 1.32;
   }
-  .modal-dialog{
-    margin: 0 auto;
+  /* Modal admin: ~90% viewport — ghi đè width/max-width cố định (px) trên từng trang */
+  body.pink .modal .modal-dialog:not(.modal-fullscreen) {
+    width: 90vw !important;
+    max-width: 90vw !important;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   [data-bs-theme='light'] .pink .table-responsive {
