@@ -279,7 +279,7 @@
             padding: 4px 22px 4px 6px;
             background: #f8f7ff;
             border-left: 3px solid #7367f0;
-            color: #384551;
+            color: var(--admin-text-body);
             line-height: 1.18;
             font-size: .68rem;
             cursor: pointer;
@@ -292,7 +292,7 @@
             min-width: 14px;
             font-weight: 700;
             line-height: 1;
-            color: #697a8d;
+            color: var(--admin-text-muted);
             pointer-events: none;
         }
         .admin-work-calendar .ws-day-contract__pay {
@@ -312,7 +312,7 @@
             color: #ea5455;
         }
         .ws-day-contract__pay--partial {
-            color: #384551;
+            color: var(--admin-text-body);
         }
         .ws-work-detail-card .ws-day-contract__pay {
             top: 10px;
@@ -354,7 +354,7 @@
             align-items: center;
             gap: 8px;
             font-size: .8125rem;
-            color: #384551;
+            color: var(--admin-text-body);
         }
         .ws-lich-legend__swatch {
             display: inline-block;
@@ -383,14 +383,14 @@
         .ws-work-detail-card--up_link_in { border-left-color: #d97706 !important; }
         .admin-work-calendar .ws-day-contract__meta {
             font-weight: 700;
-            color: #4b5563;
+            color: var(--admin-text-secondary);
             margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .admin-work-calendar .ws-day-contract__summary {
-            color: #5d6670;
+            color: var(--admin-text-subtle);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -418,7 +418,7 @@
         .admin-work-calendar .ws-week-day-header__date {
             font-size: .75rem;
             font-weight: 500;
-            color: #697a8d;
+            color: var(--admin-text-muted);
         }
         .admin-work-calendar .ws-role-tag {
             border-radius: 8px;
@@ -483,7 +483,7 @@
         .ws-lich-list-day__heading {
             font-size: .875rem;
             font-weight: 700;
-            color: #566a7f;
+            color: var(--admin-text-secondary);
             padding: .5rem .75rem;
             margin-bottom: .65rem;
             background: linear-gradient(90deg, #f0f0f8 0%, #f8f8fb 100%);
@@ -542,12 +542,12 @@
         .ws-lich-list-card__couple {
             font-size: .875rem;
             font-weight: 700;
-            color: #384551;
+            color: var(--admin-text-body);
             line-height: 1.3;
         }
         .ws-lich-list-card__detail {
             font-size: .8125rem;
-            color: #5d6670;
+            color: var(--admin-text-subtle);
             line-height: 1.45;
         }
         .ws-lich-list-card__footer {
@@ -569,7 +569,7 @@
             padding: .2rem .5rem;
             border-radius: 4px;
             background: #eef0f3;
-            color: #566a7f;
+            color: var(--admin-text-secondary);
         }
         .ws-lich-list-pay--full {
             background: #e8f8ef;
@@ -581,7 +581,7 @@
         }
         .ws-lich-list-pay--partial {
             background: #eef0f3;
-            color: #384551;
+            color: var(--admin-text-body);
         }
         #wsLichListPagination .pagination {
             margin-bottom: 0;

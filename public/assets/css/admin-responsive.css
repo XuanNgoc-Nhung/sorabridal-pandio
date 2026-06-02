@@ -4,6 +4,32 @@
  */
 
 /**
+ * Admin — màu chữ theo theme (dùng thay màu hex cứng trong component/page).
+ * Chế độ tối: sáng hơn để đạt tương phản trên nền tối.
+ */
+:root,
+[data-bs-theme='light'] {
+  --admin-text-body: #384551;
+  --admin-text-secondary: #566a7f;
+  --admin-text-muted: #697a8d;
+  --admin-text-subtle: #5d6670;
+}
+
+[data-bs-theme='dark'] {
+  --admin-text-body: #cbd5e0;
+  --admin-text-secondary: #adb5bd;
+  --admin-text-muted: #a8b0bc;
+  --admin-text-subtle: #9ca3af;
+}
+
+/**
+ * FullCalendar — sticky header/footer đồng bộ nền dark theme.
+ */
+[data-bs-theme='dark'] .fc .fc-scrollgrid-section-sticky > * {
+  background-color: var(--bs-card-bg);
+}
+
+/**
  * Bảng admin — tông hồng chỉ khi giao diện sáng (html[data-bs-theme="light"], body.pink).
  * Chế độ tối dùng màu bảng mặc định của Bootstrap.
  */
