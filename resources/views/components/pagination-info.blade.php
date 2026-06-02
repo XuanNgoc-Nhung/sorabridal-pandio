@@ -14,7 +14,7 @@
         @if($paginator->total() > 0)
         Hiển thị: <strong>{{ $paginator->firstItem() }}</strong>–<strong>{{ $paginator->lastItem() }}</strong>. Tổng: <strong>{{ $paginator->total() }}</strong>.
         @else
-        Hiển thị <strong>0</strong>–<strong>0</strong> [<strong>0</strong>].
+        Hiển thị <strong>0</strong>–<strong>0</strong> . Tổng: <strong>0</strong>.
         @endif
     </div>
 

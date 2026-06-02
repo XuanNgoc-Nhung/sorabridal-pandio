@@ -379,6 +379,7 @@ class HeThongController extends Controller
             'user_id' => 'nullable|integer|min:1',
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|integer|min:100|max:599',
+            'method' => 'nullable|string|in:GET,POST,PUT,PATCH,DELETE',
         ]);
 
         $availableDates = UserActionLogReader::availableDates();
@@ -394,6 +395,7 @@ class HeThongController extends Controller
             $search = null;
         }
         $responseStatus = isset($validated['status']) ? (int) $validated['status'] : null;
+        $httpMethod = isset($validated['method']) ? strtoupper((string) $validated['method']) : null;
 
         $danhSach = UserActionLogReader::paginate(
             $ngay,
@@ -402,6 +404,7 @@ class HeThongController extends Controller
             $userId,
             $search,
             $responseStatus,
+            $httpMethod,
         );
 
         $coFileLog = UserActionLogReader::resolveLogPath($ngay) !== null;
@@ -413,6 +416,7 @@ class HeThongController extends Controller
             'userId',
             'search',
             'responseStatus',
+            'httpMethod',
             'coFileLog',
         ));
     }

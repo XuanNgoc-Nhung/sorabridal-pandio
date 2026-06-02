@@ -78,8 +78,9 @@ class UserActionLogReader
         ?int $userId = null,
         ?string $search = null,
         ?int $responseStatus = null,
+        ?string $httpMethod = null,
     ): LengthAwarePaginator {
-        $entries = collect(self::readEntries($date, $userId, $search, $responseStatus));
+        $entries = collect(self::readEntries($date, $userId, $search, $responseStatus, $httpMethod));
 
         $total = $entries->count();
         $items = $entries
@@ -104,6 +105,7 @@ class UserActionLogReader
         ?int $userId = null,
         ?string $search = null,
         ?int $responseStatus = null,
+        ?string $httpMethod = null,
     ): array
     {
         $path = self::resolveLogPath($date);
@@ -129,6 +131,13 @@ class UserActionLogReader
 
             if ($responseStatus !== null && (int) ($parsed['response_status'] ?? 0) !== $responseStatus) {
                 continue;
+            }
+
+            if ($httpMethod !== null) {
+                $entryMethod = strtoupper((string) ($parsed['request']['method'] ?? ''));
+                if ($entryMethod !== $httpMethod) {
+                    continue;
+                }
             }
 
             if ($search !== null && $search !== '') {

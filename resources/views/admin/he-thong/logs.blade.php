@@ -10,7 +10,8 @@
 @php
     $hasFilter = ($userId ?? null) !== null
         || filled($search ?? null)
-        || ($responseStatus ?? null) !== null;
+        || ($responseStatus ?? null) !== null
+        || filled($httpMethod ?? null);
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))
@@ -63,7 +64,16 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-md-4 col-lg-3">
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label" for="method">Method</label>
+                        <select class="select2-admin form-select" id="method" name="method">
+                            <option value="" @selected(($httpMethod ?? null) === null)>Tất cả</option>
+                            @foreach(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $verb)
+                                <option value="{{ $verb }}" @selected(($httpMethod ?? null) === $verb)>{{ $verb }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-2">
                         <label class="form-label" for="search">Tìm trong log</label>
                         <input type="text"
                                class="form-control"
@@ -82,7 +92,7 @@
                         <button type="button"
                                 class="btn btn-outline-danger"
                                 id="btnXoaLogNgay">
-                            <i class="fa-solid fa-trash me-1"></i> Xóa log ngày
+                            <i class="fa-solid fa-trash me-1"></i> Xóa log
                         </button>
                     </div>
                 </div>
@@ -108,10 +118,10 @@
                             <th class="text-center" style="width: 48px;">STT</th>
                             <th style="width: 11rem;">Thời gian</th>
                             <th style="width: 12rem;">Người dùng</th>
-                            <th style="width: 5rem;">Method</th>
+                            <th>Method</th>
                             <th>Đường dẫn</th>
                             <th class="text-center" style="width: 4.5rem;">Mã</th>
-                            <th style="width: 14rem;">Phản hồi</th>
+                            <th>Phản hồi</th>
                             <th class="text-center" style="width: 4rem;">Thao tác</th>
                         </tr>
                     </thead>
