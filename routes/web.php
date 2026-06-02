@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HomeController;
 // use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController as Admin;
 use App\Http\Controllers\Admin\NhanSuController as AdminNhanSu;
@@ -17,11 +18,7 @@ use App\Http\Controllers\Admin\MarketingController as AdminMarketing;
 use App\Http\Controllers\Admin\BaoCaoController as AdminBaoCao;
 
 // Trang chủ: chưa đăng nhập → login; đã đăng nhập → admin
-Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('admin.index')
-        : redirect()->route('login');
-});
+Route::get('/', HomeController::class);
 
 // Route trang user (tạm tắt)
 // Route::get('/', [UserController::class, 'home'])->name('user.home');
