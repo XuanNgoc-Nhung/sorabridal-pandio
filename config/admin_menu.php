@@ -60,7 +60,6 @@ return [
         'type' => 'group',
         'routes' => [
             'admin.nhan-su.danh-sach',
-            'admin.nhan-su.phan-quyen',
             'admin.nhan-su.cong-viec-cua-toi',
         ],
         'route_prefix' => 'admin.nhan-su.',
@@ -68,8 +67,7 @@ return [
         'icon' => 'ti tabler-users',
         'children' => [
             ['stt' => 1, 'route' => 'admin.nhan-su.danh-sach', 'label' => 'Danh sách nhân sự'],
-            ['stt' => 2, 'route' => 'admin.nhan-su.phan-quyen', 'label' => 'Phân quyền'],
-            ['stt' => 3, 'route' => 'admin.nhan-su.cong-viec-cua-toi', 'label' => 'Công việc của tôi'],
+            ['stt' => 2, 'route' => 'admin.nhan-su.cong-viec-cua-toi', 'label' => 'Công việc của tôi'],
         ],
     ],
     [

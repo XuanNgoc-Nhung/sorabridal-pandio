@@ -4,7 +4,6 @@ return [
     'admin.index' => 'Trang chủ admin',
     'admin.thong-tin-ca-nhan' => 'Thông tin cá nhân',
     'admin.nhan-su.danh-sach' => 'Danh sách nhân sự',
-    'admin.nhan-su.phan-quyen' => 'Phân quyền nhân sự',
     'admin.lich-lam-viec' => 'Lịch làm việc',
     'admin.note-khach-moi' => 'Note khách mới',
     'admin.bao-cao.ads' => 'Báo cáo Ads',

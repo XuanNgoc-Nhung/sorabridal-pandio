@@ -8,7 +8,6 @@ use App\Models\HopDongCuoi;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\User;
-use App\Support\AdminMenuPermissions;
 use App\Support\AdminPagination;
 use App\Support\HopDongCuoiLocTienDoFilter;
 use Carbon\Carbon;
@@ -663,57 +662,6 @@ class NhanSuController extends Controller
 
             return back()->with('error', 'Có lỗi xảy ra: '.$e->getMessage());
         }
-    }
-
-    public function phanQuyen(Request $request)
-    {
-        $search = $request->get('search');
-        $danhSach = User::query()
-            ->with('nhanVien')
-            ->when($search, function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            })
-            ->orderBy('id')
-            ->paginate(AdminPagination::perPage())
-            ->withQueryString();
-
-        $adminGetRoutes = AdminMenuPermissions::routesForForm();
-
-        return view('admin.nhan-su.phan-quyen', compact('danhSach', 'adminGetRoutes'));
-    }
-
-    public function luuPhanQuyen(Request $request)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string|max:255',
-        ], [
-            'user_id.required' => 'Thiếu thông tin nhân sự.',
-            'user_id.exists' => 'Nhân sự không tồn tại.',
-            'permissions.array' => 'Danh sách quyền không hợp lệ.',
-            'permissions.*.string' => 'Mỗi quyền phải là chuỗi ký tự.',
-            'permissions.*.max' => 'Mỗi quyền không được quá 255 ký tự.',
-        ]);
-
-        $user = User::findOrFail($request->user_id);
-
-        $nhanVien = $user->nhanVien;
-        $existing = $nhanVien ? ($nhanVien->ds_menu ?? []) : [];
-        $dsMenu = AdminMenuPermissions::buildDsMenu($request->input('permissions'), $existing);
-
-        if (! $nhanVien) {
-            NhanVien::create([
-                'user_id' => $user->id,
-                'ds_menu' => $dsMenu,
-            ]);
-        } else {
-            $nhanVien->update(['ds_menu' => $dsMenu]);
-        }
-
-        return redirect()->back()->with('success', 'Đã lưu phân quyền thành công.');
     }
 
     public function lichLamViec()

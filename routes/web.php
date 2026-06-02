@@ -52,7 +52,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
     Route::group(['prefix' => 'khach-hang'], function () {
         Route::get('/danh-sach-hop-dong-cuoi', [AdminKhachHang::class, 'danhSachHopDongCuoi'])->name('khach-hang.danh-sach-hop-dong-cuoi');
         Route::get('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi/nhan-vien-theo-ngay', [AdminKhachHang::class, 'nhanVienChoDieuPhoiTheoNgayChup'])->name('khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay');
-        Route::put('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi', [AdminKhachHang::class, 'capNhatDieuPhoiHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.dieu-phoi');
+        Route::put('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi', [AdminKhachHang::class, 'c3NhatDieuPhoiHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.dieu-phoi');
         Route::get('/hop-dong-cuoi/{hopDongCuoi}/thanh-toan', [AdminKhachHang::class, 'thongTinThanhToanHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.thanh-toan');
         Route::post('/hop-dong-cuoi/{hopDongCuoi}/thanh-toan', [AdminKhachHang::class, 'luuThanhToanHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.thanh-toan.luu');
         Route::put('/hop-dong-cuoi/{hopDongCuoi}/huy', [AdminKhachHang::class, 'huyHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.huy');
@@ -114,8 +114,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::put('/danh-sach/{user}', [AdminNhanSu::class, 'update'])->name('nhan-su.update');
         Route::put('/doi-mat-khau/{user}', [AdminNhanSu::class, 'doiMatKhau'])->name('nhan-su.doi-mat-khau');
         Route::delete('/danh-sach/{user}', [AdminNhanSu::class, 'destroy'])->name('nhan-su.destroy');
-        Route::get('/phan-quyen', [AdminNhanSu::class, 'phanQuyen'])->name('nhan-su.phan-quyen');
-        Route::post('/phan-quyen', [AdminNhanSu::class, 'luuPhanQuyen'])->name('nhan-su.luu-phan-quyen');
         Route::get('/cong-viec-cua-toi', [AdminNhanSu::class, 'congViecCuaToi'])->name('nhan-su.cong-viec-cua-toi');
         Route::put('/cong-viec-cua-toi/{hopDongCuoi}/cap-nhat-link', [AdminNhanSu::class, 'capNhatLinkFileCongViec'])
             ->name('nhan-su.cong-viec-cua-toi.cap-nhat-link');
