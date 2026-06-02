@@ -15,18 +15,34 @@ class TaiLieuController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(TaiLieu::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
-        $query = TaiLieu::query()->orderByDesc('id');
+        $query = TaiLieu::query();
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
             $like = $this->likePattern($tuKhoa);
             $query->where(function ($qb) use ($like) {
                 $qb->where('ten_tai_lieu', 'like', $like)
-                    ->orWhere('file', 'like', $like);
+                    ->orWhere('mo_ta', 'like', $like);
             });
         }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? TaiLieu::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, TaiLieu::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = TaiLieu::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            TaiLieu::SAP_XEP_TEN => $query->orderBy('ten_tai_lieu', $thuTu),
+            TaiLieu::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('created_at', $thuTu),
+        };
+        $query->orderBy('id', $thuTu);
 
         return $this->apiListFromQuery($query, fn (TaiLieu $item) => $this->formatTaiLieu($item), $request);
     }

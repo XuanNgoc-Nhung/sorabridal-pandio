@@ -16,18 +16,38 @@ class TrangPhucController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(TrangPhuc::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
-        $query = TrangPhuc::query()->orderByDesc('id');
+        $query = TrangPhuc::query();
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
             $like = $this->likePattern($tuKhoa);
             $query->where(function ($qb) use ($like) {
                 $qb->where('ten_san_pham', 'like', $like)
-                    ->orWhere('ma_san_pham', 'like', $like);
+                    ->orWhere('ma_san_pham', 'like', $like)
+                    ->orWhere('mo_ta', 'like', $like)
+                    ->orWhere('ghi_chu', 'like', $like);
             });
         }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? TrangPhuc::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, TrangPhuc::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = TrangPhuc::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            TrangPhuc::SAP_XEP_TEN => $query->orderBy('ten_san_pham', $thuTu),
+            TrangPhuc::SAP_XEP_MA => $query->orderBy('ma_san_pham', $thuTu),
+            TrangPhuc::SAP_XEP_GIA_TRI => $query->orderBy('gia_tri', $thuTu),
+            TrangPhuc::SAP_XEP_TRANG_THAI => $query->orderBy('trang_thai', $thuTu),
+            TrangPhuc::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('id', $thuTu),
+        };
 
         return $this->apiListFromQuery($query, fn (TrangPhuc $item) => $this->formatTrangPhuc($item), $request);
     }

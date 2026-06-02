@@ -15,9 +15,12 @@ class PhongBanController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(PhongBan::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
-        $query = PhongBan::query()->withCount('nhanViens')->orderByDesc('id');
+        $query = PhongBan::query()->withCount('nhanViens');
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
@@ -27,6 +30,18 @@ class PhongBanController extends Controller
                     ->orWhere('ma_phong_ban', 'like', $like);
             });
         }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? PhongBan::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, PhongBan::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = PhongBan::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            PhongBan::SAP_XEP_NHAN_VIENS => $query->orderBy('nhan_viens_count', $thuTu),
+            default => $query->orderBy('id', $thuTu),
+        };
+        $query->orderBy('id', $thuTu);
 
         return $this->apiListFromQuery($query, fn (PhongBan $item) => $this->formatPhongBan($item), $request);
     }

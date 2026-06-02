@@ -19,9 +19,15 @@ class NhanSuController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'gioi_tinh' => 'nullable|string|in:'.implode(',', array_keys(User::GIOI_TINH_OPTIONS)),
+            'phong_ban_id' => 'nullable|integer|exists:phong_ban,id',
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(User::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
         $query = User::query()
+            ->where('role', '!=', '99')
             ->with(['nhanVien', 'nhanVien.phongBans'])
             ->orderBy('id');
 
@@ -33,6 +39,42 @@ class NhanSuController extends Controller
                     ->orWhere('email', 'like', $like)
                     ->orWhere('phone', 'like', $like);
             });
+        }
+
+        $gioiTinh = trim((string) ($validated['gioi_tinh'] ?? ''));
+        if ($gioiTinh !== '') {
+            $query->whereHas('nhanVien', fn ($nv) => $nv->where('gioi_tinh', $gioiTinh));
+        }
+
+        $phongBanId = $validated['phong_ban_id'] ?? null;
+        if ($phongBanId !== null) {
+            $query->whereHas('nhanVien.phongBans', fn ($pb) => $pb->where('id', (int) $phongBanId));
+        }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? User::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, User::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = User::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $sortNhanVienColumns = [
+            User::SAP_XEP_NGAY_SINH => 'ngay_sinh',
+            User::SAP_XEP_NGAY_VAO_CONG_TY => 'ngay_vao_cong_ty',
+            User::SAP_XEP_NGAY_KY_HOP_DONG => 'ngay_ky_hop_dong',
+            User::SAP_XEP_LUONG_CO_BAN => 'luong_co_ban',
+            User::SAP_XEP_LUONG_TANG_CA => 'luong_tang_ca',
+        ];
+
+        if (array_key_exists($sapXepTheo, $sortNhanVienColumns)) {
+            $query->leftJoin('nhan_vien as nv_sort', 'users.id', '=', 'nv_sort.user_id')
+                ->select('users.*')
+                ->orderBy('nv_sort.'.$sortNhanVienColumns[$sapXepTheo], $thuTu);
+        } elseif ($sapXepTheo === User::SAP_XEP_HO_TEN) {
+            $query->orderBy('name', $thuTu);
+        } elseif ($sapXepTheo === User::SAP_XEP_VAI_TRO) {
+            $query->orderBy('role', $thuTu);
+        } else {
+            $query->orderBy('id', $thuTu);
         }
 
         return $this->apiListFromQuery($query, fn (User $user) => $this->formatNhanSu($user), $request);

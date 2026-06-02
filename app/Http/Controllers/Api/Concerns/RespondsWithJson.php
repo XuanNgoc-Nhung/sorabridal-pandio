@@ -55,12 +55,13 @@ trait RespondsWithJson
     {
         return [
             'tu_khoa' => 'nullable|string|max:200',
+            'search' => 'nullable|string|max:200',
         ];
     }
 
     protected function trimmedTuKhoa(array $validated): string
     {
-        return trim((string) ($validated['tu_khoa'] ?? ''));
+        return trim((string) ($validated['tu_khoa'] ?? $validated['search'] ?? ''));
     }
 
     protected function likePattern(string $tuKhoa): string

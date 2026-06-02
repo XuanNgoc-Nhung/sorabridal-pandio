@@ -14,9 +14,12 @@ class TuVanController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(DangKyTuVan::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
-        $query = DangKyTuVan::query()->orderByDesc('created_at')->orderByDesc('id');
+        $query = DangKyTuVan::query();
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
@@ -31,6 +34,20 @@ class TuVanController extends Controller
             });
         }
 
+        $sapXepTheo = $validated['sap_xep_theo'] ?? DangKyTuVan::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, DangKyTuVan::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = DangKyTuVan::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            DangKyTuVan::SAP_XEP_NGAY_CUOI => $query
+                ->orderByRaw('ngay_cuoi_du_kien IS NULL')
+                ->orderBy('ngay_cuoi_du_kien', $thuTu),
+            default => $query->orderBy('created_at', $thuTu),
+        };
+        $query->orderBy('id', $thuTu);
+
         return $this->apiListFromQuery($query, fn (DangKyTuVan $item) => $this->formatDangKy($item), $request);
     }
 
@@ -44,6 +61,7 @@ class TuVanController extends Controller
             'phim_truong_quan_tam' => $item->phim_truong_quan_tam,
             'goi_dich_vu_quan_tam' => $item->goi_dich_vu_quan_tam,
             'ghi_chu' => $item->ghi_chu,
+            'ngay_cuoi_du_kien' => $item->ngay_cuoi_du_kien?->format('Y-m-d'),
             'created_at' => $item->created_at?->format('d/m/Y H:i:s'),
         ];
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Models\DichVuLe;
+use App\Models\PhongBan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,9 +16,14 @@ class DichVuLeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules()));
+        $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
+            'trang_thai' => 'nullable|in:0,1',
+            'phong_ban_id' => 'nullable|integer|exists:phong_ban,id',
+            'sap_xep_theo' => 'nullable|string|in:'.DichVuLe::SAP_XEP_TEN.','.DichVuLe::SAP_XEP_GIA,
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]));
 
-        $query = DichVuLe::query()->with(['nguoiTao', 'phongBan'])->orderByDesc('id');
+        $query = DichVuLe::query()->with(['nguoiTao']);
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
@@ -27,6 +33,26 @@ class DichVuLeController extends Controller
                     ->orWhere('ma_dich_vu', 'like', $like);
             });
         }
+
+        if ($request->filled('trang_thai') && in_array((string) $request->input('trang_thai'), ['0', '1'], true)) {
+            $query->where('trang_thai', (int) $request->input('trang_thai'));
+        }
+
+        if ($request->filled('phong_ban_id')) {
+            $phongBanId = (int) $request->input('phong_ban_id');
+            $phongBan = PhongBan::find($phongBanId);
+            if ($phongBan) {
+                $query->coPhongBan($phongBanId, $phongBan->ma_phong_ban);
+            }
+        }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? DichVuLe::SAP_XEP_TEN;
+        if (! in_array($sapXepTheo, [DichVuLe::SAP_XEP_TEN, DichVuLe::SAP_XEP_GIA], true)) {
+            $sapXepTheo = DichVuLe::SAP_XEP_TEN;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+        $cotSapXep = $sapXepTheo === DichVuLe::SAP_XEP_GIA ? 'gia_dich_vu' : 'ten_dich_vu';
+        $query->orderBy($cotSapXep, $thuTu);
 
         return $this->apiListFromQuery($query, fn (DichVuLe $item) => $this->formatDichVuLe($item), $request);
     }
@@ -40,7 +66,8 @@ class DichVuLeController extends Controller
             'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
-            'phong_ban_id' => 'required|integer|exists:phong_ban,id',
+            'phong_ban_id' => 'required|array|min:1',
+            'phong_ban_id.*' => 'integer|exists:phong_ban,id',
         ]);
 
         $dichVu = DichVuLe::create([
@@ -50,11 +77,11 @@ class DichVuLeController extends Controller
             'trang_thai' => (int) ($validated['trang_thai'] ?? DichVuLe::TRANG_THAI_HIEN_THI),
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'gia_dich_vu' => $validated['gia_dich_vu'],
-            'phong_ban_id' => (int) $validated['phong_ban_id'],
+            'phong_ban_id' => $this->formatPhongBanId($validated['phong_ban_id']),
             'nguoi_tao_id' => $request->user()?->id,
         ]);
 
-        $dichVu->load(['nguoiTao', 'phongBan']);
+        $dichVu->load(['nguoiTao']);
 
         return $this->apiSuccess(
             ['item' => $this->formatDichVuLe($dichVu)],
@@ -72,7 +99,8 @@ class DichVuLeController extends Controller
             'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
-            'phong_ban_id' => 'required|integer|exists:phong_ban,id',
+            'phong_ban_id' => 'required|array|min:1',
+            'phong_ban_id.*' => 'integer|exists:phong_ban,id',
         ]);
 
         $dichVuLe->update([
@@ -82,10 +110,10 @@ class DichVuLeController extends Controller
             'trang_thai' => (int) ($validated['trang_thai'] ?? DichVuLe::TRANG_THAI_HIEN_THI),
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'gia_dich_vu' => $validated['gia_dich_vu'],
-            'phong_ban_id' => (int) $validated['phong_ban_id'],
+            'phong_ban_id' => $this->formatPhongBanId($validated['phong_ban_id']),
         ]);
 
-        $dichVuLe->load(['nguoiTao', 'phongBan']);
+        $dichVuLe->load(['nguoiTao']);
 
         return $this->apiSuccess(
             ['item' => $this->formatDichVuLe($dichVuLe)],
@@ -102,6 +130,18 @@ class DichVuLeController extends Controller
 
     private function formatDichVuLe(DichVuLe $dichVu): array
     {
+        $phongBans = PhongBan::query()->orderBy('ten_phong_ban')->get();
+        $phongBanIds = $dichVu->phongBanIdList($phongBans);
+        $phongBanItems = $phongBans
+            ->whereIn('id', $phongBanIds)
+            ->map(fn (PhongBan $pb) => [
+                'id' => (int) $pb->id,
+                'ten_phong_ban' => $pb->ten_phong_ban,
+                'ma_phong_ban' => $pb->ma_phong_ban,
+            ])
+            ->values()
+            ->all();
+
         return [
             'id' => (int) $dichVu->id,
             'ten_dich_vu' => $dichVu->ten_dich_vu,
@@ -111,12 +151,9 @@ class DichVuLeController extends Controller
             'trang_thai' => (int) $dichVu->trang_thai,
             'ghi_chu' => $dichVu->ghi_chu,
             'gia_dich_vu' => (float) $dichVu->gia_dich_vu,
-            'phong_ban_id' => $dichVu->phong_ban_id ? (int) $dichVu->phong_ban_id : null,
-            'phong_ban' => $dichVu->phongBan ? [
-                'id' => (int) $dichVu->phongBan->id,
-                'ten_phong_ban' => $dichVu->phongBan->ten_phong_ban,
-                'ma_phong_ban' => $dichVu->phongBan->ma_phong_ban,
-            ] : null,
+            'phong_ban_id' => $phongBanIds,
+            'phong_ban_text' => $dichVu->tenPhongBanHienThi($phongBans),
+            'phong_ban' => $phongBanItems,
             'nguoi_tao' => $dichVu->nguoiTao ? [
                 'id' => (int) $dichVu->nguoiTao->id,
                 'name' => $dichVu->nguoiTao->name,
@@ -124,5 +161,15 @@ class DichVuLeController extends Controller
             'created_at' => $dichVu->created_at?->format('d/m/Y H:i:s'),
             'updated_at' => $dichVu->updated_at?->format('d/m/Y H:i:s'),
         ];
+    }
+
+    /**
+     * @param  array<int|string>  $ids
+     */
+    private function formatPhongBanId(array $ids): ?string
+    {
+        $normalized = array_values(array_unique(array_filter(array_map('intval', $ids))));
+
+        return $normalized === [] ? null : implode(',', $normalized);
     }
 }

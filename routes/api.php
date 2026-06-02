@@ -19,15 +19,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes (prefix: /api)
 |--------------------------------------------------------------------------
-| Xác thực (dùng chung): POST /api/login, POST /api/logout, GET /api/me
-| Quản trị CRUD:         /api/admin/...  (cần Bearer token)
-| Người dùng (sau):      /api/...        (thêm khi cần)
-|
-| Danh sách (admin): ?start=0&limit=15&tu_khoa=...  →  data.items, data.total, data.start, data.limit
-|
-| Header:
+| API cho app/mobile/third-party: chỉ trả JSON
+| Header yêu cầu:
 |   Accept: application/json
-|   Authorization: Bearer {token}  (sau POST /api/login)
+|   Authorization: Bearer {token} (với route cần đăng nhập)
 */
 
 Route::get('/documents', [DocumentationController::class, 'index'])->name('api.documents');
@@ -39,7 +34,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me'])->name('api.me');
 
     Route::prefix('admin')->name('api.admin.')->group(function () {
-        // Hợp đồng cưới (khách hàng)
+        // Khách hàng (theo web.php)
+        Route::prefix('khach-hang')->name('khach-hang.')->group(function () {
+            Route::get('/danh-sach-hop-dong-cuoi', [HopDongCuoiController::class, 'index'])->name('danh-sach-hop-dong-cuoi');
+        });
+
+        // Alias cũ để không vỡ client API đang dùng
         Route::get('/hop-dong-cuoi', [HopDongCuoiController::class, 'index'])->name('hop-dong-cuoi.index');
 
         // Sản phẩm — Concept
@@ -56,7 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/dich-vu-le', [DichVuLeController::class, 'store'])->name('dich-vu-le.store');
             Route::put('/dich-vu-le/{dichVuLe}', [DichVuLeController::class, 'update'])->name('dich-vu-le.update');
             Route::delete('/dich-vu-le/{dichVuLe}', [DichVuLeController::class, 'destroy'])->name('dich-vu-le.destroy');
-
             Route::get('/nhom-dich-vu', [NhomDichVuController::class, 'index'])->name('nhom-dich-vu.index');
             Route::post('/nhom-dich-vu', [NhomDichVuController::class, 'store'])->name('nhom-dich-vu.store');
             Route::put('/nhom-dich-vu/{nhomDichVu}', [NhomDichVuController::class, 'update'])->name('nhom-dich-vu.update');
@@ -72,7 +71,9 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         // Tư vấn
-        Route::get('/tu-van/danh-sach', [TuVanController::class, 'index'])->name('tu-van.danh-sach');
+        Route::prefix('tu-van')->name('tu-van.')->group(function () {
+            Route::get('/danh-sach', [TuVanController::class, 'index'])->name('danh-sach');
+        });
 
         // Nhân sự
         Route::prefix('nhan-su')->name('nhan-su.')->group(function () {
@@ -95,6 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Hệ thống
         Route::prefix('he-thong')->name('he-thong.')->group(function () {
+            // web.php đang ẩn menu này, nhưng API vẫn giữ để phục vụ app/đối tác khi cần
             Route::get('/ngan-hang-thanh-toan', [NganHangThanhToanController::class, 'index'])->name('ngan-hang-thanh-toan.index');
             Route::post('/ngan-hang-thanh-toan', [NganHangThanhToanController::class, 'store'])->name('ngan-hang-thanh-toan.store');
             Route::put('/ngan-hang-thanh-toan/{nganHangThanhToan}', [NganHangThanhToanController::class, 'update'])->name('ngan-hang-thanh-toan.update');

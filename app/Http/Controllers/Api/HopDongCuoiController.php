@@ -20,6 +20,11 @@ class HopDongCuoiController extends Controller
     {
         $validated = $request->validate(array_merge($this->paginationRules(), $this->tuKhoaRules(), [
             'trang_thai_hop_dong' => 'nullable|string|max:50',
+            'ngay_cuoi_tu' => 'nullable|date',
+            'ngay_cuoi_den' => 'nullable|date',
+            'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(HopDongCuoi::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
         ]));
 
         $query = HopDongCuoi::query()
@@ -39,8 +44,7 @@ class HopDongCuoiController extends Controller
                 'thanhVienHopDongCuis.nhanVien.user',
                 'thanhVienHopDongCuis.nhanVien.phongBans',
             ])
-            ->where('trang_thai_hop_dong', '!=', 'nhap')
-            ->orderByDesc('id');
+            ->where('trang_thai_hop_dong', '!=', 'nhap');
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
         if ($tuKhoa !== '') {
@@ -58,6 +62,47 @@ class HopDongCuoiController extends Controller
         if ($trangThai !== '') {
             $query->where('trang_thai_hop_dong', $trangThai);
         }
+
+        $loaiHopDong = trim((string) ($validated['loai_hop_dong'] ?? ''));
+        if ($loaiHopDong !== '') {
+            $query->where('loai_hop_dong', $loaiHopDong);
+        }
+
+        $ngayTu = $validated['ngay_cuoi_tu'] ?? null;
+        $ngayDen = $validated['ngay_cuoi_den'] ?? null;
+        if ($ngayTu || $ngayDen) {
+            $from = $ngayTu ? \Carbon\Carbon::parse($ngayTu)->format('Y-m-d') : null;
+            $to = $ngayDen ? \Carbon\Carbon::parse($ngayDen)->format('Y-m-d') : null;
+            if ($from && $to && $from > $to) {
+                [$from, $to] = [$to, $from];
+            }
+            $query->whereRaw('COALESCE(ngay_cuoi_chinh_thuc, ngay_cuoi_du_kien) IS NOT NULL');
+            if ($from && $to) {
+                $query->whereRaw('DATE(COALESCE(ngay_cuoi_chinh_thuc, ngay_cuoi_du_kien)) BETWEEN ? AND ?', [$from, $to]);
+            } elseif ($from) {
+                $query->whereRaw('DATE(COALESCE(ngay_cuoi_chinh_thuc, ngay_cuoi_du_kien)) >= ?', [$from]);
+            } elseif ($to) {
+                $query->whereRaw('DATE(COALESCE(ngay_cuoi_chinh_thuc, ngay_cuoi_du_kien)) <= ?', [$to]);
+            }
+        }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? HopDongCuoi::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, HopDongCuoi::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = HopDongCuoi::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            HopDongCuoi::SAP_XEP_TEN_CO_DAU => $query->orderBy('ten_co_dau', $thuTu),
+            HopDongCuoi::SAP_XEP_TEN_CHU_RE => $query->orderBy('ten_chu_re', $thuTu),
+            HopDongCuoi::SAP_XEP_NGAY_CUOI => $query->orderByRaw('COALESCE(ngay_cuoi_chinh_thuc, ngay_cuoi_du_kien) '.$thuTu),
+            HopDongCuoi::SAP_XEP_NGAY_CHUP => $query->orderByRaw('COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien) '.$thuTu),
+            HopDongCuoi::SAP_XEP_TIEN_DO_THANH_TOAN => $query->orderByRaw('CASE WHEN tong_tien > 0 THEN tien_coc / tong_tien ELSE 0 END '.$thuTu),
+            HopDongCuoi::SAP_XEP_MA_HOP_DONG => $query->orderBy('ma_hop_dong', $thuTu),
+            HopDongCuoi::SAP_XEP_TONG_TIEN => $query->orderBy('tong_tien', $thuTu),
+            HopDongCuoi::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('id', $thuTu),
+        };
 
         ['start' => $start, 'limit' => $limit] = $this->paginationFromRequest($request);
         $total = (clone $query)->count();
