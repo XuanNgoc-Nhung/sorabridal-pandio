@@ -104,7 +104,18 @@ class LogUserAction
             return [];
         }
 
-        return $request->session()->getFlashBag()->peekAll();
+        $session = $request->session();
+        $keys = array_unique(array_merge(
+            $session->get('_flash.new', []),
+            $session->get('_flash.old', [])
+        ));
+
+        $flash = [];
+        foreach ($keys as $key) {
+            $flash[$key] = $session->get($key);
+        }
+
+        return $flash;
     }
 
     /**
@@ -175,6 +186,7 @@ class LogUserAction
         foreach ($data as $key => $value) {
             if (is_string($key) && in_array(strtolower($key), self::SENSITIVE_KEYS, true)) {
                 $data[$key] = self::MASKED_TEXT;
+
                 continue;
             }
 
