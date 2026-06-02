@@ -189,6 +189,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/vai-tro', [AdminHeThong::class, 'storeVaiTro'])->name('he-thong.vai-tro.store');
         Route::put('/vai-tro/{vaiTro}', [AdminHeThong::class, 'updateVaiTro'])->name('he-thong.vai-tro.update');
         Route::delete('/vai-tro/{vaiTro}', [AdminHeThong::class, 'destroyVaiTro'])->name('he-thong.vai-tro.destroy');
+        Route::get('/vai-tro/{vaiTro}/nguoi-dung', [AdminHeThong::class, 'nguoiDungVaiTro'])->name('he-thong.vai-tro.nguoi-dung');
         Route::get('/phong-ban', [AdminHeThong::class, 'phongBan'])->name('he-thong.phong-ban');
         Route::post('/phong-ban', [AdminHeThong::class, 'storePhongBan'])->name('he-thong.phong-ban.store');
         Route::put('/phong-ban/{phongBan}', [AdminHeThong::class, 'updatePhongBan'])->name('he-thong.phong-ban.update');

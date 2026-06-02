@@ -2,8 +2,13 @@
 
 @section('content')
 @php
+    $sapXepTheoMacDinh = \App\Models\VaiTro::SAP_XEP_MAC_DINH;
+    $sapXepTheo = request('sap_xep_theo', $sapXepTheoMacDinh);
     $thuTu = request('thu_tu', 'desc');
-    $hasFilter = request()->filled('search') || $thuTu !== 'desc';
+    $hasFilter = request()->filled('tu_khoa')
+        || request()->filled('search')
+        || $sapXepTheo !== $sapXepTheoMacDinh
+        || $thuTu !== 'desc';
     $oldPermissions = old('permissions', []);
     $isEditValidation = old('_method') === 'PUT';
 @endphp
@@ -25,14 +30,22 @@
         <div class="card-body">
         <form action="{{ route('admin.he-thong.vai-tro') }}" method="GET">
             <div class="row g-3 align-items-end admin-filter-row">
-                <div class="col-6 col-md-4 col-lg-3">
-                    <label class="form-label" for="search">Tên hoặc mã vai trò</label>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label" for="tu_khoa">Từ khóa</label>
                     <input type="text"
                            class="form-control"
-                           id="search"
-                           name="search"
-                           value="{{ request('search') }}"
-                           placeholder="Nhập tên hoặc mã vai trò...">
+                           id="tu_khoa"
+                           name="tu_khoa"
+                           value="{{ request('tu_khoa', request('search')) }}"
+                           placeholder="Nhập...">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label" for="sap_xep_theo">Sắp xếp theo</label>
+                    <select class="select2-admin form-select" id="sap_xep_theo" name="sap_xep_theo">
+                        @foreach(\App\Models\VaiTro::SAP_XEP_OPTIONS as $value => $label)
+                            <option value="{{ $value }}" @selected($sapXepTheo === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-6 col-md-3 col-lg-2">
                     <label class="form-label" for="thu_tu">Thứ tự</label>
@@ -74,6 +87,7 @@
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th>Mã vai trò</th>
                         <th>Tên vai trò</th>
+                        <th class="text-center">Số người dùng</th>
                         <th class="text-center">Số menu</th>
                         <th>Mô tả</th>
                         <th>Ghi chú</th>
@@ -86,6 +100,7 @@
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
                         <td>{{ $item->ma_vai_tro ?? '—' }}</td>
                         <td><span class="fw-medium">{{ $item->ten_vai_tro ?? '—' }}</span></td>
+                        <td class="text-center fw-medium">{{ number_format((int) ($item->users_count ?? 0)) }}</td>
                         <td class="text-center">{{ count($item->ds_menu ?? []) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->mo_ta ?? '—', 50) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->ghi_chu ?? '—', 40) }}</td>
@@ -95,6 +110,15 @@
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
                                 <div class="dropdown-menu">
+                                    <a class="dropdown-item btn-ds-nguoi-dung-vai-tro"
+                                       href="javascript:void(0);"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#modalDsNguoiDungVaiTro"
+                                       data-url="{{ route('admin.he-thong.vai-tro.nguoi-dung', $item) }}"
+                                       data-ten="{{ e($item->ten_vai_tro ?? '') }}"
+                                       data-ma="{{ e($item->ma_vai_tro ?? '') }}">
+                                        <i class="fa-solid fa-users me-2"></i> Xem DS người dùng
+                                    </a>
                                     <a class="dropdown-item btn-sua-vai-tro"
                                        href="javascript:void(0);"
                                        data-bs-toggle="modal"
@@ -121,7 +145,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">Chưa có dữ liệu vai trò.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">Chưa có dữ liệu vai trò.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -157,7 +181,7 @@
                     <div class="row g-3 vai-tro-form-fields">
                         <div class="col-6 col-lg-3">
                             <label class="form-label" for="them_ma_vai_tro">Mã vai trò <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="them_ma_vai_tro" name="ma_vai_tro" value="{{ old('ma_vai_tro') }}" placeholder="Ví dụ: VT001" required>
+                            <input type="text" class="form-control" id="them_ma_vai_tro" name="ma_vai_tro" value="{{ old('ma_vai_tro') }}" placeholder="Ví dụ: 1, 2, 3" inputmode="numeric" pattern="[0-9]+" title="Mã vai trò phải là số" required>
                         </div>
                         <div class="col-6 col-lg-3">
                             <label class="form-label" for="them_ten_vai_tro">Tên vai trò <span class="text-danger">*</span></label>
@@ -217,8 +241,9 @@
                 <div class="modal-body">
                     <div class="row g-3 vai-tro-form-fields">
                         <div class="col-6 col-lg-3">
-                            <label class="form-label" for="sua_ma_vai_tro">Mã vai trò <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="sua_ma_vai_tro" name="ma_vai_tro" value="{{ $isEditValidation ? old('ma_vai_tro') : '' }}" placeholder="Ví dụ: VT001" required>
+                            <label class="form-label" for="sua_ma_vai_tro">Mã vai trò</label>
+                            <input type="text" class="form-control bg-light" id="sua_ma_vai_tro" value="{{ $isEditValidation ? old('ma_vai_tro') : '' }}" placeholder="Ví dụ: 1, 2, 3" readonly tabindex="-1" aria-readonly="true" title="Mã vai trò không thể thay đổi khi chỉnh sửa">
+                            <div class="form-text">Không thể thay đổi sau khi tạo.</div>
                         </div>
                         <div class="col-6 col-lg-3">
                             <label class="form-label" for="sua_ten_vai_tro">Tên vai trò <span class="text-danger">*</span></label>
@@ -248,6 +273,59 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal danh sách người dùng theo vai trò --}}
+<div class="modal fade" id="modalDsNguoiDungVaiTro" tabindex="-1" aria-labelledby="modalDsNguoiDungVaiTroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-ds-nguoi-dung-vt">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDsNguoiDungVaiTroLabel">Danh sách người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dvvtLoading" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">Đang tải danh sách người dùng...</p>
+                </div>
+                <div id="dvvtError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="dvvtContent" class="d-none">
+                    <div class="table-responsive text-nowrap table-wrapper-bordered">
+                        <table class="table table-hover table-bordered mb-0" id="dvvtTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 40px;">STT</th>
+                                    <th style="width: 56px;">Ảnh</th>
+                                    <th>Họ tên</th>
+                                    <th>Giới tính</th>
+                                    <th>Ngày sinh</th>
+                                    <th>CCCD</th>
+                                    <th>Email</th>
+                                    <th>SĐT</th>
+                                    <th>Phòng ban</th>
+                                    <th>Vị trí</th>
+                                    <th>Ngày vào CT</th>
+                                    <th>Ngày ký HĐ</th>
+                                    <th>Lương CB</th>
+                                    <th>Lương TC</th>
+                                    <th>Ngân hàng</th>
+                                    <th>Chi nhánh</th>
+                                    <th>STK</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dvvtTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p id="dvvtEmpty" class="text-center text-muted py-4 d-none mb-0">Chưa có người dùng với vai trò này.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
@@ -285,7 +363,7 @@
 }
 .table-wrapper-bordered .table {
     border-collapse: collapse;
-    min-width: 700px;
+    min-width: 780px;
 }
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
@@ -307,6 +385,22 @@
 #modalThemVaiTro .menu-perm-label,
 #modalSuaVaiTro .menu-perm-label {
     cursor: pointer;
+}
+#modalDsNguoiDungVaiTro .modal-ds-nguoi-dung-vt {
+    max-width: 95vw;
+    width: 90%;
+}
+#modalDsNguoiDungVaiTro .table-wrapper-bordered .table {
+    min-width: 1400px;
+}
+#modalDsNguoiDungVaiTro .dvvt-avatar {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+}
+#modalDsNguoiDungVaiTro .dvvt-avatar-placeholder {
+    width: 36px;
+    height: 36px;
 }
 </style>
 @endpush
@@ -369,7 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var modalThem = document.getElementById('modalThemVaiTro');
     var modalSua = document.getElementById('modalSuaVaiTro');
-    [modalThem, modalSua].forEach(function(modal) {
+    var modalDsNd = document.getElementById('modalDsNguoiDungVaiTro');
+    [modalThem, modalSua, modalDsNd].forEach(function(modal) {
         if (modal) modal.addEventListener('hidden.bs.modal', cleanupModalBackdrop);
     });
 
@@ -422,6 +517,132 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalSua._setMenuPermissions(dsMenu);
             }
         });
+    }
+
+    // Modal danh sách người dùng theo vai trò
+    var dvvtLoading = document.getElementById('dvvtLoading');
+    var dvvtError = document.getElementById('dvvtError');
+    var dvvtContent = document.getElementById('dvvtContent');
+    var dvvtTableBody = document.getElementById('dvvtTableBody');
+    var dvvtEmpty = document.getElementById('dvvtEmpty');
+    var dvvtTable = document.getElementById('dvvtTable');
+
+    function dvvtEsc(s) {
+        return String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function dvvtCell(val) {
+        var v = val != null && String(val).trim() !== '' ? String(val) : '—';
+        return dvvtEsc(v);
+    }
+
+    function dvvtReset() {
+        if (dvvtError) {
+            dvvtError.classList.add('d-none');
+            dvvtError.textContent = '';
+        }
+        if (dvvtContent) dvvtContent.classList.add('d-none');
+        if (dvvtLoading) dvvtLoading.classList.add('d-none');
+        if (dvvtTableBody) dvvtTableBody.innerHTML = '';
+        if (dvvtEmpty) dvvtEmpty.classList.add('d-none');
+        if (dvvtTable) dvvtTable.classList.remove('d-none');
+    }
+
+    function dvvtRenderAvatar(row) {
+        var name = row.name || 'N';
+        var initial = dvvtEsc(name.charAt(0).toUpperCase());
+        if (row.hinh_anh) {
+            return '<img src="' + dvvtEsc(row.hinh_anh) + '" alt="" class="rounded-circle dvvt-avatar">';
+        }
+        return '<div class="avatar rounded-circle bg-label-primary d-flex align-items-center justify-content-center dvvt-avatar-placeholder">'
+            + '<span class="text-primary fw-medium">' + initial + '</span></div>';
+    }
+
+    function dvvtRenderRows(items) {
+        if (!dvvtTableBody) return;
+        dvvtTableBody.innerHTML = '';
+        if (!items || !items.length) {
+            if (dvvtTable) dvvtTable.classList.add('d-none');
+            if (dvvtEmpty) dvvtEmpty.classList.remove('d-none');
+            return;
+        }
+        if (dvvtTable) dvvtTable.classList.remove('d-none');
+        if (dvvtEmpty) dvvtEmpty.classList.add('d-none');
+        items.forEach(function(row, idx) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td class="text-center">' + (idx + 1) + '</td>' +
+                '<td>' + dvvtRenderAvatar(row) + '</td>' +
+                '<td><span class="fw-medium">' + dvvtCell(row.name) + '</span></td>' +
+                '<td>' + dvvtCell(row.gioi_tinh) + '</td>' +
+                '<td>' + dvvtCell(row.ngay_sinh) + '</td>' +
+                '<td>' + dvvtCell(row.cccd) + '</td>' +
+                '<td>' + dvvtCell(row.email) + '</td>' +
+                '<td>' + dvvtCell(row.phone) + '</td>' +
+                '<td>' + dvvtCell(row.phong_ban) + '</td>' +
+                '<td>' + dvvtCell(row.vi_tri_lam_viec) + '</td>' +
+                '<td>' + dvvtCell(row.ngay_vao_cong_ty) + '</td>' +
+                '<td>' + dvvtCell(row.ngay_ky_hop_dong) + '</td>' +
+                '<td class="text-end">' + dvvtCell(row.luong_co_ban) + '</td>' +
+                '<td class="text-end">' + dvvtCell(row.luong_tang_ca) + '</td>' +
+                '<td>' + dvvtCell(row.ngan_hang) + '</td>' +
+                '<td>' + dvvtCell(row.chi_nhanh) + '</td>' +
+                '<td>' + dvvtCell(row.so_tai_khoan) + '</td>';
+            dvvtTableBody.appendChild(tr);
+        });
+    }
+
+    if (modalDsNd) {
+        modalDsNd.addEventListener('show.bs.modal', function(e) {
+            var btn = e.relatedTarget;
+            if (!btn || !btn.classList.contains('btn-ds-nguoi-dung-vai-tro')) return;
+
+            var url = btn.getAttribute('data-url') || '';
+            var ten = btn.getAttribute('data-ten') || '';
+
+            dvvtReset();
+            var titleEl = document.getElementById('modalDsNguoiDungVaiTroLabel');
+            if (titleEl) titleEl.textContent = 'Danh sách người dùng — ' + (ten || 'Vai trò');
+
+            if (!url) {
+                if (dvvtError) {
+                    dvvtError.textContent = 'Không xác định được vai trò.';
+                    dvvtError.classList.remove('d-none');
+                }
+                return;
+            }
+
+            if (dvvtLoading) dvvtLoading.classList.remove('d-none');
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+                credentials: 'same-origin'
+            })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (dvvtLoading) dvvtLoading.classList.add('d-none');
+                    if (dvvtContent) dvvtContent.classList.remove('d-none');
+                    var items = data && Array.isArray(data.items) ? data.items : [];
+                    dvvtRenderRows(items);
+                })
+                .catch(function(err) {
+                    if (dvvtLoading) dvvtLoading.classList.add('d-none');
+                    if (dvvtError) {
+                        dvvtError.textContent = 'Không tải được danh sách người dùng. ' + (err && err.message ? err.message : '');
+                        dvvtError.classList.remove('d-none');
+                    }
+                });
+        });
+
+        modalDsNd.addEventListener('hidden.bs.modal', dvvtReset);
     }
 
     var modalXoa = document.getElementById('modalXacNhanXoaVaiTro');

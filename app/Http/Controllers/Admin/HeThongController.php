@@ -7,6 +7,7 @@ use App\Models\NganHangThanhToan;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\TaiLieu;
+use App\Models\User;
 use App\Models\VaiTro;
 use App\Support\AdminMenuPermissions;
 use App\Support\AdminPagination;
@@ -136,22 +137,42 @@ class HeThongController extends Controller
     public function vaiTro(Request $request)
     {
         $validated = $request->validate([
-            'search' => 'nullable|string|max:255',
+            'tu_khoa' => 'nullable|string|max:200',
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(VaiTro::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
         ]);
 
-        $query = VaiTro::query();
+        $query = VaiTro::query()->withCount('users');
 
-        $search = trim((string) ($validated['search'] ?? ''));
-        if ($search !== '') {
-            $like = '%'.addcslashes($search, '%_\\').'%';
+        $tuKhoa = trim((string) ($validated['tu_khoa'] ?? $request->query('search', '')));
+        if ($tuKhoa !== '') {
+            $like = '%'.addcslashes($tuKhoa, '%_\\').'%';
             $query->where(function ($qb) use ($like) {
                 $qb->where('ten_vai_tro', 'like', $like)
-                    ->orWhere('ma_vai_tro', 'like', $like);
+                    ->orWhere('mo_ta', 'like', $like)
+                    ->orWhere('ghi_chu', 'like', $like);
             });
         }
 
+        $sapXepTheo = $validated['sap_xep_theo'] ?? VaiTro::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, VaiTro::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = VaiTro::SAP_XEP_MAC_DINH;
+        }
         $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            VaiTro::SAP_XEP_MA => $query->orderBy('ma_vai_tro', $thuTu),
+            VaiTro::SAP_XEP_TEN => $query->orderBy('ten_vai_tro', $thuTu),
+            VaiTro::SAP_XEP_USERS => $query->orderBy('users_count', $thuTu),
+            VaiTro::SAP_XEP_MO_TA => $query
+                ->orderByRaw('mo_ta IS NULL')
+                ->orderBy('mo_ta', $thuTu),
+            VaiTro::SAP_XEP_GHI_CHU => $query
+                ->orderByRaw('ghi_chu IS NULL')
+                ->orderBy('ghi_chu', $thuTu),
+            VaiTro::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('id', $thuTu),
+        };
         $query->orderBy('id', $thuTu);
 
         $danhSach = $query->paginate(AdminPagination::perPage())->withQueryString();
@@ -163,7 +184,7 @@ class HeThongController extends Controller
     public function storeVaiTro(Request $request)
     {
         $request->validate([
-            'ma_vai_tro' => ['required', 'string', 'max:50', Rule::unique('vai_tro', 'ma_vai_tro')],
+            'ma_vai_tro' => ['required', 'string', 'max:50', 'regex:/^\d+$/', Rule::unique('vai_tro', 'ma_vai_tro')],
             'ten_vai_tro' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
             'ghi_chu' => 'nullable|string',
@@ -173,6 +194,7 @@ class HeThongController extends Controller
             'ma_vai_tro.required' => 'Vui lòng nhập mã vai trò.',
             'ma_vai_tro.string' => 'Mã vai trò phải là chuỗi ký tự.',
             'ma_vai_tro.max' => 'Mã vai trò không được quá 50 ký tự.',
+            'ma_vai_tro.regex' => 'Mã vai trò phải là số.',
             'ma_vai_tro.unique' => 'Mã vai trò đã tồn tại, vui lòng chọn mã khác.',
             'ten_vai_tro.required' => 'Vui lòng nhập tên vai trò.',
             'ten_vai_tro.string' => 'Tên vai trò phải là chuỗi ký tự.',
@@ -197,8 +219,9 @@ class HeThongController extends Controller
 
     public function updateVaiTro(Request $request, VaiTro $vaiTro)
     {
+        $request->merge(['ma_vai_tro' => $vaiTro->ma_vai_tro]);
+
         $request->validate([
-            'ma_vai_tro' => ['required', 'string', 'max:50', Rule::unique('vai_tro', 'ma_vai_tro')->ignore($vaiTro->id)],
             'ten_vai_tro' => 'required|string|max:255',
             'mo_ta' => 'nullable|string',
             'ghi_chu' => 'nullable|string',
@@ -206,10 +229,6 @@ class HeThongController extends Controller
             'permissions.*' => 'string|max:255',
             'vai_tro_id' => 'nullable|integer',
         ], [
-            'ma_vai_tro.required' => 'Vui lòng nhập mã vai trò.',
-            'ma_vai_tro.string' => 'Mã vai trò phải là chuỗi ký tự.',
-            'ma_vai_tro.max' => 'Mã vai trò không được quá 50 ký tự.',
-            'ma_vai_tro.unique' => 'Mã vai trò đã tồn tại, vui lòng chọn mã khác.',
             'ten_vai_tro.required' => 'Vui lòng nhập tên vai trò.',
             'ten_vai_tro.string' => 'Tên vai trò phải là chuỗi ký tự.',
             'ten_vai_tro.max' => 'Tên vai trò không được quá 255 ký tự.',
@@ -221,7 +240,6 @@ class HeThongController extends Controller
         ]);
 
         $vaiTro->update([
-            'ma_vai_tro' => $request->input('ma_vai_tro'),
             'ten_vai_tro' => $request->input('ten_vai_tro'),
             'mo_ta' => $request->input('mo_ta'),
             'ghi_chu' => $request->input('ghi_chu'),
@@ -236,9 +254,65 @@ class HeThongController extends Controller
 
     public function destroyVaiTro(VaiTro $vaiTro)
     {
+        if ($vaiTro->users()->exists()) {
+            return redirect()
+                ->route('admin.he-thong.vai-tro')
+                ->with('error', 'Đang có người dùng gắn với vai trò này. Không thể xoá.');
+        }
+
         $vaiTro->delete();
 
         return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã xóa vai trò.');
+    }
+
+    /**
+     * Danh sách người dùng theo vai trò (JSON cho modal).
+     */
+    public function nguoiDungVaiTro(VaiTro $vaiTro): JsonResponse
+    {
+        $items = $vaiTro->users()
+            ->with(['nhanVien.phongBans'])
+            ->orderBy('id')
+            ->get()
+            ->map(static function (User $user) use ($vaiTro) {
+                $nv = $user->nhanVien;
+                $phongBan = $nv?->phongBans
+                    ? $nv->phongBans->pluck('ten_phong_ban')->filter()->implode(', ')
+                    : '';
+
+                return [
+                    'id' => (int) $user->id,
+                    'hinh_anh' => $nv?->hinh_anh ? asset('storage/'.$nv->hinh_anh) : null,
+                    'name' => $user->name ?? '—',
+                    'email' => $user->email ?? '',
+                    'phone' => $user->phone ?? '',
+                    'role_label' => $vaiTro->ten_vai_tro ?? '—',
+                    'phong_ban' => $phongBan !== '' ? $phongBan : '—',
+                    'gioi_tinh' => $nv?->gioi_tinh ?? '',
+                    'ngay_sinh' => $nv?->ngay_sinh?->format('d/m/Y') ?? '',
+                    'cccd' => $nv?->cccd ?? '',
+                    'vi_tri_lam_viec' => $nv?->vi_tri_lam_viec ?? '',
+                    'ngay_vao_cong_ty' => $nv?->ngay_vao_cong_ty?->format('d/m/Y') ?? '',
+                    'ngay_ky_hop_dong' => $nv?->ngay_ky_hop_dong?->format('d/m/Y') ?? '',
+                    'luong_co_ban' => $nv && $nv->luong_co_ban !== null ? number_format($nv->luong_co_ban) : '',
+                    'luong_tang_ca' => $nv && $nv->luong_tang_ca !== null ? number_format($nv->luong_tang_ca) : '',
+                    'ngan_hang' => $nv?->ngan_hang ?? '',
+                    'chi_nhanh' => $nv?->chi_nhanh ?? '',
+                    'so_tai_khoan' => $nv?->so_tai_khoan ?? '',
+                ];
+            })
+            ->values()
+            ->all();
+
+        return response()->json([
+            'vai_tro' => [
+                'id' => (int) $vaiTro->id,
+                'ten_vai_tro' => $vaiTro->ten_vai_tro,
+                'ma_vai_tro' => $vaiTro->ma_vai_tro,
+            ],
+            'items' => $items,
+            'total' => count($items),
+        ]);
     }
 
     public function phongBan(Request $request)
