@@ -37,6 +37,10 @@ class LogUserAction
             return $response;
         }
 
+        if ('/'.$request->path() === '//') {
+            return $response;
+        }
+
         $user = $request->user();
 
         Log::info('User action', [

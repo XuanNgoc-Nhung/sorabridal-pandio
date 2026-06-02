@@ -12,9 +12,9 @@
 <div {{ $attributes->merge(['class' => 'd-flex flex-wrap align-items-center justify-content-between gap-3 mt-3']) }}>
     <div class="text-muted small">
         @if($paginator->total() > 0)
-        Đang hiển thị {{ $label }} từ <strong>{{ $paginator->firstItem() }}</strong> đến <strong>{{ $paginator->lastItem() }}</strong> của <strong>{{ $paginator->total() }}</strong> {{ $label }}.
+        Hiển thị: <strong>{{ $paginator->firstItem() }}</strong>–<strong>{{ $paginator->lastItem() }}</strong>. Tổng: <strong>{{ $paginator->total() }}</strong>.
         @else
-        Đang hiển thị <strong>0</strong> {{ $label }}.
+        Hiển thị <strong>0</strong>–<strong>0</strong> [<strong>0</strong>].
         @endif
     </div>
 
