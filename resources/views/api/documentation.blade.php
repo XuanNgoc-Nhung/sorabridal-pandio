@@ -3,7 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $docs['title'] }} — Tài liệu</title>
+    <title>Sorabridal — Tài liệu tích hợp API</title>
+    <meta name="description" content="Tài liệu API chính thức của {{ config('app.name') }}. Tra cứu endpoint, tham số, ví dụ request/response và hướng dẫn tích hợp nhanh.">
+    <meta name="keywords" content="api documentation, tài liệu api, wedding studio api, endpoint, tích hợp api">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="{{ request()->url() }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="vi_VN">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:title" content="Sorabridal — Tài liệu API">
+    <meta property="og:description" content="Tài liệu API chính thức của {{ config('app.name') }} với danh sách endpoint, mô tả tham số và ví dụ sử dụng.">
+    <meta property="og:url" content="{{ request()->url() }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sorabridal — Tài liệu API">
+    <meta name="twitter:description" content="Khám phá tài liệu API {{ config('app.name') }}: endpoint, xác thực, tham số và response mẫu.">
     <style>
         :root {
             --bg: #0f1419;
@@ -254,7 +269,7 @@
 <body>
 <div class="layout">
     <aside class="sidebar">
-        <h1>{{ $docs['title'] }}</h1>
+        <h1>Sorabridal Api</h1>
         <p class="meta">{{ $docs['total'] }} endpoint · Cập nhật {{ \Illuminate\Support\Carbon::parse($docs['generated_at'])->diffForHumans() }}</p>
 
         <div class="auth-panel">
