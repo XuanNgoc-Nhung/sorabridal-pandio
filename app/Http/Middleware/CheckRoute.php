@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
+use App\Models\VaiTro;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Chỉ kiểm tra ds_menu với các route thuộc sidebar phân quyền (config admin_menu).
  * Route admin khác (CRUD/API phụ không nằm trong menu đó) không bị chặn bởi ds_menu.
- * User có role = 1 (admin) được phép truy cập mọi route.
+ * User có ma_vai_tro admin (mặc định mã 1) được phép truy cập mọi route.
  */
 class CheckRoute
 {
@@ -93,7 +93,7 @@ class CheckRoute
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user && (int) $user->role === User::ROLE_ADMIN) {
+        if ($user && VaiTro::isAdminMa($user->role)) {
             return $next($request);
         }
 

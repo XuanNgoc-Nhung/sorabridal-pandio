@@ -8,6 +8,7 @@ use App\Models\HopDongCuoi;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\User;
+use App\Models\VaiTro;
 use App\Support\AdminPagination;
 use App\Support\HopDongCuoiLocTienDoFilter;
 use Carbon\Carbon;
@@ -367,7 +368,7 @@ class NhanSuController extends Controller
 
         $query = User::query()
             ->where('role', '!=', '99')
-            ->with(['nhanVien', 'nhanVien.phongBans']);
+            ->with(['nhanVien', 'nhanVien.phongBans', 'vaiTro']);
 
         $tuKhoa = trim((string) ($validated['tu_khoa'] ?? ''));
         if ($tuKhoa !== '') {
@@ -422,8 +423,10 @@ class NhanSuController extends Controller
         $danhSach = $query->paginate(AdminPagination::perPage())->withQueryString();
 
         $phongBans = PhongBan::orderBy('ten_phong_ban')->get();
+        $dsVaiTro = VaiTro::query()->orderBy('ma_vai_tro')->get(['id', 'ma_vai_tro', 'ten_vai_tro']);
+        $maVaiTroMacDinh = VaiTro::maMacDinhNhanVien();
 
-        return view('admin.nhan-su.danh-sach', compact('danhSach', 'phongBans'));
+        return view('admin.nhan-su.danh-sach', compact('danhSach', 'phongBans', 'dsVaiTro', 'maVaiTroMacDinh'));
     }
 
     public function store(Request $request)
@@ -437,7 +440,7 @@ class NhanSuController extends Controller
             'gioi_tinh' => 'nullable|string|in:nam,nu,khac',
             'ngay_sinh' => 'nullable|date',
             'cccd' => ['nullable', 'string', 'max:20', Rule::unique('nhan_vien', 'cccd')],
-            'role' => 'nullable|integer|in:1,2,3',
+            'role' => VaiTro::quyTacValidateRole(),
             'vi_tri_lam_viec' => 'nullable|string|max:255',
             'ngay_vao_cong_ty' => 'nullable|date',
             'ngay_ky_hop_dong' => 'nullable|date',
@@ -467,8 +470,7 @@ class NhanSuController extends Controller
             'cccd.string' => 'Số CCCD phải là chuỗi ký tự.',
             'cccd.max' => 'Số CCCD không được quá 20 ký tự.',
             'cccd.unique' => 'Số CCCD này đã được sử dụng.',
-            'role.integer' => 'Vai trò phải là số nguyên.',
-            'role.in' => 'Vai trò không hợp lệ.',
+            'role.exists' => 'Vai trò không hợp lệ.',
             'vi_tri_lam_viec.string' => 'Vị trí làm việc phải là chuỗi ký tự.',
             'vi_tri_lam_viec.max' => 'Vị trí làm việc không được quá 255 ký tự.',
             'ngay_vao_cong_ty.date' => 'Ngày vào công ty không đúng định dạng.',
@@ -485,7 +487,7 @@ class NhanSuController extends Controller
         ]);
 
         $validated['password'] = Hash::make($request->password);
-        $validated['role'] = $request->input('role', User::ROLE_NHAN_VIEN);
+        $validated['role'] = (int) $request->input('role', VaiTro::maMacDinhNhanVien());
 
         DB::beginTransaction();
         try {
@@ -533,7 +535,7 @@ class NhanSuController extends Controller
             'gioi_tinh' => 'nullable|string|in:nam,nu,khac',
             'ngay_sinh' => 'nullable|date',
             'cccd' => ['nullable', 'string', 'max:20'],
-            'role' => 'nullable|integer|in:1,2,3',
+            'role' => VaiTro::quyTacValidateRole(),
             'vi_tri_lam_viec' => 'nullable|string|max:255',
             'ngay_vao_cong_ty' => 'nullable|date',
             'ngay_ky_hop_dong' => 'nullable|date',
@@ -551,8 +553,7 @@ class NhanSuController extends Controller
             'ngay_sinh.date' => 'Ngày sinh không đúng định dạng.',
             'cccd.string' => 'Số CCCD phải là chuỗi ký tự.',
             'cccd.max' => 'Số CCCD không được quá 20 ký tự.',
-            'role.integer' => 'Vai trò phải là số nguyên.',
-            'role.in' => 'Vai trò không hợp lệ.',
+            'role.exists' => 'Vai trò không hợp lệ.',
             'vi_tri_lam_viec.string' => 'Vị trí làm việc phải là chuỗi ký tự.',
             'vi_tri_lam_viec.max' => 'Vị trí làm việc không được quá 255 ký tự.',
             'ngay_vao_cong_ty.date' => 'Ngày vào công ty không đúng định dạng.',
@@ -572,7 +573,7 @@ class NhanSuController extends Controller
         try {
             $user->update([
                 'name' => $validated['name'],
-                'role' => $request->input('role', $user->role),
+                'role' => (int) $request->input('role', $user->role),
             ]);
 
             $nhanVien = $user->nhanVien;
@@ -667,7 +668,7 @@ class NhanSuController extends Controller
     public function lichLamViec()
     {
         $user = auth()->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
         $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
 
@@ -721,7 +722,7 @@ class NhanSuController extends Controller
     public function lichLamViecData(Request $request)
     {
         $user = auth()->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
         $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
         if (! $isAdmin && ! $nhanVienId) {
@@ -800,7 +801,7 @@ class NhanSuController extends Controller
     public function lichLamViecDanhSach(Request $request)
     {
         $user = auth()->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
         $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
 
@@ -904,7 +905,7 @@ class NhanSuController extends Controller
     public function lichLamViecHopDongChuaPhanNgay(Request $request)
     {
         $user = $request->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         if (! $isAdmin) {
             abort(403);
         }
@@ -932,7 +933,7 @@ class NhanSuController extends Controller
     public function lichLamViecHopDongDieuPhoiData(Request $request, HopDongCuoi $hopDongCuoi)
     {
         $user = $request->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         if (! $isAdmin) {
             abort(403);
         }
@@ -994,7 +995,7 @@ class NhanSuController extends Controller
     public function lichLamViecTaoLich(Request $request)
     {
         $user = $request->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         if (! $isAdmin) {
             abort(403);
         }
@@ -1059,7 +1060,7 @@ class NhanSuController extends Controller
     public function lichLamViecChiTietNgay(Request $request)
     {
         $user = auth()->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
         $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
         if (! $isAdmin && ! $nhanVienId) {
@@ -1117,7 +1118,7 @@ class NhanSuController extends Controller
     public function congViecCuaToi(Request $request)
     {
         $user = auth()->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
 
         $search = $request->get('search');
@@ -1171,7 +1172,7 @@ class NhanSuController extends Controller
     public function capNhatLinkFileCongViec(Request $request, HopDongCuoi $hopDongCuoi)
     {
         $user = $request->user();
-        $isAdmin = (int) ($user?->role) === User::ROLE_ADMIN;
+        $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
 
         $validated = $request->validate([

@@ -20,11 +20,6 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    /** 1=admin, 2=nhân viên, 3=người dùng */
-    public const ROLE_ADMIN = 1;
-    public const ROLE_NHAN_VIEN = 2;
-    public const ROLE_NGUOI_DUNG = 3;
-
     public const SAP_XEP_ID = 'id';
 
     public const SAP_XEP_HO_TEN = 'ho_ten';
@@ -100,12 +95,16 @@ class User extends Authenticatable
      */
     public function getRoleLabelAttribute(): string
     {
-        return match ((int) $this->role) {
-            self::ROLE_ADMIN => 'Quản trị viên',
-            self::ROLE_NHAN_VIEN => 'Nhân viên',
-            self::ROLE_NGUOI_DUNG => 'Người dùng',
-            default => 'Người dùng',
-        };
+        if ($this->relationLoaded('vaiTro') && $this->vaiTro) {
+            return $this->vaiTro->ten_vai_tro;
+        }
+
+        return VaiTro::tenChoMa($this->role) ?? '—';
+    }
+
+    public function isAdmin(): bool
+    {
+        return VaiTro::isAdminMa($this->role);
     }
 
     /**

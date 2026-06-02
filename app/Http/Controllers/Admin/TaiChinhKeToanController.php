@@ -8,6 +8,7 @@ use App\Models\HopDongChoThueTrangPhuc;
 use App\Models\HopDongCuoi;
 use App\Models\PhieuThuChi;
 use App\Models\User;
+use App\Models\VaiTro;
 use App\Support\AdminCongNoList;
 use App\Support\AdminPagination;
 use Illuminate\Database\Eloquent\Builder;
@@ -279,7 +280,7 @@ class TaiChinhKeToanController extends Controller
 
         $nhanVien = User::query()
             ->where(function ($q) use ($userIdsCoChamCong) {
-                $q->where('role', User::ROLE_NHAN_VIEN)
+                $q->where('role', (int) VaiTro::MA_NHAN_VIEN)
                     ->orWhereIn('id', $userIdsCoChamCong);
             })
             ->orderBy('name')

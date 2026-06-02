@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\NhanVien;
 use App\Models\User;
+use App\Models\VaiTro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -74,7 +75,7 @@ class AuthController extends Controller
             'email' => $email,
             'phone' => $phone,
             'password' => $validated['password'],
-            'role' => User::ROLE_NHAN_VIEN,
+            'role' => (int) VaiTro::maMacDinhNhanVien(),
         ]);
 
         NhanVien::create([

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Models\NhanVien;
 use App\Models\User;
+use App\Models\VaiTro;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class NhanSuController extends Controller
 
         $query = User::query()
             ->where('role', '!=', '99')
-            ->with(['nhanVien', 'nhanVien.phongBans'])
+            ->with(['nhanVien', 'nhanVien.phongBans', 'vaiTro'])
             ->orderBy('id');
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
@@ -90,7 +91,7 @@ class NhanSuController extends Controller
             'gioi_tinh' => 'nullable|string|in:nam,nu,khac',
             'ngay_sinh' => 'nullable|date',
             'cccd' => ['nullable', 'string', 'max:20', Rule::unique('nhan_vien', 'cccd')],
-            'role' => 'nullable|integer|in:1,2,3',
+            'role' => VaiTro::quyTacValidateRole(),
             'vi_tri_lam_viec' => 'nullable|string|max:255',
             'ngay_vao_cong_ty' => 'nullable|date',
             'ngay_ky_hop_dong' => 'nullable|date',
@@ -108,7 +109,7 @@ class NhanSuController extends Controller
                 'email' => $validated['email'],
                 'phone' => $request->input('phone'),
                 'password' => Hash::make($validated['password']),
-                'role' => (int) $request->input('role', User::ROLE_NHAN_VIEN),
+                'role' => (int) $request->input('role', VaiTro::maMacDinhNhanVien()),
             ]);
 
             $hinhAnhPath = null;
@@ -152,7 +153,7 @@ class NhanSuController extends Controller
             'gioi_tinh' => 'nullable|string|in:nam,nu,khac',
             'ngay_sinh' => 'nullable|date',
             'cccd' => ['nullable', 'string', 'max:20'],
-            'role' => 'nullable|integer|in:1,2,3',
+            'role' => VaiTro::quyTacValidateRole(),
             'vi_tri_lam_viec' => 'nullable|string|max:255',
             'ngay_vao_cong_ty' => 'nullable|date',
             'ngay_ky_hop_dong' => 'nullable|date',

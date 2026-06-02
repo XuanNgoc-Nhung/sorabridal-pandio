@@ -128,12 +128,7 @@
                     @php
                         $nv = $item->nhanVien;
                         $hinhAnh = $nv?->hinh_anh;
-                        $vaiTroLabel = match((int)($item->role ?? 0)) {
-                            \App\Models\User::ROLE_ADMIN => 'Admin',
-                            \App\Models\User::ROLE_NHAN_VIEN => 'Nhân viên',
-                            \App\Models\User::ROLE_NGUOI_DUNG => 'Người dùng',
-                            default => '—',
-                        };
+                        $vaiTroLabel = $item->vaiTro?->ten_vai_tro ?? '—';
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -331,9 +326,9 @@
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="them_vai_tro">Vai trò</label>
                                     <select class="select2-admin form-select" id="them_vai_tro" name="role" data-placeholder="Chọn vai trò">
-                                        <option value="{{ \App\Models\User::ROLE_ADMIN }}" {{ old('role') == \App\Models\User::ROLE_ADMIN ? 'selected' : '' }}>Admin</option>
-                                        <option value="{{ \App\Models\User::ROLE_NHAN_VIEN }}" {{ old('role', \App\Models\User::ROLE_NHAN_VIEN) == \App\Models\User::ROLE_NHAN_VIEN ? 'selected' : '' }}>Nhân viên</option>
-                                        <option value="{{ \App\Models\User::ROLE_NGUOI_DUNG }}" {{ old('role') == \App\Models\User::ROLE_NGUOI_DUNG ? 'selected' : '' }}>Người dùng</option>
+                                        @foreach($dsVaiTro ?? [] as $vt)
+                                        <option value="{{ $vt->ma_vai_tro }}" {{ (string) old('role', $maVaiTroMacDinh ?? '') === (string) $vt->ma_vai_tro ? 'selected' : '' }}>{{ $vt->ten_vai_tro }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
@@ -451,9 +446,9 @@
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_vai_tro">Vai trò</label>
                                     <select class="select2-admin form-select" id="sua_vai_tro" name="role" data-placeholder="Chọn vai trò">
-                                        <option value="{{ \App\Models\User::ROLE_ADMIN }}">Admin</option>
-                                        <option value="{{ \App\Models\User::ROLE_NHAN_VIEN }}">Nhân viên</option>
-                                        <option value="{{ \App\Models\User::ROLE_NGUOI_DUNG }}">Người dùng</option>
+                                        @foreach($dsVaiTro ?? [] as $vt)
+                                        <option value="{{ $vt->ma_vai_tro }}">{{ $vt->ten_vai_tro }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">

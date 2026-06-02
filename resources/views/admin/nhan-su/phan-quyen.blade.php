@@ -60,12 +60,7 @@
                 <tbody class="table-border-bottom-0">
                     @forelse($danhSach ?? [] as $index => $item)
                     @php
-                        $vaiTroLabel = match((int)($item->role ?? 0)) {
-                            \App\Models\User::ROLE_ADMIN => 'Admin',
-                            \App\Models\User::ROLE_NHAN_VIEN => 'Nhân viên',
-                            \App\Models\User::ROLE_NGUOI_DUNG => 'Người dùng',
-                            default => '—',
-                        };
+                        $vaiTroLabel = $item->role_label ?? '—';
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
