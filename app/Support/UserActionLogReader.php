@@ -77,8 +77,9 @@ class UserActionLogReader
         int $page,
         ?int $userId = null,
         ?string $search = null,
+        ?int $responseStatus = null,
     ): LengthAwarePaginator {
-        $entries = collect(self::readEntries($date, $userId, $search));
+        $entries = collect(self::readEntries($date, $userId, $search, $responseStatus));
 
         $total = $entries->count();
         $items = $entries
@@ -98,7 +99,12 @@ class UserActionLogReader
     /**
      * @return list<array<string, mixed>>
      */
-    public static function readEntries(string $date, ?int $userId = null, ?string $search = null): array
+    public static function readEntries(
+        string $date,
+        ?int $userId = null,
+        ?string $search = null,
+        ?int $responseStatus = null,
+    ): array
     {
         $path = self::resolveLogPath($date);
         if ($path === null) {
@@ -118,6 +124,10 @@ class UserActionLogReader
             }
 
             if ($userId !== null && (int) ($parsed['user']['id'] ?? 0) !== $userId) {
+                continue;
+            }
+
+            if ($responseStatus !== null && (int) ($parsed['response_status'] ?? 0) !== $responseStatus) {
                 continue;
             }
 
@@ -159,11 +169,14 @@ class UserActionLogReader
         $request = is_array($payload['request'] ?? null) ? $payload['request'] : [];
         $response = is_array($payload['response'] ?? null) ? $payload['response'] : [];
 
+        $status = $response['status'] ?? null;
+
         return [
             'logged_at' => $matches[1],
             'user' => $user,
             'request' => $request,
             'response' => $response,
+            'response_status' => $status !== null ? (int) $status : null,
             'response_summary' => self::summarizeResponse($response),
         ];
     }
@@ -174,13 +187,12 @@ class UserActionLogReader
     private static function summarizeResponse(array $response): string
     {
         $type = (string) ($response['type'] ?? '');
-        $status = $response['status'] ?? null;
 
         return match ($type) {
-            'json' => 'JSON'.($status !== null ? ' '.$status : ''),
-            'redirect' => 'Chuyển hướng'.($status !== null ? ' '.$status : ''),
-            'view' => 'View: '.($response['view'] ?? '—').($status !== null ? ' ('.$status.')' : ''),
-            default => $type !== '' ? ucfirst($type).($status !== null ? ' '.$status : '') : '—',
+            'json' => 'JSON',
+            'redirect' => 'Chuyển hướng',
+            'view' => 'View: '.($response['view'] ?? '—'),
+            default => $type !== '' ? ucfirst($type) : '—',
         };
     }
 }

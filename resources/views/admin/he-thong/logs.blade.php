@@ -8,7 +8,9 @@
 
 @section('content')
 @php
-    $hasFilter = ($userId ?? null) !== null || filled($search ?? null);
+    $hasFilter = ($userId ?? null) !== null
+        || filled($search ?? null)
+        || ($responseStatus ?? null) !== null;
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))
@@ -51,6 +53,15 @@
                                min="1"
                                value="{{ $userId }}"
                                placeholder="VD: 1">
+                    </div>
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label" for="status">Mã phản hồi</label>
+                        <select class="select2-admin form-select" id="status" name="status">
+                            <option value="" @selected(($responseStatus ?? null) === null)>Tất cả</option>
+                            @foreach([200, 201, 204, 302, 400, 401, 403, 404, 422, 500, 503] as $code)
+                                <option value="{{ $code }}" @selected(($responseStatus ?? null) === $code)>{{ $code }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-12 col-md-4 col-lg-3">
                         <label class="form-label" for="search">Tìm trong log</label>
@@ -99,6 +110,7 @@
                             <th style="width: 12rem;">Người dùng</th>
                             <th style="width: 5rem;">Method</th>
                             <th>Đường dẫn</th>
+                            <th class="text-center" style="width: 4.5rem;">Mã</th>
                             <th style="width: 14rem;">Phản hồi</th>
                             <th class="text-center" style="width: 4rem;">Thao tác</th>
                         </tr>
@@ -109,6 +121,14 @@
                             $collapseId = 'log-detail-'.$danhSach->currentPage().'-'.$index;
                             $user = $entry['user'] ?? null;
                             $requestData = $entry['request'] ?? [];
+                            $httpStatus = $entry['response_status'] ?? null;
+                            $statusBadgeClass = match (true) {
+                                $httpStatus >= 200 && $httpStatus < 300 => 'bg-label-success',
+                                $httpStatus >= 300 && $httpStatus < 400 => 'bg-label-info',
+                                $httpStatus >= 400 && $httpStatus < 500 => 'bg-label-warning',
+                                $httpStatus >= 500 => 'bg-label-danger',
+                                default => 'bg-label-secondary',
+                            };
                             $logDetailJson = json_encode([
                                 'user' => $entry['user'] ?? null,
                                 'request' => $entry['request'] ?? [],
@@ -130,6 +150,13 @@
                                 <span class="badge bg-label-primary">{{ $requestData['method'] ?? '—' }}</span>
                             </td>
                             <td class="font-monospace small text-break">{{ $requestData['path'] ?? '—' }}</td>
+                            <td class="text-center">
+                                @if($httpStatus !== null)
+                                    <span class="badge {{ $statusBadgeClass }}">{{ $httpStatus }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td class="small">{{ $entry['response_summary'] ?? '—' }}</td>
                             <td class="text-center">
                                 <button type="button"
@@ -146,7 +173,7 @@
                             </td>
                         </tr>
                         <tr class="collapse" id="{{ $collapseId }}">
-                            <td colspan="7" class="bg-light">
+                            <td colspan="8" class="bg-light">
                                 <textarea class="form-control font-monospace small"
                                           rows="12"
                                           readonly
@@ -155,7 +182,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-muted">
                                 Không có bản ghi <strong>User action</strong> trong ngày này.
                             </td>
                         </tr>
