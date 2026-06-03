@@ -42,7 +42,8 @@
 (function () {
   try {
     var template = document.documentElement.getAttribute('data-template');
-    if (localStorage.getItem('templateCustomizer-' + template + '--MenuSpread') === 'true') {
+    var menuSpread = localStorage.getItem('templateCustomizer-' + template + '--MenuSpread');
+    if (menuSpread === null || menuSpread === '' || menuSpread === 'true') {
       document.documentElement.classList.add('layout-menu-spread');
     }
   } catch (e) {}

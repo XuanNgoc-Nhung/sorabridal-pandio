@@ -13,9 +13,13 @@ window.AdminMenuSpread = (function () {
 
   function isEnabled() {
     try {
-      return localStorage.getItem(storageKey()) === 'true';
+      var stored = localStorage.getItem(storageKey());
+      if (stored === null || stored === '') {
+        return true;
+      }
+      return stored === 'true';
     } catch (e) {
-      return false;
+      return true;
     }
   }
 
