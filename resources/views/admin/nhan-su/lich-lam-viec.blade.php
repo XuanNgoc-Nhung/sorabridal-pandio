@@ -68,12 +68,20 @@
                 </div>
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
-                        <div class="text-muted small mb-2">Chú thích tiến độ hợp đồng</div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chọn màu nền từng trạng thái)</span></div>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-muted ws-lich-legend__reset" id="wsLichLegendResetColors">Khôi phục màu mặc định</button>
+                        </div>
                         <div class="d-flex flex-wrap gap-3">
                             @foreach($tienDoLegend as $key => $item)
                                 @if(!empty($item['label']))
                                     <div class="ws-lich-legend__item">
-                                        <span class="ws-lich-legend__swatch ws-day-contract--{{ $key }}"></span>
+                                        <input type="color"
+                                               class="ws-lich-legend__swatch ws-day-contract--{{ $key }}"
+                                               data-tien-do="{{ $key }}"
+                                               value="{{ $item['bg'] ?? '#f8f7ff' }}"
+                                               title="Màu nền — {{ $item['label'] }}"
+                                               aria-label="Màu nền {{ $item['label'] }}">
                                         <span class="ws-lich-legend__label">{{ $item['label'] }}</span>
                                     </div>
                                 @endif
@@ -277,6 +285,13 @@
             'tre_chup' => 'bg-label-warning',
             'tre_edit' => 'bg-label-warning',
         ];
+        $tienDoColorDefaults = [];
+        foreach (is_array($tienDoLegend ?? null) ? $tienDoLegend : [] as $tdKey => $tdItem) {
+            $tienDoColorDefaults[$tdKey] = [
+                'bg' => $tdItem['bg'] ?? '',
+                'border' => $tdItem['border'] ?? '',
+            ];
+        }
     @endphp
     <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/fullcalendar/fullcalendar.js') }}"></script>
@@ -394,6 +409,225 @@
             }
 
             var tienDoKeys = @json(array_keys(is_array($tienDoLegend ?? null) ? $tienDoLegend : []));
+            var tienDoColorDefaults = @json($tienDoColorDefaults);
+            var TIEN_DO_COLORS_LS = 'ws-lich-lam-viec-tien-do-colors';
+
+            function normalizeHexColor(value) {
+                var s = String(value || '').trim();
+                if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) return '';
+                if (s.length === 4) {
+                    return '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+                }
+                return s.toLowerCase();
+            }
+
+            function isDarkBsTheme() {
+                return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            }
+
+            function tienDoCssVarName(key, role) {
+                return '--ws-td-' + key + '-' + role;
+            }
+
+            function readTienDoColorsFromStorage() {
+                try {
+                    var raw = localStorage.getItem(TIEN_DO_COLORS_LS);
+                    if (!raw) return null;
+                    var parsed = JSON.parse(raw);
+                    return (parsed && typeof parsed === 'object') ? parsed : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function writeTienDoColorsToStorage(colorsByKey) {
+                try {
+                    localStorage.setItem(TIEN_DO_COLORS_LS, JSON.stringify(colorsByKey));
+                } catch (e) { /* ignore */ }
+            }
+
+            function resolveTienDoColors(key) {
+                var defaults = (tienDoColorDefaults && tienDoColorDefaults[key]) ? tienDoColorDefaults[key] : {};
+                var stored = readTienDoColorsFromStorage();
+                var custom = (stored && stored[key]) ? stored[key] : {};
+                return {
+                    bg: normalizeHexColor(custom.bg) || normalizeHexColor(defaults.bg) || '',
+                    border: normalizeHexColor(custom.border) || normalizeHexColor(defaults.border) || '',
+                };
+            }
+
+            function getAllTienDoColorsResolved() {
+                var out = {};
+                tienDoKeys.forEach(function (key) {
+                    out[key] = resolveTienDoColors(key);
+                });
+                return out;
+            }
+
+            function getTienDoColorScopes() {
+                var scopes = [];
+                if (root) scopes.push(root);
+                if (document.documentElement) scopes.push(document.documentElement);
+                return scopes;
+            }
+
+            function paintTienDoContractElement(el, key) {
+                if (!el || !key) return;
+                var colors = resolveTienDoColors(key);
+                var dark = isDarkBsTheme();
+                if (colors.border) {
+                    el.style.setProperty('border-left-color', colors.border);
+                } else {
+                    el.style.removeProperty('border-left-color');
+                }
+                if (dark) {
+                    el.style.removeProperty('background');
+                } else if (colors.bg) {
+                    el.style.setProperty('background', colors.bg);
+                } else {
+                    el.style.removeProperty('background');
+                }
+            }
+
+            function clearTienDoContractElementPaint(el) {
+                if (!el) return;
+                el.style.removeProperty('background');
+                el.style.removeProperty('border-left-color');
+            }
+
+            function syncTienDoDynamicStylesheet() {
+                var styleEl = document.getElementById('wsLichTienDoCustomColors');
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'wsLichTienDoCustomColors';
+                    document.head.appendChild(styleEl);
+                }
+                var dark = isDarkBsTheme();
+                var rules = [];
+                tienDoKeys.forEach(function (key) {
+                    var colors = resolveTienDoColors(key);
+                    if (!colors.border && !colors.bg) return;
+                    var selector = [
+                        '#ws-lich-lam-viec .admin-work-calendar .ws-day-contract.ws-day-contract--' + key,
+                        '#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key
+                    ].join(',');
+                    var decl = [];
+                    if (colors.border) {
+                        decl.push('border-left-color:' + colors.border + ' !important');
+                    }
+                    if (dark && colors.border) {
+                        decl.push('background:color-mix(in srgb, var(--bs-card-bg) 88%, ' + colors.border + ' 12%) !important');
+                    } else if (colors.bg) {
+                        decl.push('background:' + colors.bg + ' !important');
+                    }
+                    if (decl.length) {
+                        rules.push(selector + '{' + decl.join(';') + '}');
+                    }
+                });
+                styleEl.textContent = rules.join('\n');
+            }
+
+            function paintAllTienDoContractElements() {
+                if (!root) return;
+                tienDoKeys.forEach(function (key) {
+                    root.querySelectorAll('.ws-day-contract.ws-day-contract--' + key).forEach(function (el) {
+                        paintTienDoContractElement(el, key);
+                    });
+                });
+            }
+
+            function applyTienDoColors() {
+                var scopes = getTienDoColorScopes();
+                if (!scopes.length) return;
+                tienDoKeys.forEach(function (key) {
+                    var colors = resolveTienDoColors(key);
+                    var bgVar = tienDoCssVarName(key, 'bg');
+                    var borderVar = tienDoCssVarName(key, 'border');
+                    scopes.forEach(function (scope) {
+                        if (colors.border) {
+                            scope.style.setProperty(borderVar, colors.border);
+                        } else {
+                            scope.style.removeProperty(borderVar);
+                        }
+                        if (colors.bg) {
+                            scope.style.setProperty(bgVar, colors.bg);
+                        } else {
+                            scope.style.removeProperty(bgVar);
+                        }
+                    });
+                });
+                syncTienDoDynamicStylesheet();
+                paintAllTienDoContractElements();
+            }
+
+            function syncTienDoColorInputs() {
+                root.querySelectorAll('input.ws-lich-legend__swatch[data-tien-do]').forEach(function (input) {
+                    var key = String(input.getAttribute('data-tien-do') || '').trim();
+                    if (!key) return;
+                    var colors = resolveTienDoColors(key);
+                    if (colors.bg) input.value = colors.bg;
+                });
+            }
+
+            function saveTienDoBgColor(key, value) {
+                var hex = normalizeHexColor(value);
+                if (!hex) return;
+                var stored = readTienDoColorsFromStorage() || {};
+                if (!stored[key] || typeof stored[key] !== 'object') stored[key] = {};
+                stored[key].bg = hex;
+                writeTienDoColorsToStorage(stored);
+                applyTienDoColors();
+            }
+
+            function resetTienDoColors() {
+                try {
+                    localStorage.removeItem(TIEN_DO_COLORS_LS);
+                } catch (e) { /* ignore */ }
+                getTienDoColorScopes().forEach(function (scope) {
+                    tienDoKeys.forEach(function (key) {
+                        scope.style.removeProperty(tienDoCssVarName(key, 'bg'));
+                        scope.style.removeProperty(tienDoCssVarName(key, 'border'));
+                    });
+                });
+                var styleEl = document.getElementById('wsLichTienDoCustomColors');
+                if (styleEl) styleEl.textContent = '';
+                if (root) {
+                    root.querySelectorAll('.ws-day-contract[class*="ws-day-contract--"]').forEach(clearTienDoContractElementPaint);
+                }
+                syncTienDoColorInputs();
+                applyTienDoColors();
+            }
+
+            function initTienDoColorCustomization() {
+                applyTienDoColors();
+                syncTienDoColorInputs();
+
+                function onLegendSwatchColorChange(input) {
+                    var key = String(input.getAttribute('data-tien-do') || '').trim();
+                    if (!key) return;
+                    saveTienDoBgColor(key, input.value);
+                }
+
+                root.querySelectorAll('input.ws-lich-legend__swatch[data-tien-do]').forEach(function (input) {
+                    input.addEventListener('input', function () { onLegendSwatchColorChange(input); });
+                    input.addEventListener('change', function () { onLegendSwatchColorChange(input); });
+                });
+
+                var resetBtn = document.getElementById('wsLichLegendResetColors');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', resetTienDoColors);
+                }
+
+                var themeObserver = new MutationObserver(function () {
+                    applyTienDoColors();
+                });
+                themeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-bs-theme'],
+                });
+            }
+
+            initTienDoColorCustomization();
 
             function contractTienDoKey(contractItem) {
                 var key = String(contractItem && contractItem.tien_do || '').trim();
@@ -494,6 +728,7 @@
                     row.appendChild(meta);
                     row.appendChild(summary);
                     appendPaymentBadge(row, item);
+                    paintTienDoContractElement(row, contractTienDoKey(item));
                     wrap.appendChild(row);
                 });
 
@@ -622,6 +857,7 @@
                     root.classList.add('is-mobile-month');
                     mobileMonthEl.classList.remove('d-none');
                     renderMobileMonthTable();
+                    applyTienDoColors();
                 } else {
                     hideMobileMonthLayout();
                     if (wasMobileMonth) {
@@ -998,7 +1234,10 @@
                         .then(function (r) { return r.json(); })
                         .then(function (data) {
                             successCallback(normalizeCalendarEvents(data));
-                            requestAnimationFrame(syncMobileMonthLayout);
+                            requestAnimationFrame(function () {
+                                syncMobileMonthLayout();
+                                applyTienDoColors();
+                            });
                         })
                         .catch(function (e) { failureCallback(e); });
                 },

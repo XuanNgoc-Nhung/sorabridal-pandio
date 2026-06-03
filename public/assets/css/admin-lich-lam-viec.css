@@ -81,59 +81,59 @@
     width: 1rem;
     height: 1rem;
 }
-.admin-work-calendar .ws-day-contract--phan_chup,
-.ws-lich-legend__swatch.ws-day-contract--phan_chup {
-    background: #ffe4e8;
-    border-left-color: #e53e3e;
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup {
+    background: var(--ws-td-phan_chup-bg, #ffe4e8);
+    border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
-.admin-work-calendar .ws-day-contract--phan_make,
-.ws-lich-legend__swatch.ws-day-contract--phan_make {
-    background: #ede9fe;
-    border-left-color: #7c3aed;
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make {
+    background: var(--ws-td-phan_make-bg, #ede9fe);
+    border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
-.admin-work-calendar .ws-day-contract--phan_edit,
-.ws-lich-legend__swatch.ws-day-contract--phan_edit {
-    background: #dbeafe;
-    border-left-color: #2563eb;
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit {
+    background: var(--ws-td-phan_edit-bg, #dbeafe);
+    border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
-.admin-work-calendar .ws-day-contract--up_link_demo,
-.ws-lich-legend__swatch.ws-day-contract--up_link_demo {
-    background: #d1fae5;
-    border-left-color: #059669;
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo {
+    background: var(--ws-td-up_link_demo-bg, #d1fae5);
+    border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
-.admin-work-calendar .ws-day-contract--up_link_in,
-.ws-lich-legend__swatch.ws-day-contract--up_link_in {
-    background: #fef3c7;
-    border-left-color: #d97706;
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in {
+    background: var(--ws-td-up_link_in-bg, #fef3c7);
+    border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract {
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
     border-left-color: #7367f0;
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_chup,
-[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_chup {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, #e53e3e 12%);
-    border-left-color: #e53e3e;
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_chup-border, #e53e3e) 12%);
+    border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_make,
-[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_make {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, #7c3aed 12%);
-    border-left-color: #7c3aed;
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_make-border, #7c3aed) 12%);
+    border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_edit,
-[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_edit {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, #2563eb 12%);
-    border-left-color: #2563eb;
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_edit-border, #2563eb) 12%);
+    border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--up_link_demo,
-[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--up_link_demo {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, #059669 12%);
-    border-left-color: #059669;
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-up_link_demo-border, #059669) 12%);
+    border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
-[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--up_link_in,
-[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--up_link_in {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, #d97706 12%);
-    border-left-color: #d97706;
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-up_link_in-border, #d97706) 12%);
+    border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
 .ws-lich-legend__item {
     display: inline-flex;
@@ -142,14 +142,41 @@
     font-size: .8125rem;
     color: var(--admin-text-body);
 }
-.ws-lich-legend__swatch {
+input.ws-lich-legend__swatch {
+    -webkit-appearance: none;
+    appearance: none;
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 30px;
+    height: 22px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid color-mix(in srgb, var(--admin-text-body) 18%, transparent);
     border-radius: 4px;
-    border-left: 3px solid #7367f0;
+    cursor: pointer;
     flex-shrink: 0;
+    background: transparent;
+    vertical-align: middle;
 }
+input.ws-lich-legend__swatch::-webkit-color-swatch-wrapper {
+    padding: 2px 2px 2px 5px;
+}
+input.ws-lich-legend__swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+input.ws-lich-legend__swatch::-moz-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+input.ws-lich-legend__swatch:focus {
+    outline: 2px solid color-mix(in srgb, #7367f0 45%, transparent);
+    outline-offset: 1px;
+}
+/* input.ws-lich-legend__swatch.ws-day-contract--phan_chup { border-left: 3px solid var(--ws-td-phan_chup-border, #e53e3e); }
+input.ws-lich-legend__swatch.ws-day-contract--phan_make { border-left: 3px solid var(--ws-td-phan_make-border, #7c3aed); }
+input.ws-lich-legend__swatch.ws-day-contract--phan_edit { border-left: 3px solid var(--ws-td-phan_edit-border, #2563eb); }
+input.ws-lich-legend__swatch.ws-day-contract--up_link_demo { border-left: 3px solid var(--ws-td-up_link_demo-border, #059669); }
+input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px solid var(--ws-td-up_link_in-border, #d97706); } */
 .ws-lich-legend__label {
     line-height: 1.2;
 }
@@ -162,11 +189,11 @@
     border-left-width: 4px !important;
     padding-right: 3.25rem !important;
 }
-.ws-work-detail-card--phan_chup { border-left-color: #e53e3e !important; }
-.ws-work-detail-card--phan_make { border-left-color: #7c3aed !important; }
-.ws-work-detail-card--phan_edit { border-left-color: #2563eb !important; }
-.ws-work-detail-card--up_link_demo { border-left-color: #059669 !important; }
-.ws-work-detail-card--up_link_in { border-left-color: #d97706 !important; }
+.ws-work-detail-card--phan_chup { border-left-color: var(--ws-td-phan_chup-border, #e53e3e) !important; }
+.ws-work-detail-card--phan_make { border-left-color: var(--ws-td-phan_make-border, #7c3aed) !important; }
+.ws-work-detail-card--phan_edit { border-left-color: var(--ws-td-phan_edit-border, #2563eb) !important; }
+.ws-work-detail-card--up_link_demo { border-left-color: var(--ws-td-up_link_demo-border, #059669) !important; }
+.ws-work-detail-card--up_link_in { border-left-color: var(--ws-td-up_link_in-border, #d97706) !important; }
 .admin-work-calendar .ws-day-contract__meta {
     font-weight: 700;
     color: var(--admin-text-secondary);
@@ -536,4 +563,7 @@
 .ws-lich-mobile-month-table tr.is-other-month .ws-lich-mobile-month__ngay {
     color: var(--admin-text-muted);
     font-weight: 500;
+}
+.fc .fc-view-harness{
+    min-block-size: auto !important;
 }
