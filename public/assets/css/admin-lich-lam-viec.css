@@ -87,27 +87,27 @@
 }
 #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
 #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup {
-    background: var(--ws-td-phan_chup-bg, #ffe4e8);
+    background: #ffe4e8;
     border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
 #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
 #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make {
-    background: var(--ws-td-phan_make-bg, #ede9fe);
+    background: #ede9fe;
     border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
 #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
 #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit {
-    background: var(--ws-td-phan_edit-bg, #dbeafe);
+    background: #dbeafe;
     border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
 #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
 #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo {
-    background: var(--ws-td-up_link_demo-bg, #d1fae5);
+    background: #d1fae5;
     border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
 #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
 #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in {
-    background: var(--ws-td-up_link_in-bg, #fef3c7);
+    background: #fef3c7;
     border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
@@ -116,27 +116,27 @@
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
 [data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_chup-border, #e53e3e) 12%);
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #e53e3e 12%);
     border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
 [data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_make-border, #7c3aed) 12%);
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #7c3aed 12%);
     border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
 [data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-phan_edit-border, #2563eb) 12%);
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #2563eb 12%);
     border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
 [data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-up_link_demo-border, #059669) 12%);
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #059669 12%);
     border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
 [data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
 [data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in {
-    background: color-mix(in srgb, var(--bs-card-bg) 88%, var(--ws-td-up_link_in-border, #d97706) 12%);
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #d97706 12%);
     border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
 .ws-lich-legend__item {

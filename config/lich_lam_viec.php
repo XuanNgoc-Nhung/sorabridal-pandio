@@ -11,6 +11,7 @@ return [
 
     /*
     | Màu thẻ hợp đồng trên lịch làm việc (theo tiến độ cao nhất đạt được).
+    | bg: màu nền cố định trên lịch. border: màu viền trái mặc định (có thể tùy chỉnh trên UI chú thích).
     */
     'tien_do' => [
         'phan_chup' => [

@@ -69,7 +69,7 @@
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chọn màu viền trái từng trạng thái)</span></div>
+                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chỉ đổi màu viền trái trên lịch; nền theo config)</span></div>
                             <button type="button" class="btn btn-link btn-sm p-0 text-muted ws-lich-legend__reset" id="wsLichLegendResetColors">Khôi phục màu mặc định</button>
                         </div>
                         <div class="d-flex flex-wrap gap-3">
@@ -446,22 +446,19 @@
                 } catch (e) { /* ignore */ }
             }
 
-            function resolveTienDoColors(key) {
+            function tienDoDefaultBorder(key) {
                 var defaults = (tienDoColorDefaults && tienDoColorDefaults[key]) ? tienDoColorDefaults[key] : {};
-                var stored = readTienDoColorsFromStorage();
-                var custom = (stored && stored[key]) ? stored[key] : {};
-                return {
-                    bg: normalizeHexColor(custom.bg) || normalizeHexColor(defaults.bg) || '',
-                    border: normalizeHexColor(custom.border) || normalizeHexColor(defaults.border) || '',
-                };
+                return normalizeHexColor(defaults.border) || '';
             }
 
-            function getAllTienDoColorsResolved() {
-                var out = {};
-                tienDoKeys.forEach(function (key) {
-                    out[key] = resolveTienDoColors(key);
-                });
-                return out;
+            function getCustomTienDoBorder(key) {
+                var stored = readTienDoColorsFromStorage();
+                if (!stored || !stored[key] || typeof stored[key] !== 'object') return '';
+                return normalizeHexColor(stored[key].border) || '';
+            }
+
+            function resolveTienDoBorderForLegend(key) {
+                return getCustomTienDoBorder(key) || tienDoDefaultBorder(key);
             }
 
             function getTienDoColorScopes() {
@@ -473,25 +470,17 @@
 
             function paintTienDoContractElement(el, key) {
                 if (!el || !key) return;
-                var colors = resolveTienDoColors(key);
-                var dark = isDarkBsTheme();
-                if (colors.border) {
-                    el.style.setProperty('border-left-color', colors.border);
+                var customBorder = getCustomTienDoBorder(key);
+                el.style.removeProperty('background');
+                if (customBorder) {
+                    el.style.setProperty('border-left-color', customBorder);
                 } else {
                     el.style.removeProperty('border-left-color');
-                }
-                if (dark) {
-                    el.style.removeProperty('background');
-                } else if (colors.bg) {
-                    el.style.setProperty('background', colors.bg);
-                } else {
-                    el.style.removeProperty('background');
                 }
             }
 
             function clearTienDoContractElementPaint(el) {
                 if (!el) return;
-                el.style.removeProperty('background');
                 el.style.removeProperty('border-left-color');
             }
 
@@ -502,27 +491,15 @@
                     styleEl.id = 'wsLichTienDoCustomColors';
                     document.head.appendChild(styleEl);
                 }
-                var dark = isDarkBsTheme();
                 var rules = [];
                 tienDoKeys.forEach(function (key) {
-                    var colors = resolveTienDoColors(key);
-                    if (!colors.border && !colors.bg) return;
+                    var customBorder = getCustomTienDoBorder(key);
+                    if (!customBorder) return;
                     var selector = [
                         '#ws-lich-lam-viec .admin-work-calendar .ws-day-contract.ws-day-contract--' + key,
                         '#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key
                     ].join(',');
-                    var decl = [];
-                    if (colors.border) {
-                        decl.push('border-left-color:' + colors.border + ' !important');
-                    }
-                    if (dark && colors.border) {
-                        decl.push('background:color-mix(in srgb, var(--bs-card-bg) 88%, ' + colors.border + ' 12%) !important');
-                    } else if (colors.bg) {
-                        decl.push('background:' + colors.bg + ' !important');
-                    }
-                    if (decl.length) {
-                        rules.push(selector + '{' + decl.join(';') + '}');
-                    }
+                    rules.push(selector + '{border-left-color:' + customBorder + ' !important}');
                 });
                 styleEl.textContent = rules.join('\n');
             }
@@ -540,19 +517,15 @@
                 var scopes = getTienDoColorScopes();
                 if (!scopes.length) return;
                 tienDoKeys.forEach(function (key) {
-                    var colors = resolveTienDoColors(key);
-                    var bgVar = tienDoCssVarName(key, 'bg');
+                    var customBorder = getCustomTienDoBorder(key);
                     var borderVar = tienDoCssVarName(key, 'border');
+                    var bgVar = tienDoCssVarName(key, 'bg');
                     scopes.forEach(function (scope) {
-                        if (colors.border) {
-                            scope.style.setProperty(borderVar, colors.border);
+                        scope.style.removeProperty(bgVar);
+                        if (customBorder) {
+                            scope.style.setProperty(borderVar, customBorder);
                         } else {
                             scope.style.removeProperty(borderVar);
-                        }
-                        if (colors.bg) {
-                            scope.style.setProperty(bgVar, colors.bg);
-                        } else {
-                            scope.style.removeProperty(bgVar);
                         }
                     });
                 });
@@ -564,8 +537,8 @@
                 root.querySelectorAll('input.ws-lich-legend__swatch[data-tien-do]').forEach(function (input) {
                     var key = String(input.getAttribute('data-tien-do') || '').trim();
                     if (!key) return;
-                    var colors = resolveTienDoColors(key);
-                    if (colors.border) input.value = colors.border;
+                    var border = resolveTienDoBorderForLegend(key);
+                    if (border) input.value = border;
                 });
             }
 
@@ -575,6 +548,7 @@
                 var stored = readTienDoColorsFromStorage() || {};
                 if (!stored[key] || typeof stored[key] !== 'object') stored[key] = {};
                 stored[key].border = hex;
+                delete stored[key].bg;
                 writeTienDoColorsToStorage(stored);
                 applyTienDoColors();
             }
@@ -598,7 +572,21 @@
                 applyTienDoColors();
             }
 
+            function migrateTienDoColorStorage() {
+                var stored = readTienDoColorsFromStorage();
+                if (!stored) return;
+                var dirty = false;
+                Object.keys(stored).forEach(function (storageKey) {
+                    if (stored[storageKey] && stored[storageKey].bg) {
+                        delete stored[storageKey].bg;
+                        dirty = true;
+                    }
+                });
+                if (dirty) writeTienDoColorsToStorage(stored);
+            }
+
             function initTienDoColorCustomization() {
+                migrateTienDoColorStorage();
                 applyTienDoColors();
                 syncTienDoColorInputs();
 
