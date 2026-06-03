@@ -10,6 +10,13 @@
     padding: 0;
     margin: 2px 6px 0 6px;
 }
+[data-bs-theme='dark'] .admin-work-calendar .fc-h-event {
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+[data-bs-theme='dark'] .admin-work-calendar .fc-h-event .fc-event-main {
+    color: inherit;
+}
 .admin-work-calendar .ws-day-badges {
     display: flex;
     flex-direction: column;
@@ -97,6 +104,35 @@
 .admin-work-calendar .ws-day-contract--up_link_in,
 .ws-lich-legend__swatch.ws-day-contract--up_link_in {
     background: #fef3c7;
+    border-left-color: #d97706;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
+    border-left-color: #7367f0;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_chup,
+[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_chup {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #e53e3e 12%);
+    border-left-color: #e53e3e;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_make,
+[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_make {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #7c3aed 12%);
+    border-left-color: #7c3aed;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--phan_edit,
+[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--phan_edit {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #2563eb 12%);
+    border-left-color: #2563eb;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--up_link_demo,
+[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--up_link_demo {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #059669 12%);
+    border-left-color: #059669;
+}
+[data-bs-theme='dark'] .admin-work-calendar .ws-day-contract--up_link_in,
+[data-bs-theme='dark'] .ws-lich-legend__swatch.ws-day-contract--up_link_in {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #d97706 12%);
     border-left-color: #d97706;
 }
 .ws-lich-legend__item {
