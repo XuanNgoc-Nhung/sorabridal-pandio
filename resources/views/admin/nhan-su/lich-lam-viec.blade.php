@@ -34,7 +34,7 @@
                     </div>
                 @endif
                 @if(!empty($isAdmin))
-                <div id="wsLichChuaPhanCongPanel" class="ws-lich-chua-phan-cong border-bottom pb-3 mb-3 d-none" aria-label="Hợp đồng chưa phân công">
+                <div id="wsLichChuaPhanCongPanel" class="ws-lich-chua-phan-cong border-bottom pb-3 mb-3 d-none" style="display: none;" aria-label="Hợp đồng chưa phân công">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                         <div class="text-muted small mb-0">Chưa phân công <span class="text-muted">(chưa phân chụp · make · edit, chưa có ngày trên lịch)</span></div>
                         <span class="badge bg-label-secondary" id="wsLichChuaPhanCongCount">0</span>
@@ -79,7 +79,7 @@
                 </div>
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
-                        <div class="text-muted small mb-2">Chú thích tiến độ hợp đồng <span class="text-muted">(chỉ đổi màu viền trái trên lịch; nền theo config)</span></div>
+                        <div class="text-muted small mb-2">Chú thích tiến độ hợp đồng</div>
                         <div class="d-flex flex-wrap align-items-center gap-3">
                             @foreach($tienDoLegend as $key => $item)
                                 @if(!empty($item['label']))
