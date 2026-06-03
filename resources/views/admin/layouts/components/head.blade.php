@@ -9,7 +9,7 @@
 <meta name="description" content="" />
 
 <!-- Favicon -->
-<link rel="icon" type="image/x-icon" href="../../assets/img/favicon/favicon.ico" />
+<link rel="icon" type="image/x-icon" href="../../assets/img/favicon/heart.png?t=1" />
 
 <!-- Fonts: Tahoma stack qua demo.css / Bootstrap — không tải Public Sans -->
 
