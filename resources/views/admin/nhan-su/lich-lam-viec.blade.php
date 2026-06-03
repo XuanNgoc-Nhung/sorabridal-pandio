@@ -68,11 +68,8 @@
                 </div>
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chỉ đổi màu viền trái trên lịch; nền theo config)</span></div>
-                            <button type="button" class="btn btn-link btn-sm p-0 text-muted ws-lich-legend__reset" id="wsLichLegendResetColors">Khôi phục màu mặc định</button>
-                        </div>
-                        <div class="d-flex flex-wrap gap-3">
+                        <div class="text-muted small mb-2">Chú thích tiến độ hợp đồng <span class="text-muted">(chỉ đổi màu viền trái trên lịch; nền theo config)</span></div>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
                             @foreach($tienDoLegend as $key => $item)
                                 @if(!empty($item['label']))
                                     <div class="ws-lich-legend__item">
@@ -86,6 +83,13 @@
                                     </div>
                                 @endif
                             @endforeach
+                            <button type="button"
+                                    class="btn btn-link btn-sm p-0 text-muted ws-lich-legend__reset d-inline-flex align-items-center"
+                                    id="wsLichLegendResetColors"
+                                    title="Khôi phục màu mặc định"
+                                    aria-label="Khôi phục màu mặc định">
+                                <i class="icon-base ti tabler-refresh icon-sm" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
                 @endif
