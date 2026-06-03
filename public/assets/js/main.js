@@ -86,6 +86,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialize menu
   //-----------------
 
+  if (window.AdminMenuSpread) {
+    window.AdminMenuSpread.applyBeforeMenuInit();
+  }
+
   let layoutMenuEl = document.querySelectorAll('#layout-menu');
   layoutMenuEl.forEach(function (element) {
     menu = new Menu(element, {

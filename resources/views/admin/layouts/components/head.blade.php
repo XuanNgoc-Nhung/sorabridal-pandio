@@ -37,6 +37,17 @@
 <!-- Helpers -->
 <script src="../../assets/vendor/js/helpers.js"></script>
 <script src="../../assets/vendor/js/template-customizer.js"></script>
+<script src="../../assets/js/template-customizer-menu-spread.js"></script>
+<script>
+(function () {
+  try {
+    var template = document.documentElement.getAttribute('data-template');
+    if (localStorage.getItem('templateCustomizer-' + template + '--MenuSpread') === 'true') {
+      document.documentElement.classList.add('layout-menu-spread');
+    }
+  } catch (e) {}
+})();
+</script>
 <script src="../../assets/js/config.js"></script>
 
 <!-- Select2 (dùng chung cho các select trong admin) -->
@@ -128,6 +139,13 @@ body > .flatpickr-calendar.open,
 }
 .menu-vertical .menu-header{
   padding: 0.5rem 0.5rem 0 1.3rem !important;
+}
+/* Menu con: bỏ chấm tròn mặc định (::before), chỉ giữ icon Tabler trong menu-link */
+.menu-vertical .menu-sub > .menu-item > .menu-link::before {
+  display: none !important;
+}
+.menu-vertical .menu-sub .menu-link {
+  padding-inline-start: 1.75rem !important;
 }
 </style>
 

@@ -67,6 +67,7 @@ window.templateName = document.documentElement.getAttribute('data-template');
  * defaultFooterFixed: true, false (For vertical layout only)
  * defaultShowDropdownOnHover : true, false (for horizontal layout only)
  * controls: [ 'color', 'theme', 'skins', 'semiDark', 'layoutCollapsed', 'layoutNavbarOptions', 'headerType', 'contentLayout', 'rtl' ] | Show/Hide customizer controls
+ * defaultMenuSpread: true, false — Trải dài menu (sidebar phẳng, không nhóm); UI trong template-customizer-menu-spread.js
  */
 
 if (typeof TemplateCustomizer !== 'undefined') {

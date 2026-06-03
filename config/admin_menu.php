@@ -66,8 +66,8 @@ return [
         'label' => 'Nhân sự',
         'icon' => 'ti tabler-users',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.nhan-su.danh-sach', 'label' => 'Danh sách nhân sự'],
-            ['stt' => 2, 'route' => 'admin.nhan-su.cong-viec-cua-toi', 'label' => 'Công việc của tôi'],
+            ['stt' => 1, 'route' => 'admin.nhan-su.danh-sach', 'label' => 'Danh sách nhân sự', 'icon' => 'ti tabler-users'],
+            ['stt' => 2, 'route' => 'admin.nhan-su.cong-viec-cua-toi', 'label' => 'Công việc của tôi', 'icon' => 'ti tabler-briefcase'],
         ],
     ],
     [
@@ -83,10 +83,10 @@ return [
         'label' => 'Sản phẩm',
         'icon' => 'ti tabler-package',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.trang-phuc.san-pham', 'label' => 'Trang phục'],
-            ['stt' => 2, 'route' => 'admin.concept.concept', 'label' => 'Concept'],
-            ['stt' => 3, 'route' => 'admin.dich-vu.dich-vu-le', 'label' => 'Dịch vụ lẻ'],
-            ['stt' => 4, 'route' => 'admin.dich-vu.nhom-dich-vu', 'label' => 'Nhóm dịch vụ'],
+            ['stt' => 1, 'route' => 'admin.trang-phuc.san-pham', 'label' => 'Trang phục', 'icon' => 'ti tabler-hanger'],
+            ['stt' => 2, 'route' => 'admin.concept.concept', 'label' => 'Concept', 'icon' => 'ti tabler-photo'],
+            ['stt' => 3, 'route' => 'admin.dich-vu.dich-vu-le', 'label' => 'Dịch vụ lẻ', 'icon' => 'ti tabler-puzzle'],
+            ['stt' => 4, 'route' => 'admin.dich-vu.nhom-dich-vu', 'label' => 'Nhóm dịch vụ', 'icon' => 'ti tabler-stack-2'],
         ],
     ],
     [
@@ -97,9 +97,9 @@ return [
         'label' => 'Tài chính kế toán',
         'icon' => 'ti tabler-cash',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.tai-chinh.cong-no', 'label' => 'Công nợ'],
-            ['stt' => 2, 'route' => 'admin.tai-chinh.phieu-thu-chi', 'label' => 'Phiếu thu chi'],
-            ['stt' => 3, 'route' => 'admin.tai-chinh.tinh-luong', 'label' => 'Tính lương'],
+            ['stt' => 1, 'route' => 'admin.tai-chinh.cong-no', 'label' => 'Công nợ', 'icon' => 'ti tabler-receipt'],
+            ['stt' => 2, 'route' => 'admin.tai-chinh.phieu-thu-chi', 'label' => 'Phiếu thu chi', 'icon' => 'ti tabler-file-invoice'],
+            ['stt' => 3, 'route' => 'admin.tai-chinh.tinh-luong', 'label' => 'Tính lương', 'icon' => 'ti tabler-calculator'],
         ],
     ],
     [
@@ -117,7 +117,7 @@ return [
         'label' => 'Báo cáo',
         'icon' => 'ti tabler-report-analytics',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.bao-cao.ads', 'label' => 'Báo cáo Ads'],
+            ['stt' => 1, 'route' => 'admin.bao-cao.ads', 'label' => 'Báo cáo Ads', 'icon' => 'ti tabler-chart-line'],
         ],
     ],
     [
@@ -142,10 +142,10 @@ return [
         'label' => 'Hệ thống',
         'icon' => 'ti tabler-building',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.he-thong.vai-tro', 'label' => 'Vai trò'],
-            ['stt' => 2, 'route' => 'admin.he-thong.phong-ban', 'label' => 'Phòng ban'],
-            ['stt' => 3, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu'],
-            ['stt' => 4, 'route' => 'admin.he-thong.logs', 'label' => 'Logs'],
+            ['stt' => 1, 'route' => 'admin.he-thong.vai-tro', 'label' => 'Vai trò', 'icon' => 'ti tabler-shield'],
+            ['stt' => 2, 'route' => 'admin.he-thong.phong-ban', 'label' => 'Phòng ban', 'icon' => 'ti tabler-building'],
+            ['stt' => 3, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu', 'icon' => 'ti tabler-file-text'],
+            ['stt' => 4, 'route' => 'admin.he-thong.logs', 'label' => 'Logs', 'icon' => 'ti tabler-list'],
         ],
     ],
 ];

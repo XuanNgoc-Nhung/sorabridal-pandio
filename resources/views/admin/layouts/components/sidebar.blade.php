@@ -70,7 +70,7 @@
                     @foreach ($item['children'] as $child)
                       <li class="menu-item {{ request()->routeIs($child['route']) ? 'active' : '' }}">
                         <a href="{{ route($child['route']) }}" class="menu-link">
-                          {{-- <div>{{ $child['stt']?? }} {{ $child['label'] }}</div> --}}
+                          <i class="menu-icon icon-base {{ $child['icon'] ?? $item['icon'] ?? 'ti tabler-circle' }}"></i>
                           <div>{{ $child['label'] }}</div>
                         </a>
                       </li>
@@ -80,6 +80,12 @@
               @endif
             @endforeach
           </ul>
+          <script src="../../assets/js/admin-menu-spread.js"></script>
+          <script>
+            if (window.AdminMenuSpread) {
+              window.AdminMenuSpread.applyBeforeMenuInit();
+            }
+          </script>
         </aside>
 
         <div class="menu-mobile-toggler d-xl-none rounded-1">

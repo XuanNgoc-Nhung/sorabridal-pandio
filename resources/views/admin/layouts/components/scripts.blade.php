@@ -16,6 +16,7 @@
     <script src="../../assets/vendor/libs/i18n/i18n.js"></script>
 
     <script src="../../assets/vendor/js/menu.js"></script>
+    <script src="../../assets/js/admin-menu-spread.js"></script>
 
     <!-- endbuild -->
 
