@@ -34,7 +34,7 @@
                     </div>
                 @endif
                 <div id="calendar" class="admin-work-calendar"></div>
-                <div id="ws-lich-mobile-month" class="ws-lich-mobile-month d-none" aria-label="Lịch tháng (mobile)">
+                <div id="ws-lich-mobile-month" class="ws-lich-mobile-month d-none" aria-label="Lịch tháng/tuần (mobile)">
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm ws-lich-mobile-month-table mb-0">
                             <thead>
@@ -521,7 +521,7 @@
                     && !listModeActive
                     && calendar
                     && calendar.view
-                    && calendar.view.type === 'dayGridMonth';
+                    && (calendar.view.type === 'dayGridMonth' || calendar.view.type === 'dayGridWeek');
             }
 
             function getContractsForDate(dateStr) {
@@ -544,6 +544,7 @@
                 var view = calendar.view;
                 var start = new Date(view.activeStart);
                 var end = new Date(view.activeEnd);
+                var isMonthView = view.type === 'dayGridMonth';
                 var monthRef = view.currentStart ? new Date(view.currentStart) : start;
                 var displayMonth = monthRef.getMonth();
                 var displayYear = monthRef.getFullYear();
@@ -556,7 +557,8 @@
                     var thu = weekDayLabels[cursor.getDay()] || '';
                     var dd = String(cursor.getDate()).padStart(2, '0');
                     var mm = String(cursor.getMonth() + 1).padStart(2, '0');
-                    var isOtherMonth = cursor.getMonth() !== displayMonth || cursor.getFullYear() !== displayYear;
+                    var isOtherMonth = isMonthView
+                        && (cursor.getMonth() !== displayMonth || cursor.getFullYear() !== displayYear);
 
                     var tr = document.createElement('tr');
                     tr.setAttribute('data-date', dateKey);
@@ -1058,9 +1060,6 @@
             window.addEventListener('resize', syncMobileMonthLayoutDebounced);
 
             calendarEl.addEventListener('click', function (e) {
-                if (e.target.closest('.fc-dayGridWeek-button') && !listModeActive && root.classList.contains('is-mobile-month')) {
-                    hideMobileMonthLayout();
-                }
                 if (!listModeActive) return;
                 if (e.target.closest('.fc-dayGridMonth-button')) {
                     deactivateListView('dayGridMonth');

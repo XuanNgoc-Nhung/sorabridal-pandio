@@ -382,13 +382,16 @@
     margin-bottom: 0;
 }
 
-/* Mobile — xem theo tháng: bảng Thứ / Ngày / Công việc */
+/* Mobile — xem theo tháng/tuần: bảng dọc Thứ / Ngày / Công việc */
 @media (max-width: 767.98px) {
     #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .fc-view-harness {
         display: none !important;
     }
     #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .ws-lich-mobile-month {
         display: block !important;
+    }
+    #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .fc-header-toolbar {
+        margin-bottom: .75rem;
     }
 }
 .ws-lich-mobile-month {
