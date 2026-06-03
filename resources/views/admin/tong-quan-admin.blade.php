@@ -26,8 +26,8 @@
                         <i class="ti tabler-layout-dashboard fs-4"></i>
                     </span>
                     <div class="min-w-0">
-                        <h5 class="mb-0 text-heading">Tổng quan hệ thống</h5>
-                        <small class="text-muted">Số liệu theo thời điểm tải trang — Wedding Studio</small>
+                        <h5 class="mb-0 text-heading">Tổng quan quản trị</h5>
+                        <small class="text-muted">Thống kê toàn hệ thống — Wedding Studio</small>
                     </div>
                 </div>
             </div>

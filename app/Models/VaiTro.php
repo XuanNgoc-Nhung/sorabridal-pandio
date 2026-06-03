@@ -114,6 +114,18 @@ class VaiTro extends Model
     }
 
     /**
+     * View tổng quan theo mã vai trò (dùng khi cần map tường minh).
+     */
+    public static function viewTongQuanChoMa(mixed $ma): string
+    {
+        return match ((string) $ma) {
+            self::MA_ADMIN => 'admin.tong-quan-admin',
+            self::MA_NHAN_VIEN => 'admin.tong-quan-nhan-vien',
+            default => 'admin.tong-quan-mac-dinh',
+        };
+    }
+
+    /**
      * @return array<int, string>
      */
     public static function quyTacValidateRole(): array

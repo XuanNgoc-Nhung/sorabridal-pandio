@@ -10,6 +10,9 @@ use App\Models\HopDongThanhToan;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
 use App\Models\TrangPhuc;
+use App\Models\User;
+use App\Models\VaiTro;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +25,22 @@ use Illuminate\Validation\Rules\Password;
 class AdminController extends Controller
 {
     public function index(Request $request)
+    {
+        $user = $request->user()->load(['nhanVien.phongBans', 'vaiTro']);
+        $role = (string) ($user->role ?? '');
+
+        if (VaiTro::isAdminMa($role)) {
+            return $this->tongQuanAdmin($request);
+        }
+
+        if ($user->nhanVien !== null) {
+            return $this->tongQuanNhanVien($request, $user);
+        }
+
+        return $this->tongQuanMacDinh($request, $user);
+    }
+
+    private function tongQuanAdmin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'tu_ngay' => ['nullable', 'date'],
@@ -248,7 +267,7 @@ class AdminController extends Controller
             ];
         })->all();
 
-        $view = view('admin.index', compact(
+        $view = view('admin.tong-quan-admin', compact(
             'tuNgay',
             'denNgay',
             'soHopDongCuoi',
@@ -282,6 +301,187 @@ class AdminController extends Controller
         ));
 
         return $validator->fails() ? $view->withErrors($validator) : $view;
+    }
+
+    private function tongQuanNhanVien(Request $request, User $user)
+    {
+        $nhanVien = $user->nhanVien;
+        $nhanVienId = $nhanVien?->id;
+        $baseQuery = $this->hopDongQueryChoNhanVien($nhanVienId);
+
+        $trangThaiCuoiTongQuanLabels = [
+            'nhap' => 'Nháp',
+            'da_huy' => 'Đã huỷ',
+            'dang_thuc_hien' => 'Đang thực hiện',
+            'tre_chup' => 'Trễ chụp',
+            'tre_edit' => 'Trễ edit',
+        ];
+
+        $soHopDongLienQuan = (clone $baseQuery)->count();
+        $soHopDongDangThucHien = (clone $baseQuery)->where('trang_thai_hop_dong', 'dang_thuc_hien')->count();
+        $soHopDongTreChup = (clone $baseQuery)->where('trang_thai_hop_dong', 'tre_chup')->count();
+        $soHopDongTreEdit = (clone $baseQuery)->where('trang_thai_hop_dong', 'tre_edit')->count();
+
+        $soHopDongChup = $nhanVienId
+            ? (int) HopDongCuoi::query()->where('tho_chup_id', $nhanVienId)->where('trang_thai_hop_dong', '!=', 'da_huy')->count()
+            : 0;
+        $soHopDongMake = $nhanVienId
+            ? (int) HopDongCuoi::query()->where('tho_make_id', $nhanVienId)->where('trang_thai_hop_dong', '!=', 'da_huy')->count()
+            : 0;
+        $soHopDongEdit = $nhanVienId
+            ? (int) HopDongCuoi::query()->where('tho_edit_id', $nhanVienId)->where('trang_thai_hop_dong', '!=', 'da_huy')->count()
+            : 0;
+        $soHopDongSale = $nhanVienId
+            ? (int) DB::table('hop_dong_cuoi_thanh_vien_sale as t')
+                ->join('hop_dong_cuoi as h', 'h.id', '=', 't.hop_dong_id')
+                ->where('t.nhan_vien_id', $nhanVienId)
+                ->where('h.trang_thai_hop_dong', '!=', 'da_huy')
+                ->distinct()
+                ->count('t.hop_dong_id')
+            : 0;
+
+        $homNay = now()->startOfDay();
+        $hetTuan = now()->addDays(14)->endOfDay();
+
+        $hopDongSapChup = (clone $baseQuery)
+            ->where('trang_thai_hop_dong', '!=', 'da_huy')
+            ->where(function (Builder $q) use ($homNay, $hetTuan) {
+                $q->whereBetween('ngay_chup_thuc_te', [$homNay->toDateString(), $hetTuan->toDateString()])
+                    ->orWhere(function (Builder $qq) use ($homNay, $hetTuan) {
+                        $qq->whereNull('ngay_chup_thuc_te')
+                            ->whereBetween('ngay_chup_du_kien', [$homNay->toDateString(), $hetTuan->toDateString()]);
+                    });
+            })
+            ->orderByRaw('COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien) ASC')
+            ->limit(8)
+            ->get(['id', 'ma_hop_dong', 'ten_chu_re', 'ten_co_dau', 'ngay_chup_du_kien', 'ngay_chup_thuc_te', 'trang_thai_hop_dong', 'tho_chup_id', 'tho_make_id', 'tho_edit_id']);
+
+        $hopDongCanXuLy = (clone $baseQuery)
+            ->where('trang_thai_hop_dong', '!=', 'da_huy')
+            ->where(function (Builder $q) use ($nhanVienId) {
+                $q->whereIn('trang_thai_hop_dong', ['tre_chup', 'tre_edit']);
+                if ($nhanVienId) {
+                    $q->orWhere(function (Builder $qq) use ($nhanVienId) {
+                        $qq->where('trang_thai_hop_dong', 'dang_thuc_hien')
+                            ->where(function (Builder $q3) use ($nhanVienId) {
+                                $q3->where(function (Builder $q4) use ($nhanVienId) {
+                                    $q4->where('tho_chup_id', $nhanVienId)
+                                        ->where(function (Builder $q5) {
+                                            $q5->whereNull('link_demo')->orWhere('link_demo', '');
+                                        });
+                                })->orWhere(function (Builder $q4) use ($nhanVienId) {
+                                    $q4->where('tho_edit_id', $nhanVienId)
+                                        ->where(function (Builder $q5) {
+                                            $q5->whereNull('link_in')->orWhere('link_in', '');
+                                        });
+                                });
+                            });
+                    });
+                }
+            })
+            ->orderByDesc('updated_at')
+            ->limit(8)
+            ->get(['id', 'ma_hop_dong', 'ten_chu_re', 'ten_co_dau', 'trang_thai_hop_dong', 'link_demo', 'link_in', 'tho_chup_id', 'tho_edit_id']);
+
+        $thongKeTrangThai = (clone $baseQuery)
+            ->selectRaw('trang_thai_hop_dong as tt, COUNT(*) as so_luong')
+            ->groupBy('trang_thai_hop_dong')
+            ->pluck('so_luong', 'tt')
+            ->all();
+
+        $tenPhongBan = $nhanVien?->phongBans?->pluck('ten_phong_ban')->filter()->implode(', ') ?: null;
+        $linksNhanh = $this->buildLinksNhanh($user);
+
+        return view('admin.tong-quan-nhan-vien', compact(
+            'user',
+            'nhanVien',
+            'tenPhongBan',
+            'soHopDongLienQuan',
+            'soHopDongDangThucHien',
+            'soHopDongTreChup',
+            'soHopDongTreEdit',
+            'soHopDongChup',
+            'soHopDongMake',
+            'soHopDongEdit',
+            'soHopDongSale',
+            'hopDongSapChup',
+            'hopDongCanXuLy',
+            'trangThaiCuoiTongQuanLabels',
+            'thongKeTrangThai',
+            'linksNhanh',
+        ));
+    }
+
+    private function tongQuanMacDinh(Request $request, User $user)
+    {
+        $linksNhanh = $this->buildLinksNhanh($user);
+
+        return view('admin.tong-quan-mac-dinh', compact(
+            'user',
+            'linksNhanh',
+        ));
+    }
+
+    /**
+     * Hợp đồng cưới gắn với nhân viên (thợ chụp/make/edit hoặc thành viên sale).
+     */
+    private function hopDongQueryChoNhanVien(?int $nhanVienId): Builder
+    {
+        if (! $nhanVienId) {
+            return HopDongCuoi::query()->whereRaw('1 = 0');
+        }
+
+        return HopDongCuoi::query()->where(function (Builder $q) use ($nhanVienId) {
+            $q->where('tho_chup_id', $nhanVienId)
+                ->orWhere('tho_make_id', $nhanVienId)
+                ->orWhere('tho_edit_id', $nhanVienId)
+                ->orWhereHas('thanhVienHopDongCuis', function (Builder $qq) use ($nhanVienId) {
+                    $qq->where('nhan_vien_id', $nhanVienId);
+                });
+        });
+    }
+
+    /**
+     * @return list<array{label: string, route: string, icon: string}>
+     */
+    private function buildLinksNhanh(User $user): array
+    {
+        $dsMenu = $user->sidebarDsMenuFromVaiTro();
+        if ($dsMenu === []) {
+            return [];
+        }
+
+        $allowed = array_flip($dsMenu);
+        $links = [];
+
+        foreach (config('admin_menu', []) as $item) {
+            if (($item['type'] ?? '') === 'single') {
+                $route = $item['route'] ?? '';
+                if ($route !== '' && $route !== 'admin.index' && isset($allowed[$route])) {
+                    $links[] = [
+                        'label' => (string) ($item['label'] ?? $route),
+                        'route' => $route,
+                        'icon' => (string) ($item['icon'] ?? 'ti tabler-link'),
+                    ];
+                }
+                continue;
+            }
+
+            if (($item['type'] ?? '') === 'group' && ! empty($item['children'])) {
+                foreach ($item['children'] as $child) {
+                    $route = $child['route'] ?? '';
+                    if ($route !== '' && $route !== 'admin.index' && isset($allowed[$route])) {
+                        $links[] = [
+                            'label' => (string) ($child['label'] ?? $route),
+                            'route' => $route,
+                            'icon' => (string) ($child['icon'] ?? $item['icon'] ?? 'ti tabler-link'),
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $links;
     }
 
     public function thongTinCaNhan()
