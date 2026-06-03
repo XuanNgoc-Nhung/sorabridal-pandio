@@ -69,7 +69,7 @@
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chọn màu nền từng trạng thái)</span></div>
+                            <div class="text-muted small mb-0">Chú thích tiến độ hợp đồng <span class="text-muted">(chọn màu viền trái từng trạng thái)</span></div>
                             <button type="button" class="btn btn-link btn-sm p-0 text-muted ws-lich-legend__reset" id="wsLichLegendResetColors">Khôi phục màu mặc định</button>
                         </div>
                         <div class="d-flex flex-wrap gap-3">
@@ -79,9 +79,9 @@
                                         <input type="color"
                                                class="ws-lich-legend__swatch ws-day-contract--{{ $key }}"
                                                data-tien-do="{{ $key }}"
-                                               value="{{ $item['bg'] ?? '#f8f7ff' }}"
-                                               title="Màu nền — {{ $item['label'] }}"
-                                               aria-label="Màu nền {{ $item['label'] }}">
+                                               value="{{ $item['border'] ?? '#7367f0' }}"
+                                               title="Màu viền trái — {{ $item['label'] }}"
+                                               aria-label="Màu viền trái {{ $item['label'] }}">
                                         <span class="ws-lich-legend__label">{{ $item['label'] }}</span>
                                     </div>
                                 @endif
@@ -565,16 +565,16 @@
                     var key = String(input.getAttribute('data-tien-do') || '').trim();
                     if (!key) return;
                     var colors = resolveTienDoColors(key);
-                    if (colors.bg) input.value = colors.bg;
+                    if (colors.border) input.value = colors.border;
                 });
             }
 
-            function saveTienDoBgColor(key, value) {
+            function saveTienDoBorderColor(key, value) {
                 var hex = normalizeHexColor(value);
                 if (!hex) return;
                 var stored = readTienDoColorsFromStorage() || {};
                 if (!stored[key] || typeof stored[key] !== 'object') stored[key] = {};
-                stored[key].bg = hex;
+                stored[key].border = hex;
                 writeTienDoColorsToStorage(stored);
                 applyTienDoColors();
             }
@@ -605,7 +605,7 @@
                 function onLegendSwatchColorChange(input) {
                     var key = String(input.getAttribute('data-tien-do') || '').trim();
                     if (!key) return;
-                    saveTienDoBgColor(key, input.value);
+                    saveTienDoBorderColor(key, input.value);
                 }
 
                 root.querySelectorAll('input.ws-lich-legend__swatch[data-tien-do]').forEach(function (input) {

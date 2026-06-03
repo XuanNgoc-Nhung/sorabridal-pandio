@@ -34,12 +34,16 @@
     position: relative;
     border-radius: 7px;
     padding: 4px 22px 4px 6px;
-    background: #f8f7ff;
-    border-left: 3px solid #7367f0;
+    border-left-width: 6px;
+    border-left-style: solid;
     color: var(--admin-text-body);
     line-height: 1.18;
     font-size: .68rem;
     cursor: pointer;
+}
+#ws-lich-lam-viec .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
+    background: #f8f7ff;
+    border-left-color: #7367f0;
 }
 .ws-day-contract__pay {
     position: absolute;
@@ -106,7 +110,7 @@
     background: var(--ws-td-up_link_in-bg, #fef3c7);
     border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract {
+[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
     border-left-color: #7367f0;
 }
