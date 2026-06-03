@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: localhost
--- Thời gian đã tạo: Th6 02, 2026 lúc 07:54 AM
+-- Thời gian đã tạo: Th6 03, 2026 lúc 05:21 AM
 -- Phiên bản máy phục vụ: 10.4.28-MariaDB
 -- Phiên bản PHP: 8.0.28
 
@@ -399,8 +399,10 @@ INSERT INTO `hop_dong_cuoi` (`id`, `ma_hop_dong`, `loai_hop_dong`, `ten_co_dau`,
 (1, '2805261', NULL, 'b', 'a', NULL, NULL, '2026-05-29', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'combo_tron_goi', 1, NULL, NULL, 8600000.00, 0.00, 0.00, 'dang_thuc_hien', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-28', NULL, NULL, '2026-05-28 21:52:25', '2026-05-28 21:53:04', 25),
 (2, '2805262', NULL, 'cô dâu', 'Chú rể', NULL, NULL, NULL, '2026-05-29', '16:00:00', NULL, NULL, NULL, NULL, NULL, 'combo_va_nang_cap', 1, NULL, NULL, 21400000.00, 0.00, 0.00, 'dang_thuc_hien', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 24, 3, NULL, '2026-05-28', NULL, NULL, '2026-05-28 22:38:44', '2026-05-29 07:42:25', 25),
 (3, '2905263', NULL, 'cô dâu', 'a', NULL, NULL, NULL, '2026-06-03', NULL, NULL, NULL, NULL, NULL, NULL, 'ghep_dich_vu_le', -1, NULL, NULL, 1200000.00, 0.00, 0.00, 'dang_thuc_hien', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-29 07:49:42', '2026-06-02 12:20:34', 25),
-(4, '0206264', NULL, 'a', '', NULL, NULL, NULL, '2026-06-04', '15:00:00', NULL, NULL, '2026-06-19', 'Công viên Thủ Lệ', NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'dang_thuc_hien', NULL, NULL, '2026-06-18', NULL, NULL, NULL, NULL, '2026-06-19', NULL, NULL, 'ghi chú sale', 2, 4, 3, NULL, NULL, NULL, '2026-06-02 11:24:10', '2026-06-02 12:11:26', 1),
-(5, '0206265', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'nhap', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-02 12:20:17', '2026-06-02 12:20:17', 1);
+(4, '0206264', NULL, 'a', '', NULL, NULL, NULL, '2026-06-04', '15:00:00', NULL, NULL, '2026-06-19', 'Công viên Thủ Lệ', NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'dang_thuc_hien', NULL, NULL, '2026-06-18', NULL, NULL, NULL, NULL, '2026-06-19', NULL, NULL, 'ghi chú sale', NULL, 4, 3, NULL, NULL, NULL, '2026-06-02 11:24:10', '2026-06-02 12:11:26', 1),
+(5, '0206265', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'nhap', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-02 12:20:17', '2026-06-02 12:20:17', 1),
+(6, '0206266', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'nhap', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-02 17:14:06', '2026-06-02 17:14:06', 1),
+(7, '0206267', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, -1, NULL, NULL, 0.00, 0.00, 0.00, 'nhap', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-02 19:49:25', '2026-06-02 19:49:25', 1);
 
 -- --------------------------------------------------------
 
@@ -487,7 +489,9 @@ INSERT INTO `hop_dong_cuoi_thanh_vien_sale` (`id`, `hop_dong_id`, `nhan_vien_id`
 (442, 2, 25, 'nguoi_tao', '2026-05-28 15:38:44', '2026-05-28 15:38:44'),
 (443, 3, 25, 'nguoi_tao', '2026-05-29 00:49:42', '2026-05-29 00:49:42'),
 (444, 4, 1, 'nguoi_tao', '2026-06-02 04:24:10', '2026-06-02 04:24:10'),
-(445, 5, 1, 'nguoi_tao', '2026-06-02 05:20:17', '2026-06-02 05:20:17');
+(445, 5, 1, 'nguoi_tao', '2026-06-02 05:20:17', '2026-06-02 05:20:17'),
+(446, 6, 1, 'nguoi_tao', '2026-06-02 10:14:06', '2026-06-02 10:14:06'),
+(447, 7, 1, 'nguoi_tao', '2026-06-02 12:49:25', '2026-06-02 12:49:25');
 
 -- --------------------------------------------------------
 
@@ -599,7 +603,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (7, '2026_06_02_000004_create_hop_dong_tables', 1),
 (8, '2026_06_02_000005_create_hop_dong_cuoi_tables', 1),
 (9, '2026_06_02_000006_create_tai_chinh_tables', 1),
-(10, '2026_06_02_000007_create_marketing_tables', 1);
+(10, '2026_06_02_000007_create_marketing_tables', 1),
+(11, '2026_06_02_000008_create_vai_tro_table', 2),
+(12, '2026_06_02_000009_add_ds_menu_to_vai_tro_table', 3),
+(13, '2026_06_02_000010_drop_ds_menu_from_nhan_vien_table', 4);
 
 -- --------------------------------------------------------
 
@@ -650,7 +657,6 @@ CREATE TABLE `nhan_vien` (
   `ngay_ky_hop_dong` date DEFAULT NULL,
   `luong_co_ban` bigint(20) UNSIGNED DEFAULT NULL,
   `luong_tang_ca` bigint(20) UNSIGNED DEFAULT NULL,
-  `ds_menu` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`ds_menu`)),
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -659,32 +665,31 @@ CREATE TABLE `nhan_vien` (
 -- Đang đổ dữ liệu cho bảng `nhan_vien`
 --
 
-INSERT INTO `nhan_vien` (`id`, `hinh_anh`, `user_id`, `phong_ban`, `ngan_hang`, `chi_nhanh`, `so_tai_khoan`, `gioi_tinh`, `ngay_sinh`, `cccd`, `vi_tri_lam_viec`, `ngay_vao_cong_ty`, `ngay_ky_hop_dong`, `luong_co_ban`, `luong_tang_ca`, `ds_menu`, `created_at`, `updated_at`) VALUES
-(1, 'nhan-vien/dhrUS3EZefNaMKobOq07Z1DAmQgiIe0C88PPqMvG.png', 1, NULL, NULL, NULL, NULL, 'nam', '1996-02-27', '123456789', 'Kỹ thuật viên', '2020-11-12', '2020-12-12', 50000, 80000, '[\"admin.nhan-su.lich-lam-viec.data\",\"admin.nhan-su.lich-lam-viec.chi-tiet-ngay\",\"admin.diem-danh.dieu-phoi-cong-viec\",\"admin.he-thong.ngan-hang-thanh-toan\",\"admin.he-thong.phong-ban\",\"admin.nhan-su.lich-lam-viec\",\"admin.index\",\"admin.khach-hang.danh-sach-hop-dong-cuoi\",\"admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay\",\"admin.khach-hang.chinh-sua-hop-dong-cuoi\",\"admin.khach-hang.tao-hop-dong-canh-bao\",\"admin.khach-hang.tao-hop-dong\",\"admin.lich-lam-viec\",\"admin.trang-phuc.san-pham\",\"admin.trang-phuc.hop-dong\",\"admin.tu-van.danh-sach\",\"admin.diem-danh.diem-danh\",\"admin.diem-danh.cham-cong\",\"admin.diem-danh.check-in\",\"admin.diem-danh.check-out\",\"admin.nhan-su.danh-sach\",\"admin.nhan-su.phan-quyen\",\"admin.nhan-su.cong-viec-cua-toi\",\"admin.concept.concept\",\"admin.dich-vu.dich-vu-le\",\"admin.dich-vu.nhom-dich-vu\",\"admin.tai-chinh.cong-no\",\"admin.tai-chinh.phieu-thu-chi\",\"admin.tai-chinh.tinh-luong\",\"admin.hen-lich\",\"admin.note-khach-moi\",\"admin.bao-cao-ads\",\"admin.thong-tin-ca-nhan\",\"admin.he-thong.tai-lieu\"]', '2026-03-04 12:18:04', '2026-05-24 19:27:43'),
-(2, NULL, 2, 'LTS01', NULL, NULL, NULL, 'Nữ', '2004-04-16', NULL, 'Chuyên viên tư vấn', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:02', '2026-05-27 01:47:02'),
-(3, NULL, 3, 'LTS01', NULL, NULL, NULL, 'Nữ', '2004-02-28', NULL, 'Chuyên viên tư vấn', '2025-10-11', NULL, NULL, NULL, NULL, '2026-05-27 01:47:02', '2026-05-27 01:47:02'),
-(4, NULL, 4, 'LTS01', NULL, NULL, NULL, 'Nữ', '2005-05-13', NULL, 'Chuyên viên tư vấn', '2025-10-10', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(5, NULL, 5, 'LTS01', NULL, NULL, NULL, 'Nữ', '2005-10-10', '352391708', 'Chuyên viên tư vấn', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(6, NULL, 6, 'LTS01', NULL, NULL, NULL, 'Nữ', '2000-10-16', NULL, 'Leader Sale', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(7, NULL, 7, 'LTS01', NULL, NULL, NULL, 'Nữ', '2008-07-10', NULL, 'Leader Trang phục', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(8, NULL, 8, 'LTS01', NULL, NULL, NULL, 'Nữ', '2004-05-29', NULL, 'Chuyên viên tư vấn', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(9, NULL, 9, 'LTS01', NULL, NULL, NULL, 'Nữ', '2005-04-09', NULL, 'Lễ tân phòng váy', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(10, NULL, 10, 'LTS01', NULL, NULL, NULL, 'Nữ', '2002-06-28', '38302013255', 'Lễ tân phòng váy', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
-(11, NULL, 11, 'PS01', NULL, NULL, NULL, 'Nam', '1998-10-25', NULL, 'Hậu kì', '2024-06-21', NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
-(12, NULL, 12, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
-(13, NULL, 13, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
-(14, NULL, 14, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
-(15, NULL, 15, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
-(16, NULL, 16, 'MKS01', NULL, NULL, NULL, 'Nam', '2003-04-14', NULL, 'Leader Performance', '2024-11-20', NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
-(17, NULL, 17, 'MKS01', NULL, NULL, NULL, 'Nam', '2003-05-06', NULL, 'Leader Media', '2024-04-30', NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
-(18, NULL, 18, 'MKS01', NULL, NULL, NULL, 'Nữ', '2003-05-05', NULL, 'Content', '2025-06-16', NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
-(19, NULL, 19, 'MKS01', NULL, NULL, NULL, 'Nữ', NULL, NULL, 'VJ Content', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
-(20, NULL, 20, 'MS01', NULL, NULL, NULL, 'Nữ', '2002-09-20', NULL, 'Makeup', '2022-09-20', NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
-(21, NULL, 21, 'KTS01', NULL, NULL, NULL, 'Nữ', '2004-10-28', '30304001372', 'Kế toán - HCNS', '2025-10-13', NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
-(22, NULL, 22, 'DPS01', NULL, NULL, NULL, 'Nữ', '1997-07-10', NULL, 'Điều phối', '2025-12-16', NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
-(23, NULL, 23, 'CSKS01', NULL, NULL, NULL, 'Nữ', '2003-02-25', NULL, 'Chăm sóc khách hàng', NULL, NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
-(24, NULL, 24, 'RDS01', NULL, NULL, NULL, 'Nam', '1999-10-30', NULL, 'Lead Sản Phẩm', '2023-03-24', NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
-(25, NULL, 25, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Quản lý chung', NULL, NULL, NULL, NULL, '[\"admin.nhan-su.lich-lam-viec.data\",\"admin.nhan-su.lich-lam-viec.chi-tiet-ngay\",\"admin.diem-danh.dieu-phoi-cong-viec\",\"admin.he-thong.ngan-hang-thanh-toan\",\"admin.he-thong.phong-ban\",\"admin.nhan-su.lich-lam-viec\",\"admin.index\",\"admin.khach-hang.danh-sach-hop-dong-cuoi\",\"admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay\",\"admin.khach-hang.chinh-sua-hop-dong-cuoi\",\"admin.khach-hang.tao-hop-dong-canh-bao\",\"admin.khach-hang.tao-hop-dong\",\"admin.lich-lam-viec\",\"admin.trang-phuc.san-pham\",\"admin.trang-phuc.hop-dong\",\"admin.tu-van.danh-sach\",\"admin.diem-danh.diem-danh\",\"admin.diem-danh.cham-cong\",\"admin.diem-danh.check-in\",\"admin.diem-danh.check-out\",\"admin.nhan-su.danh-sach\",\"admin.nhan-su.phan-quyen\",\"admin.nhan-su.cong-viec-cua-toi\",\"admin.concept.concept\",\"admin.dich-vu.dich-vu-le\",\"admin.dich-vu.nhom-dich-vu\",\"admin.tai-chinh.cong-no\",\"admin.tai-chinh.phieu-thu-chi\",\"admin.tai-chinh.tinh-luong\",\"admin.hen-lich\",\"admin.note-khach-moi\",\"admin.bao-cao-ads\",\"admin.thong-tin-ca-nhan\",\"admin.he-thong.tai-lieu\"]', '2026-05-27 01:47:07', '2026-05-27 01:47:07');
+INSERT INTO `nhan_vien` (`id`, `hinh_anh`, `user_id`, `phong_ban`, `ngan_hang`, `chi_nhanh`, `so_tai_khoan`, `gioi_tinh`, `ngay_sinh`, `cccd`, `vi_tri_lam_viec`, `ngay_vao_cong_ty`, `ngay_ky_hop_dong`, `luong_co_ban`, `luong_tang_ca`, `created_at`, `updated_at`) VALUES
+(1, 'nhan-vien/dhrUS3EZefNaMKobOq07Z1DAmQgiIe0C88PPqMvG.png', 1, NULL, NULL, NULL, NULL, 'nam', '1996-02-27', '123456789', 'Kỹ thuật viên', '2020-11-12', '2020-12-12', 50000, 80000, '2026-03-04 12:18:04', '2026-06-02 15:06:40'),
+(3, NULL, 3, 'LTS01', NULL, NULL, NULL, 'Nữ', '2004-02-28', NULL, 'Chuyên viên tư vấn', '2025-10-11', NULL, NULL, NULL, '2026-05-27 01:47:02', '2026-05-27 01:47:02'),
+(4, NULL, 4, 'LTS01', NULL, NULL, NULL, 'Nữ', '2005-05-13', NULL, 'Chuyên viên tư vấn', '2025-10-10', NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(5, NULL, 5, 'LTS01', NULL, NULL, NULL, NULL, '2005-10-10', '352391708', 'Chuyên viên tư vấn', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-06-02 16:53:15'),
+(6, NULL, 6, 'LTS01', NULL, NULL, NULL, 'Nữ', '2000-10-16', NULL, 'Leader Sale', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(7, NULL, 7, 'LTS01', NULL, NULL, NULL, 'Nữ', '2008-07-10', NULL, 'Leader Trang phục', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(8, NULL, 8, 'LTS01', NULL, NULL, NULL, 'Nữ', '2004-05-29', NULL, 'Chuyên viên tư vấn', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(9, NULL, 9, 'LTS01', NULL, NULL, NULL, 'Nữ', '2005-04-09', NULL, 'Lễ tân phòng váy', NULL, NULL, NULL, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(10, NULL, 10, 'LTS01', NULL, NULL, NULL, 'Nữ', '2002-06-28', '38302013255', 'Lễ tân phòng váy', NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
+(11, NULL, 11, 'PS01', NULL, NULL, NULL, 'Nam', '1998-10-25', NULL, 'Hậu kì', '2024-06-21', NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
+(12, NULL, 12, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
+(13, NULL, 13, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
+(14, NULL, 14, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, '2026-05-27 01:47:04', '2026-05-27 01:47:04'),
+(15, NULL, 15, 'PS01', NULL, NULL, NULL, 'Nam', NULL, NULL, 'Hậu kì', NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
+(16, NULL, 16, 'MKS01', NULL, NULL, NULL, 'Nam', '2003-04-14', NULL, 'Leader Performance', '2024-11-20', NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
+(17, NULL, 17, 'MKS01', NULL, NULL, NULL, 'Nam', '2003-05-06', NULL, 'Leader Media', '2024-04-30', NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
+(18, NULL, 18, 'MKS01', NULL, NULL, NULL, 'Nữ', '2003-05-05', NULL, 'Content', '2025-06-16', NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
+(19, NULL, 19, 'MKS01', NULL, NULL, NULL, 'Nữ', NULL, NULL, 'VJ Content', NULL, NULL, NULL, NULL, '2026-05-27 01:47:05', '2026-05-27 01:47:05'),
+(20, NULL, 20, 'MS01', NULL, NULL, NULL, 'Nữ', '2002-09-20', NULL, 'Makeup', '2022-09-20', NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
+(21, NULL, 21, 'KTS01', NULL, NULL, NULL, 'Nữ', '2004-10-28', '30304001372', 'Kế toán - HCNS', '2025-10-13', NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
+(22, NULL, 22, 'DPS01', NULL, NULL, NULL, 'Nữ', '1997-07-10', NULL, 'Điều phối', '2025-12-16', NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
+(23, NULL, 23, 'CSKS01', NULL, NULL, NULL, 'Nữ', '2003-02-25', NULL, 'Chăm sóc khách hàng', NULL, NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
+(24, NULL, 24, 'RDS01', NULL, NULL, NULL, 'Nam', '1999-10-30', NULL, 'Lead Sản Phẩm', '2023-03-24', NULL, NULL, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
+(25, NULL, 25, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Quản lý chung', NULL, NULL, NULL, NULL, '2026-05-27 01:47:07', '2026-05-27 01:47:07');
 
 -- --------------------------------------------------------
 
@@ -705,7 +710,6 @@ CREATE TABLE `nhan_vien_phong_ban` (
 --
 
 INSERT INTO `nhan_vien_phong_ban` (`id`, `nhan_vien_id`, `phong_ban_id`, `created_at`, `updated_at`) VALUES
-(110, 2, 1, '2026-05-27 02:21:44', '2026-05-27 02:21:44'),
 (111, 3, 1, '2026-05-27 02:21:44', '2026-05-27 02:21:44'),
 (112, 4, 1, '2026-05-27 02:21:44', '2026-05-27 02:21:44'),
 (113, 5, 1, '2026-05-27 02:21:44', '2026-05-27 02:21:44'),
@@ -1057,7 +1061,8 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (23, 'App\\Models\\User', 1, 'api-client', '442899b5eafa8f4516b2f5a137d6ab7296b67bd75237b36bac0233324f9bb993', '[\"*\"]', NULL, NULL, '2026-05-21 01:58:21', '2026-05-21 01:58:21'),
 (24, 'App\\Models\\User', 1, 'api-client', 'd4f651e80c41f9757a96f6017a12df88145c67ea5647d36c175a8554967f6d4d', '[\"*\"]', NULL, NULL, '2026-05-21 02:24:11', '2026-05-21 02:24:11'),
 (25, 'App\\Models\\User', 1, 'api-client', 'dbf3e6e4485e24f50d26bb3e883179d8526e5281ec1c71cb5101489f047e930f', '[\"*\"]', NULL, NULL, '2026-05-21 06:48:55', '2026-05-21 06:48:55'),
-(26, 'App\\Models\\User', 1, 'api-client', 'df964d7d0e69461809ee3b7c3f14a414e217638d69afb81a4ea340cf759919ce', '[\"*\"]', NULL, NULL, '2026-05-25 12:37:16', '2026-05-25 12:37:16');
+(26, 'App\\Models\\User', 1, 'api-client', 'df964d7d0e69461809ee3b7c3f14a414e217638d69afb81a4ea340cf759919ce', '[\"*\"]', NULL, NULL, '2026-05-25 12:37:16', '2026-05-25 12:37:16'),
+(27, 'App\\Models\\User', 25, 'api-docs', '6e3cbff845e58291b61c723edcf376040f70b9784db929b9bb6f777167c46563', '[\"*\"]', '2026-06-02 10:32:23', NULL, '2026-06-02 07:09:00', '2026-06-02 10:32:23');
 
 -- --------------------------------------------------------
 
@@ -1105,7 +1110,6 @@ INSERT INTO `phong_ban` (`id`, `ten_phong_ban`, `ma_phong_ban`, `mo_ta`, `ghi_ch
 (3, 'Makeup', 'MS01', NULL, NULL, NULL, NULL),
 (4, 'Photoshop', 'PS01', NULL, NULL, NULL, NULL),
 (5, 'Marketing', 'MKS01', NULL, NULL, NULL, NULL),
-(6, 'Trang phục', 'TPS01', NULL, NULL, NULL, NULL),
 (7, 'R&D', 'RDS01', NULL, NULL, NULL, NULL),
 (8, 'Kế toán', 'KTS01', NULL, NULL, NULL, NULL),
 (9, 'Điều phối', 'DPS01', NULL, NULL, NULL, NULL),
@@ -1266,11 +1270,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `email_verified_at`, `password`, `role`, `status`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Phùng Xuân Ngọc', 'Xuanngoc.dev@gmail.com', '988505055', NULL, '$2y$12$tlfymxAv1o.GxswMaiSNiuC.9jJ3lgvxuUiNb/RFVgykaMDrJ/Ss.', 1, 0, NULL, '2026-03-04 12:18:04', '2026-03-24 21:36:54'),
-(2, 'Nguyễn Thị Thuỳ Linh', NULL, '352391708', NULL, '$2y$12$pTqOkfWx8EUQPDtxUJ/BiuSouy9NIyI7V.0kvH0FsnoUMiTIdNTlG', 3, 1, NULL, '2026-05-27 01:47:02', '2026-05-27 01:47:02'),
+(1, 'Phùng Xuân Ngọc', 'Xuanngoc.dev@gmail.com', '0988505055', NULL, '$2y$12$lrRZWUCOrjcI3ebNJ4.VZOl9pstB/N5/Am0ptwTX6sEexvt01eBYO', 1, 1, NULL, '2026-03-04 12:18:04', '2026-03-24 21:36:54'),
 (3, 'Đỗ Thị Thanh Thuý', 'dothithanhthuy3737@gmail.com', '702021843', NULL, '$2y$12$lrRZWUCOrjcI3ebNJ4.VZOl9pstB/N5/Am0ptwTX6sEexvt01eBYO', 3, 1, NULL, '2026-05-27 01:47:02', '2026-05-27 01:47:02'),
 (4, 'Lưu Ngọc Anh', 'anha0926@gmail.com', '383361304', NULL, '$2y$12$sCYabjAshqwYOL98iczek.E.QKxnTKcOoZUeBb6.KO9jXOzpcumm.', 3, 1, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
-(5, 'Lê Thị Hoài Linh', NULL, '382085196', NULL, '$2y$12$Z.OZ8SeMRFci1mmmgrC.iO4hirdbcOoNp8DQORVlTdscWxeMOC7j2', 3, 2, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
+(5, 'Lê Thị Hoài Linh', NULL, '382085196', NULL, '$2y$12$Z.OZ8SeMRFci1mmmgrC.iO4hirdbcOoNp8DQORVlTdscWxeMOC7j2', 3, 2, NULL, '2026-05-27 01:47:03', '2026-06-02 16:53:59'),
 (6, 'Lê Thu Hiền', NULL, NULL, NULL, '$2y$12$0g3vm8lX.G6AUCANG42l0OUkqb5XMiydlxf4dfDYyevIdCVL115V6', 2, 1, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
 (7, 'Phùng Nhật Phương', NULL, NULL, NULL, '$2y$12$1cM3me5M7Fs3ygLccw7FhuUeypQDGgIKfuIhcmh0z8WlkjeA9mNIG', 2, 1, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
 (8, 'Nguyễn Thị Diệu Trang', NULL, NULL, NULL, '$2y$12$XzAhSNLbCdC1rSm3YhTxTerGjF8NQ34LU6p8pSWdOtKLY4UyOcY66', 3, 1, NULL, '2026-05-27 01:47:03', '2026-05-27 01:47:03'),
@@ -1291,6 +1294,32 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `email_verified_at`, `passw
 (23, 'Nguyễn Diệu Linh', NULL, NULL, NULL, '$2y$12$cxBNcB7WZ0tGlofIIgd.jOWuuxhEo/VclTyz0ZIGbczktz2jUXOEK', 3, 1, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
 (24, 'Đinh Trọng Tín', 'trongtin030199@gmail.com', '966884801', NULL, '$2y$12$jwbbpFrTj0RbmaxADt7KZOOzo9qyNZa9MBot.bbFtGfqUR9u8BveO', 2, 1, NULL, '2026-05-27 01:47:06', '2026-05-27 01:47:06'),
 (25, 'Admin Sora', 'cskh@sorabridal.com', NULL, NULL, '$2y$12$PKzpknYpvZ0gJqYf7c.wUOufFNLI.d76wPTguwXEgPfimNFRUqPsS', 1, 1, NULL, '2026-05-27 01:47:07', '2026-05-27 01:47:07');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `vai_tro`
+--
+
+CREATE TABLE `vai_tro` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `ma_vai_tro` varchar(255) NOT NULL,
+  `ten_vai_tro` varchar(255) NOT NULL,
+  `mo_ta` text DEFAULT NULL,
+  `ghi_chu` text DEFAULT NULL,
+  `ds_menu` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`ds_menu`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `vai_tro`
+--
+
+INSERT INTO `vai_tro` (`id`, `ma_vai_tro`, `ten_vai_tro`, `mo_ta`, `ghi_chu`, `ds_menu`, `created_at`, `updated_at`) VALUES
+(1, '1', 'Admin hệ thống', 'Tài khoản admin tổng', NULL, '[\"admin.nhan-su.phan-quyen\",\"admin.index\",\"admin.khach-hang.tao-hop-dong\",\"admin.khach-hang.danh-sach-hop-dong-cuoi\",\"admin.trang-phuc.hop-dong\",\"admin.lich-lam-viec\",\"admin.diem-danh.diem-danh\",\"admin.diem-danh.cham-cong\",\"admin.nhan-su.danh-sach\",\"admin.nhan-su.cong-viec-cua-toi\",\"admin.trang-phuc.san-pham\",\"admin.concept.concept\",\"admin.dich-vu.dich-vu-le\",\"admin.dich-vu.nhom-dich-vu\",\"admin.tai-chinh.cong-no\",\"admin.tai-chinh.phieu-thu-chi\",\"admin.tai-chinh.tinh-luong\",\"admin.note-khach-moi\",\"admin.bao-cao.ads\",\"admin.tu-van.danh-sach\",\"admin.thong-tin-ca-nhan\",\"admin.he-thong.vai-tro\",\"admin.he-thong.phong-ban\",\"admin.he-thong.tai-lieu\",\"admin.he-thong.logs\"]', '2026-06-02 15:18:00', '2026-06-02 16:47:56'),
+(2, '3', 'Người dùng', 'Vai trò người dùng', 'Vai trò mặc định ban đầu', '[\"admin.index\"]', '2026-06-02 16:35:03', '2026-06-02 16:58:41'),
+(3, '2', 'Nhân viên', 'Tài khoản nhân viên', NULL, '[\"admin.index\"]', '2026-06-02 16:38:33', '2026-06-02 16:59:01');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -1590,6 +1619,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `users_phone_unique` (`phone`);
 
 --
+-- Chỉ mục cho bảng `vai_tro`
+--
+ALTER TABLE `vai_tro`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `vai_tro_ma_vai_tro_unique` (`ma_vai_tro`);
+
+--
 -- AUTO_INCREMENT cho các bảng đã đổ
 --
 
@@ -1657,7 +1693,7 @@ ALTER TABLE `hop_dong_cho_thue_trang_phuc`
 -- AUTO_INCREMENT cho bảng `hop_dong_cuoi`
 --
 ALTER TABLE `hop_dong_cuoi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT cho bảng `hop_dong_cuoi_dich_vu_le`
@@ -1675,7 +1711,7 @@ ALTER TABLE `hop_dong_cuoi_nhom_dich_vu`
 -- AUTO_INCREMENT cho bảng `hop_dong_cuoi_thanh_vien_sale`
 --
 ALTER TABLE `hop_dong_cuoi_thanh_vien_sale`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=446;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=448;
 
 --
 -- AUTO_INCREMENT cho bảng `hop_dong_cuoi_trang_phuc`
@@ -1705,7 +1741,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT cho bảng `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT cho bảng `ngan_hang_thanh_toan`
@@ -1753,7 +1789,7 @@ ALTER TABLE `note_khach_moi_phu_trach_sale`
 -- AUTO_INCREMENT cho bảng `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT cho bảng `phieu_thu_chi`
@@ -1790,6 +1826,12 @@ ALTER TABLE `trang_phuc`
 --
 ALTER TABLE `users`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT cho bảng `vai_tro`
+--
+ALTER TABLE `vai_tro`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Các ràng buộc cho các bảng đã đổ

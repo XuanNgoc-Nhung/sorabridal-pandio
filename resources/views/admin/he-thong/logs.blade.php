@@ -108,7 +108,7 @@
         <div class="card-body">
             @if(! $coFileLog)
             <div class="alert alert-warning mb-0" role="alert">
-                Không có file log cho ngày đã chọn (<code>laravel-{{ $ngay }}.log</code>).
+                Không có file log cho ngày đã chọn (<code>history-{{ $ngay }}.log</code>).
             </div>
             @else
             <div class="table-responsive table-wrapper-bordered">
@@ -223,7 +223,7 @@
                 Bạn có chắc muốn xóa toàn bộ file log ngày
                 <span class="fw-medium" id="ngayLogCanXoa">{{ \Carbon\Carbon::parse($ngay)->format('d/m/Y') }}</span>?
                 <div class="form-text mt-2">
-                    Thao tác này xóa file <code id="tenFileLogCanXoa">laravel-{{ $ngay }}.log</code> và không thể hoàn tác.
+                    Thao tác này xóa toàn bộ lịch sử trong ngày <code id="tenFileLogCanXoa">{{ $ngay }}</code> và không thể hoàn tác.
                 </div>
             </div>
             <div class="modal-footer">
@@ -264,7 +264,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ngayLogCanXoa.textContent = label;
         }
         if (tenFileLogCanXoa) {
-            tenFileLogCanXoa.textContent = 'laravel-' + ngay + '.log';
+            //chuyển ngày sang dạng dd/mm/yyyy
+            tenFileLogCanXoa.textContent = ngay; 
         }
     }
 

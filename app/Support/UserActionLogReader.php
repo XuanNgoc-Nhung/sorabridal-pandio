@@ -17,6 +17,21 @@ class UserActionLogReader
     {
         $dates = [];
 
+        foreach (File::glob(storage_path('logs/history*.log')) ?: [] as $path) {
+            $basename = basename($path);
+            if (preg_match('/^history-(\d{2}-\d{2}-\d{4})\.log$/', $basename, $matches)) {
+                if (Carbon::hasFormat($matches[1], 'd-m-Y')) {
+                    $dates[] = Carbon::createFromFormat('d-m-Y', $matches[1])->format('Y-m-d');
+                }
+
+                continue;
+            }
+
+            if ($basename === 'history.log') {
+                $dates[] = Carbon::createFromTimestamp(File::lastModified($path))->format('Y-m-d');
+            }
+        }
+
         foreach (File::glob(storage_path('logs/laravel*.log')) ?: [] as $path) {
             $basename = basename($path);
             if (preg_match('/^laravel-(\d{4}-\d{2}-\d{2})\.log$/', $basename, $matches)) {
@@ -42,16 +57,31 @@ class UserActionLogReader
             return null;
         }
 
-        $datedPath = storage_path('logs/laravel-'.$date.'.log');
-        if (File::isFile($datedPath)) {
-            return $datedPath;
+        $day = Carbon::parse($date);
+
+        $historyPath = storage_path('logs/history-'.$day->format('d-m-Y').'.log');
+        if (File::isFile($historyPath)) {
+            return $historyPath;
         }
 
-        $singlePath = storage_path('logs/laravel.log');
-        if (File::isFile($singlePath)) {
-            $fileDate = Carbon::createFromTimestamp(File::lastModified($singlePath))->format('Y-m-d');
+        $historySinglePath = storage_path('logs/history.log');
+        if (File::isFile($historySinglePath)) {
+            $fileDate = Carbon::createFromTimestamp(File::lastModified($historySinglePath))->format('Y-m-d');
             if ($fileDate === $date) {
-                return $singlePath;
+                return $historySinglePath;
+            }
+        }
+
+        $legacyPath = storage_path('logs/laravel-'.$date.'.log');
+        if (File::isFile($legacyPath)) {
+            return $legacyPath;
+        }
+
+        $legacySinglePath = storage_path('logs/laravel.log');
+        if (File::isFile($legacySinglePath)) {
+            $fileDate = Carbon::createFromTimestamp(File::lastModified($legacySinglePath))->format('Y-m-d');
+            if ($fileDate === $date) {
+                return $legacySinglePath;
             }
         }
 
