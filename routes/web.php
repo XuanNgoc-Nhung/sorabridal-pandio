@@ -89,6 +89,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::get('/chi-tiet-ngay', [AdminNhanSu::class, 'lichLamViecChiTietNgay'])->name('lich-lam-viec.chi-tiet-ngay');
         Route::get('/hop-dong-chua-phan-ngay', [AdminNhanSu::class, 'lichLamViecHopDongChuaPhanNgay'])
             ->name('lich-lam-viec.hop-dong-chua-phan-ngay');
+        Route::get('/chua-phan-cong', [AdminNhanSu::class, 'lichLamViecChuaPhanCong'])
+            ->name('lich-lam-viec.chua-phan-cong');
         Route::get('/hop-dong/{hopDongCuoi}/dieu-phoi-data', [AdminNhanSu::class, 'lichLamViecHopDongDieuPhoiData'])
             ->name('lich-lam-viec.hop-dong-dieu-phoi-data');
         Route::post('/tao-lich', [AdminNhanSu::class, 'lichLamViecTaoLich'])->name('lich-lam-viec.tao-lich');

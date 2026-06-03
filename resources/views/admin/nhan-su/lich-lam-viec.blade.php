@@ -33,6 +33,17 @@
                         {{-- <div class="form-text mt-2 mb-0">Không chọn = hiển thị tất cả hợp đồng (trừ nháp). Chọn nhiều = hiển thị HĐ thỏa ít nhất một điều kiện.</div> --}}
                     </div>
                 @endif
+                @if(!empty($isAdmin))
+                <div id="wsLichChuaPhanCongPanel" class="ws-lich-chua-phan-cong border-bottom pb-3 mb-3 d-none" aria-label="Hợp đồng chưa phân công">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <div class="text-muted small mb-0">Chưa phân công <span class="text-muted">(chưa phân chụp · make · edit, chưa có ngày trên lịch)</span></div>
+                        <span class="badge bg-label-secondary" id="wsLichChuaPhanCongCount">0</span>
+                    </div>
+                    <div id="wsLichChuaPhanCongBody" class="ws-lich-chua-phan-cong__body">
+                        <div class="text-muted small">Đang tải...</div>
+                    </div>
+                </div>
+                @endif
                 <div id="calendar" class="admin-work-calendar"></div>
                 <div id="ws-lich-mobile-month" class="ws-lich-mobile-month d-none" aria-label="Lịch tháng/tuần (mobile)">
                     <div class="table-responsive">
@@ -323,7 +334,11 @@
             var listCurrentPage = 1;
             var calendarViewBeforeList = 'dayGridMonth';
             var listDanhSachUrl = @json(route('admin.lich-lam-viec.danh-sach'));
+            var chuaPhanCongUrl = @json(route('admin.lich-lam-viec.chua-phan-cong'));
             var trangThaiHopDongClass = @json($trangThaiHopDongClass);
+            var chuaPhanCongPanel = document.getElementById('wsLichChuaPhanCongPanel');
+            var chuaPhanCongBody = document.getElementById('wsLichChuaPhanCongBody');
+            var chuaPhanCongCount = document.getElementById('wsLichChuaPhanCongCount');
 
             var direction = (typeof isRtl !== 'undefined' && isRtl) ? 'rtl' : 'ltr';
 
@@ -354,6 +369,69 @@
                     btn.classList.remove('d-none');
                 } else {
                     btn.classList.add('d-none');
+                }
+            }
+
+            function locIncludesChuaPhanCong() {
+                return selectedLocFilters().indexOf('chua_phan_cong') !== -1;
+            }
+
+            function buildChuaPhanCongCardHtml(contract) {
+                var coupleText = buildContractCoupleShortText(contract) || String(contract.couple || '').trim() || '—';
+                var maHd = String(contract.ma_hop_dong || '').trim();
+                var tdClass = listCardTienDoClass(contract);
+                var brief = (contract && contract.brief) ? contract.brief : {};
+                var khach = String(brief.khach_hang || '').trim();
+                var sdt = String(brief.sdt || '').trim();
+                var meta = [khach !== '—' && khach ? khach : '', sdt !== '—' && sdt ? sdt : ''].filter(Boolean).join(' · ');
+
+                return '<div class="ws-lich-chua-phan-cong__card' + (tdClass ? (' ' + tdClass) : '') + '">' +
+                    '<div class="ws-lich-chua-phan-cong__couple">' + escapeHtml(coupleText) + '</div>' +
+                    (maHd ? '<span class="badge bg-label-secondary">' + escapeHtml(maHd) + '</span>' : '') +
+                    (meta ? '<div class="ws-lich-chua-phan-cong__meta text-muted small">' + escapeHtml(meta) + '</div>' : '') +
+                '</div>';
+            }
+
+            function renderChuaPhanCongPanel(items) {
+                if (!chuaPhanCongBody) return;
+                var list = (items || []).filter(function (item) {
+                    return !isNhapContract(item);
+                });
+                if (chuaPhanCongCount) {
+                    chuaPhanCongCount.textContent = String(list.length);
+                }
+                if (!list.length) {
+                    chuaPhanCongBody.innerHTML = '<div class="text-muted small mb-0">Không có hợp đồng chưa phân công.</div>';
+                    return;
+                }
+                var html = '<div class="ws-lich-chua-phan-cong__grid">';
+                list.forEach(function (item) {
+                    html += buildChuaPhanCongCardHtml(item);
+                });
+                html += '</div>';
+                chuaPhanCongBody.innerHTML = html;
+            }
+
+            function loadChuaPhanCongPanel() {
+                if (!chuaPhanCongBody || !chuaPhanCongUrl) return;
+                chuaPhanCongBody.innerHTML = '<div class="text-muted small">Đang tải...</div>';
+                fetch(chuaPhanCongUrl, { method: 'GET' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (payload) {
+                        renderChuaPhanCongPanel((payload && payload.items) ? payload.items : []);
+                    })
+                    .catch(function () {
+                        chuaPhanCongBody.innerHTML = '<div class="alert alert-danger mb-0 py-2 small">Không tải được danh sách.</div>';
+                    });
+            }
+
+            function syncChuaPhanCongPanel() {
+                if (!chuaPhanCongPanel || !isAdmin) return;
+                if (locIncludesChuaPhanCong()) {
+                    chuaPhanCongPanel.classList.remove('d-none');
+                    loadChuaPhanCongPanel();
+                } else {
+                    chuaPhanCongPanel.classList.add('d-none');
                 }
             }
 
@@ -1036,6 +1114,7 @@
                 if (!listBodyEl || !listPaginationEl || !listSummaryEl) return;
 
                 var items = (payload && payload.items) ? payload.items : [];
+                var chuaPhanItems = (payload && payload.chua_phan_cong) ? payload.chua_phan_cong : [];
                 var pagination = (payload && payload.pagination) ? payload.pagination : {};
                 var total = parseInt(pagination.total, 10) || 0;
                 var currentPage = parseInt(pagination.current_page, 10) || 1;
@@ -1046,14 +1125,34 @@
 
                 listCurrentPage = currentPage;
 
+                var html = '';
+                if (locIncludesChuaPhanCong() && chuaPhanItems.length) {
+                    html += '<div class="ws-lich-list-day ws-lich-list-day--chua-phan-cong mb-3">' +
+                        '<div class="ws-lich-list-day__heading">Chưa phân công</div>' +
+                        '<div class="ws-lich-list-day__items ws-lich-list-day__items--grid">';
+                    chuaPhanItems.forEach(function (item) {
+                        if (!isNhapContract(item)) {
+                            html += buildChuaPhanCongCardHtml(item);
+                        }
+                    });
+                    html += '</div></div>';
+                }
+
                 if (!items.length) {
-                    listBodyEl.innerHTML = '<div class="alert alert-info mb-0">Không có hợp đồng trong khoảng thời gian này.</div>';
-                    listSummaryEl.textContent = '0 hợp đồng';
+                    if (html) {
+                        html += '<div class="alert alert-info mb-0">Không có hợp đồng có ngày chụp trong khoảng thời gian này.</div>';
+                    } else {
+                        listBodyEl.innerHTML = '<div class="alert alert-info mb-0">Không có hợp đồng trong khoảng thời gian này.</div>';
+                        listSummaryEl.textContent = '0 hợp đồng';
+                        listPaginationEl.innerHTML = '';
+                        return;
+                    }
+                    listBodyEl.innerHTML = html;
+                    listSummaryEl.textContent = chuaPhanItems.length + ' hợp đồng chưa phân công';
                     listPaginationEl.innerHTML = '';
                     return;
                 }
 
-                var html = '';
                 var lastNgay = null;
                 items.forEach(function (item) {
                     if (!filterVisibleContracts([item]).length) return;
@@ -1308,6 +1407,7 @@
             root.querySelectorAll('.ws-lich-loc-filter').forEach(function (el) {
                 el.addEventListener('change', function () {
                     updateLocClearButton();
+                    syncChuaPhanCongPanel();
                     calendar.refetchEvents();
                     syncMobileMonthLayout();
                     if (listModeActive) loadListDanhSach(1);
@@ -1320,12 +1420,14 @@
                         cb.checked = false;
                     });
                     updateLocClearButton();
+                    syncChuaPhanCongPanel();
                     calendar.refetchEvents();
                     syncMobileMonthLayout();
                     if (listModeActive) loadListDanhSach(1);
                 });
             }
             updateLocClearButton();
+            syncChuaPhanCongPanel();
 
             function bindWorkDayAddBtn(dateStr) {
                 var modalEl = document.getElementById('wsWorkDayModal');

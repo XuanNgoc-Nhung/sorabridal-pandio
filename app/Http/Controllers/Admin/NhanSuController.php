@@ -172,6 +172,10 @@ class NhanSuController extends Controller
 
     private function lichLamViecTienDo(HopDongCuoi $hd): string
     {
+        if (HopDongCuoiLocTienDoFilter::matchesChuaPhanCong($hd)) {
+            return 'chua_phan_cong';
+        }
+
         if ($hd->ngay_up_link_in_gan_nhat || trim((string) ($hd->link_in ?? '')) !== '') {
             return 'up_link_in';
         }
@@ -349,6 +353,41 @@ class NhanSuController extends Controller
             'ty_le_thanh_toan' => $this->lichLamViecTyLeThanhToan($hd),
             'brief' => $this->lichLamViecBriefFields($hd, $tz),
         ];
+    }
+
+    /** @return \Illuminate\Support\Collection<int, array<string, mixed>> */
+    private function lichLamViecLayHopDongChuaPhanCong(?int $nhanVienId, bool $isAdmin, string $tz)
+    {
+        if (! $isAdmin) {
+            return collect();
+        }
+
+        return HopDongCuoi::query()
+            ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
+            ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
+            ->whereNotIn('trang_thai_hop_dong', ['da_huy'])
+            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q))
+            ->whereNull('ngay_chup_thuc_te')
+            ->whereNull('ngay_chup_du_kien')
+            ->orderByDesc('id')
+            ->limit(200)
+            ->get()
+            ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz));
+    }
+
+    public function lichLamViecChuaPhanCong(Request $request)
+    {
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        $nhanVienId = $user?->nhanVien?->id;
+        if (! $isAdmin && ! $nhanVienId) {
+            return response()->json(['items' => []]);
+        }
+
+        $tz = config('app.timezone');
+        $items = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz)->values();
+
+        return response()->json(['items' => $items]);
     }
 
     public function index()
@@ -880,12 +919,18 @@ class NhanSuController extends Controller
             ->filter()
             ->values();
 
+        $chuaPhanCongItems = collect();
+        if (HopDongCuoiLocTienDoFilter::hasChuaPhanCong($locFilters)) {
+            $chuaPhanCongItems = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz);
+        }
+
         $total = $rows->count();
         $lastPage = max(1, (int) ceil($total / $perPage));
         $page = min($page, $lastPage);
         $items = $rows->forPage($page, $perPage)->values();
 
         return response()->json([
+            'chua_phan_cong' => $chuaPhanCongItems->values()->all(),
             'items' => $items,
             'pagination' => [
                 'current_page' => $page,
@@ -912,6 +957,7 @@ class NhanSuController extends Controller
 
         $items = HopDongCuoi::query()
             ->whereNotIn('trang_thai_hop_dong', ['nhap', 'da_huy'])
+            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q))
             ->whereNull('ngay_chup_thuc_te')
             ->whereNull('ngay_chup_du_kien')
             ->orderByDesc('id')

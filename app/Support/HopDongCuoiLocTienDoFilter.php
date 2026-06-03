@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\HopDongCuoi;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -33,6 +34,24 @@ class HopDongCuoiLocTienDoFilter
         return array_values(array_intersect(self::allowedKeys(), (array) $raw));
     }
 
+    public static function hasChuaPhanCong(array $filters): bool
+    {
+        return in_array('chua_phan_cong', $filters, true);
+    }
+
+    public static function matchesChuaPhanCong(HopDongCuoi $hd): bool
+    {
+        return ! $hd->tho_chup_id && ! $hd->tho_make_id && ! $hd->tho_edit_id;
+    }
+
+    /** Chưa phân chụp, make và edit. @param Builder<\App\Models\HopDongCuoi> $query */
+    public static function applyChuaPhanCong(Builder $query): void
+    {
+        $query->whereNull('tho_chup_id')
+            ->whereNull('tho_make_id')
+            ->whereNull('tho_edit_id');
+    }
+
     /** @param Builder<\App\Models\HopDongCuoi> $query @param list<string> $filters */
     public static function apply(Builder $query, array $filters): void
     {
@@ -44,6 +63,7 @@ class HopDongCuoiLocTienDoFilter
             foreach ($filters as $key) {
                 $outer->orWhere(function ($q) use ($key) {
                     match ($key) {
+                        'chua_phan_cong' => $q->tap(fn ($qq) => self::applyChuaPhanCong($qq)),
                         'phan_chup' => $q->whereNotNull('tho_chup_id')
                             ->whereNull('tho_make_id')
                             ->whereNull('tho_edit_id')

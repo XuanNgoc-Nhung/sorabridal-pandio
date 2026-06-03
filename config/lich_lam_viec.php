@@ -14,6 +14,11 @@ return [
     | bg: màu nền cố định trên lịch. border: màu viền trái mặc định (có thể tùy chỉnh trên UI chú thích).
     */
     'tien_do' => [
+        'chua_phan_cong' => [
+            'label' => 'Chưa phân công',
+            'bg' => '#f3f4f6',
+            'border' => '#9ca3af',
+        ],
         'phan_chup' => [
             'label' => 'Đã phân chụp',
             'bg' => '#ffe4e8',
@@ -46,6 +51,7 @@ return [
     | Chọn nhiều = OR — HĐ thỏa ít nhất một điều kiện.
     */
     'loc_tien_do' => [
+        'chua_phan_cong' => ['label' => 'Chưa phân công'],
         'phan_chup' => ['label' => 'Đã phân chụp'],
         'phan_make' => ['label' => 'Đã phân make'],
         'phan_edit' => ['label' => 'Đã phân edit'],
