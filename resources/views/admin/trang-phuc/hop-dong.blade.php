@@ -147,7 +147,17 @@
                                 .'<br>Còn lại: '.$fmtTien($conThieuHd)
                                 .'<br>Tiến độ: '.$tyLeDaThuTooltip.'%';
                         @endphp
-                        <td>{{ $tenSanPhams->isNotEmpty() ? $tenSanPhams->implode(', ') : '—' }}</td>
+                        <td>
+                            @if($tenSanPhams->isNotEmpty())
+                            <ul class="mb-0 ps-3 small lh-sm">
+                                @foreach($tenSanPhams as $tenSp)
+                                <li><p>{{ $tenSp }}</p></li>
+                                @endforeach
+                            </ul>
+                            @else
+                            —
+                            @endif
+                        </td>
                         <td class="text-center">{{ $item->so_ngay_thue ?? 0 }}</td>
                         <td class="text-end hd-thanh-toan-cell">
                             <div class="hd-thanh-toan-cell__rows small lh-sm">
