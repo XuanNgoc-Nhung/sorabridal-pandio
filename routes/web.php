@@ -52,7 +52,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
     Route::group(['prefix' => 'khach-hang'], function () {
         Route::get('/danh-sach-hop-dong-cuoi', [AdminKhachHang::class, 'danhSachHopDongCuoi'])->name('khach-hang.danh-sach-hop-dong-cuoi');
         Route::get('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi/nhan-vien-theo-ngay', [AdminKhachHang::class, 'nhanVienChoDieuPhoiTheoNgayChup'])->name('khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay');
-        Route::put('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi', [AdminKhachHang::class, 'c3NhatDieuPhoiHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.dieu-phoi');
+        Route::put('/hop-dong-cuoi/{hopDongCuoi}/dieu-phoi', [AdminKhachHang::class, 'capNhatDieuPhoiHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.dieu-phoi');
         Route::get('/hop-dong-cuoi/{hopDongCuoi}/thanh-toan', [AdminKhachHang::class, 'thongTinThanhToanHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.thanh-toan');
         Route::post('/hop-dong-cuoi/{hopDongCuoi}/thanh-toan', [AdminKhachHang::class, 'luuThanhToanHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.thanh-toan.luu');
         Route::put('/hop-dong-cuoi/{hopDongCuoi}/huy', [AdminKhachHang::class, 'huyHopDongCuoi'])->name('khach-hang.hop-dong-cuoi.huy');
