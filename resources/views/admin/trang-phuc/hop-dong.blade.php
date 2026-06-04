@@ -85,7 +85,7 @@
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th>Tên khách hàng</th>
                         <th>Số điện thoại</th>
-                        <th>Tên sản phẩm</th>
+                        <th>Sản phẩm</th>
                         <th class="text-center" style="width: 90px;">Số ngày thuê</th>
                         <th class="text-end hd-thanh-toan-col">Thanh toán</th>
                         <th>Thời gian thuê</th>
@@ -696,7 +696,7 @@
                 <div id="hdKtspError" class="alert alert-danger d-none" role="alert"></div>
                 <div id="hdKtspContent" class="d-none">
                     <div class="fw-semibold mb-1">Lịch sử sử dụng theo ngày</div>
-                    <div class="text-muted small mb-2">Mỗi ngày liệt kê các đơn đang sử dụng sản phẩm.</div>
+                    {{-- <div class="text-muted small mb-2">Mỗi ngày liệt kê các đơn đang sử dụng sản phẩm.</div> --}}
                     <div id="hdKtspGroupedEmpty" class="text-muted small d-none">Chưa có dữ liệu sử dụng.</div>
                     <div id="hdKtspGroupedWrap" class="accordion accordion-flush"></div>
                 </div>
