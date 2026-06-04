@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\UserActionLogReader;
 use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
@@ -33,11 +34,7 @@ class LogUserAction
     {
         $response = $next($request);
 
-        if (! $request->route() || $request->routeIs('admin.he-thong.logs', 'admin.he-thong.logs.destroy')) {
-            return $response;
-        }
-
-        if ('/'.$request->path() === '//') {
+        if (! UserActionLogReader::shouldLog($request, $response)) {
             return $response;
         }
 

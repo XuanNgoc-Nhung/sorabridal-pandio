@@ -204,3 +204,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::delete('/logs', [AdminHeThong::class, 'destroyLogs'])->name('he-thong.logs.destroy');
     });
 });
+
+Route::fallback(function () {
+    \Log::info('fallback hit');
+    return response()->view('errors.404', [], 404);
+});

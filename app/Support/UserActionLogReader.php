@@ -3,12 +3,54 @@
 namespace App\Support;
 
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserActionLogReader
 {
     private const LOG_MARKER = 'User action';
+
+    /** View trả về bởi Route::fallback() khi URL không khớp route đã khai báo. */
+    private const UNDECLARED_ROUTE_VIEW = 'errors.404';
+
+    /**
+     * Có nên ghi log User action cho request/response này không.
+     * Bỏ qua route fallback (URL chưa khai báo) để giảm tải ghi file log.
+     */
+    public static function shouldLog(Request $request, Response $response): bool
+    {
+        if (! $request->route()) {
+            return false;
+        }
+
+        if ($request->routeIs('admin.he-thong.logs', 'admin.he-thong.logs.destroy')) {
+            return false;
+        }
+
+        if ('/'.$request->path() === '//') {
+            return false;
+        }
+
+        if ($response->getStatusCode() === 404 && self::responseUsesView($response, self::UNDECLARED_ROUTE_VIEW)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function responseUsesView(Response $response, string $viewName): bool
+    {
+        if (! method_exists($response, 'getOriginalContent')) {
+            return false;
+        }
+
+        $original = $response->getOriginalContent();
+
+        return $original instanceof View && $original->name() === $viewName;
+    }
 
     /**
      * @return list<string> Ngày dạng Y-m-d, mới nhất trước
