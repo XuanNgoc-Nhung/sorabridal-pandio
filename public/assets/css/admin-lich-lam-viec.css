@@ -466,8 +466,35 @@ input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px soli
     background: #eef0f3;
     color: var(--admin-text-body);
 }
+.ws-lich-list-footer {
+    row-gap: .75rem;
+}
+.ws-lich-list-footer__summary {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.ws-lich-list-footer__pagination {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+.ws-lich-list-footer__per-page {
+    flex: 0 1 auto;
+}
 #wsLichListPagination .pagination {
     margin-bottom: 0;
+}
+@media (max-width: 767.98px) {
+    .ws-lich-list-footer__pagination {
+        flex: 1 1 100%;
+        order: 3;
+    }
+    .ws-lich-list-footer__per-page {
+        flex: 1 1 100%;
+        margin-left: 0 !important;
+        justify-content: flex-end;
+    }
 }
 
 /* Mobile — xem theo tháng/tuần: bảng dọc Thứ / Ngày / Công việc */

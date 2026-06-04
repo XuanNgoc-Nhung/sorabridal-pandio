@@ -60,22 +60,22 @@
                     </div>
                 </div>
                 <div id="ws-lich-list-view" class="ws-lich-list-view d-none" aria-label="Danh sách lịch làm việc">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                        <div class="text-muted small mb-0" id="wsLichListSummary">Đang tải...</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <label class="form-label mb-0 small text-muted" for="wsLichListPerPage">Hiển thị</label>
+                    <div id="wsLichListBody" class="ws-lich-list-body">
+                        <div class="text-muted small py-4 text-center">Đang tải...</div>
+                    </div>
+                    <div class="ws-lich-list-footer d-flex flex-wrap align-items-center gap-2 mt-3">
+                        <div class="ws-lich-list-footer__summary text-muted small mb-0" id="wsLichListSummary">Đang tải...</div>
+                        <nav class="ws-lich-list-footer__pagination" id="wsLichListPagination" aria-label="Phân trang danh sách lịch"></nav>
+                        <div class="ws-lich-list-footer__per-page d-flex align-items-center gap-2 ms-md-auto">
+                            {{-- <label class="form-label mb-0 small text-muted" for="wsLichListPerPage">Hiển thị</label> --}}
                             <select class="form-select form-select-sm" id="wsLichListPerPage" style="width: auto; min-width: 4.5rem;">
                                 <option value="10">10</option>
                                 <option value="20" selected>20</option>
                                 <option value="50">50</option>
                             </select>
-                            <span class="small text-muted">hợp đồng / trang</span>
+                            {{-- <span class="small text-muted">hợp đồng / trang</span> --}}
                         </div>
                     </div>
-                    <div id="wsLichListBody" class="ws-lich-list-body">
-                        <div class="text-muted small py-4 text-center">Đang tải...</div>
-                    </div>
-                    <nav class="mt-3" id="wsLichListPagination" aria-label="Phân trang danh sách lịch"></nav>
                 </div>
                 @if(!empty($tienDoLegend) && is_array($tienDoLegend))
                     <div class="ws-lich-legend border-top pt-3 mt-3 pb-3" aria-label="Chú thích màu tiến độ hợp đồng">
