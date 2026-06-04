@@ -379,7 +379,7 @@
             function buildChuaPhanCongCardHtml(contract) {
                 var coupleText = buildContractCoupleShortText(contract) || String(contract.couple || '').trim() || '—';
                 var maHd = String(contract.ma_hop_dong || '').trim();
-                var tdClass = listCardTienDoClass(contract);
+                var tdClass = listCardTienDoClass(contract) || 'ws-lich-list-card--chua_phan_cong';
                 var brief = (contract && contract.brief) ? contract.brief : {};
                 var khach = String(brief.khach_hang || '').trim();
                 var sdt = String(brief.sdt || '').trim();
@@ -410,6 +410,7 @@
                 });
                 html += '</div>';
                 chuaPhanCongBody.innerHTML = html;
+                paintAllTienDoContractElements();
             }
 
             function loadChuaPhanCongPanel() {
@@ -566,6 +567,14 @@
                 el.style.removeProperty('border-left-color');
             }
 
+            function tienDoBorderElementSelector(key) {
+                return [
+                    '.ws-day-contract.ws-day-contract--' + key,
+                    '.ws-lich-list-card.ws-lich-list-card--' + key,
+                    '.ws-lich-chua-phan-cong__card.ws-lich-list-card--' + key
+                ].join(',');
+            }
+
             function syncTienDoDynamicStylesheet() {
                 var styleEl = document.getElementById('wsLichTienDoCustomColors');
                 if (!styleEl) {
@@ -579,7 +588,9 @@
                     if (!customBorder) return;
                     var selector = [
                         '#ws-lich-lam-viec .admin-work-calendar .ws-day-contract.ws-day-contract--' + key,
-                        '#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key
+                        '#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key,
+                        '#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--' + key,
+                        '#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--' + key
                     ].join(',');
                     rules.push(selector + '{border-left-color:' + customBorder + ' !important}');
                 });
@@ -589,7 +600,7 @@
             function paintAllTienDoContractElements() {
                 if (!root) return;
                 tienDoKeys.forEach(function (key) {
-                    root.querySelectorAll('.ws-day-contract.ws-day-contract--' + key).forEach(function (el) {
+                    root.querySelectorAll(tienDoBorderElementSelector(key)).forEach(function (el) {
                         paintTienDoContractElement(el, key);
                     });
                 });
@@ -648,7 +659,11 @@
                 var styleEl = document.getElementById('wsLichTienDoCustomColors');
                 if (styleEl) styleEl.textContent = '';
                 if (root) {
-                    root.querySelectorAll('.ws-day-contract[class*="ws-day-contract--"]').forEach(clearTienDoContractElementPaint);
+                    root.querySelectorAll(
+                        '.ws-day-contract[class*="ws-day-contract--"],' +
+                        '.ws-lich-list-card[class*="ws-lich-list-card--"],' +
+                        '.ws-lich-chua-phan-cong__card[class*="ws-lich-list-card--"]'
+                    ).forEach(clearTienDoContractElementPaint);
                 }
                 syncTienDoColorInputs();
                 applyTienDoColors();
@@ -1150,6 +1165,7 @@
                     listBodyEl.innerHTML = html;
                     listSummaryEl.textContent = chuaPhanItems.length + ' hợp đồng chưa phân công';
                     listPaginationEl.innerHTML = '';
+                    paintAllTienDoContractElements();
                     return;
                 }
 
@@ -1181,6 +1197,8 @@
                 listSummaryEl.textContent = (from && to)
                     ? ('Hiển thị ' + from + '–' + to + ' / ' + total + ' hợp đồng · Trang ' + currentPage + '/' + lastPage)
                     : (total + ' hợp đồng');
+
+                paintAllTienDoContractElements();
 
                 listBodyEl.querySelectorAll('.ws-lich-list-card').forEach(function (el) {
                     el.addEventListener('click', function () {
