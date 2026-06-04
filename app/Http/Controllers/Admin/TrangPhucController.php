@@ -493,6 +493,7 @@ class TrangPhucController extends Controller
         $validated = $request->validate([
             'trang_thai' => 'required|integer|in:1,2',
             'ngay_tra_chinh_thuc' => 'nullable|date',
+            'tien_coc' => 'nullable|numeric|min:0',
         ]);
 
         $trangThai = (int) $validated['trang_thai'];
@@ -502,9 +503,18 @@ class TrangPhucController extends Controller
                 ? Carbon::parse($validated['ngay_tra_chinh_thuc'])->startOfDay()
                 : $hopDong->ngay_tra_chinh_thuc);
 
+        $tongTien = round((float) $hopDong->tong_tien, 2);
+        $tienCoc = round((float) ($validated['tien_coc'] ?? $hopDong->tien_coc ?? 0), 2);
+        if ($tongTien > 0 && $tienCoc > $tongTien) {
+            return redirect()->route('admin.trang-phuc.hop-dong')
+                ->withErrors(['tien_coc' => 'Đã thanh toán không được lớn hơn tổng tiền hợp đồng.'])
+                ->withInput();
+        }
+
         $hopDong->update([
             'trang_thai' => $trangThai,
             'ngay_tra_chinh_thuc' => $ngayTraChinhThuc,
+            'tien_coc' => $tienCoc,
         ]);
 
         $msg = $trangThai === 2 ? 'Đã huỷ hợp đồng.' : 'Đã chuyển hợp đồng sang Hoàn thành.';

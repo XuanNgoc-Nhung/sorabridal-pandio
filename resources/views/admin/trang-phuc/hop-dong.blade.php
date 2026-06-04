@@ -87,7 +87,7 @@
                         <th>Số điện thoại</th>
                         <th>Tên sản phẩm</th>
                         <th class="text-center" style="width: 90px;">Số ngày thuê</th>
-                        <th class="text-end" style="width: 120px;">Tiền thuê</th>
+                        <th class="text-end hd-thanh-toan-col">Thanh toán</th>
                         <th>Thời gian thuê</th>
                         <th>Thời gian trả chính thức</th>
                         <th>Ghi chú</th>
@@ -124,11 +124,71 @@
                                 ->filter()
                                 ->unique()
                                 ->values();
-                            $fmtTien = fn ($v) => $v !== null ? number_format((float) $v, 0, ',', '.') . ' đ' : '—';
+                            $fmtTien = fn ($v) => number_format(max(0, (float) ($v ?? 0)), 0, ',', '.') . ' đ';
+                            $tongTienHd = round((float) ($item->tong_tien ?? 0), 2);
+                            $tienCocHd = round((float) ($item->tien_coc ?? 0), 2);
+                            $daThuHd = min($tongTienHd, max(0, $tienCocHd));
+                            $conThieuHd = max(0, round($tongTienHd - $daThuHd, 2));
+                            if ($tongTienHd > 0) {
+                                $tyLeDaThuHd = min(100, max(0, ($daThuHd / $tongTienHd) * 100));
+                                $tyLeThieuHd = min(100, max(0, ($conThieuHd / $tongTienHd) * 100));
+                                if (round($tyLeDaThuHd + $tyLeThieuHd, 2) > 100) {
+                                    $tyLeThieuHd = max(0, 100 - $tyLeDaThuHd);
+                                }
+                            } else {
+                                $tyLeDaThuHd = 0;
+                                $tyLeThieuHd = 0;
+                            }
+                            $tyLeDaThuCss = rtrim(rtrim(number_format($tyLeDaThuHd, 2, '.', ''), '0'), '.');
+                            $tyLeThieuCss = rtrim(rtrim(number_format($tyLeThieuHd, 2, '.', ''), '0'), '.');
+                            $tyLeDaThuTooltip = number_format(round($tyLeDaThuHd, 2), 2, ',', '');
+                            $hdProgressTooltipHtml = 'Tổng: '.$fmtTien($tongTienHd)
+                                .'<br>Đã nhận: '.$fmtTien($daThuHd)
+                                .'<br>Còn lại: '.$fmtTien($conThieuHd)
+                                .'<br>Tiến độ: '.$tyLeDaThuTooltip.'%';
                         @endphp
                         <td>{{ $tenSanPhams->isNotEmpty() ? $tenSanPhams->implode(', ') : '—' }}</td>
                         <td class="text-center">{{ $item->so_ngay_thue ?? 0 }}</td>
-                        <td class="text-end">{{ $fmtTien($item->tong_tien) }}</td>
+                        <td class="text-end hd-thanh-toan-cell">
+                            <div class="hd-thanh-toan-cell__rows small lh-sm">
+                                <div class="d-flex justify-content-between align-items-baseline gap-2">
+                                    <span class="text-muted">Tổng</span>
+                                    <span class="fw-semibold text-nowrap">{{ $fmtTien($tongTienHd) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-baseline gap-2 mt-1">
+                                    <span class="text-muted">Đã nhận</span>
+                                    <span class="text-success text-nowrap">{{ $fmtTien($tienCocHd) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-baseline gap-2 mt-1">
+                                    <span class="text-muted">Còn lại</span>
+                                    <span class="text-danger fw-medium text-nowrap">{{ $fmtTien($conThieuHd) }}</span>
+                                </div>
+                            </div>
+                            <div class="progress hd-thanh-toan-progress mt-2"
+                                 data-bs-toggle="tooltip"
+                                 data-bs-placement="top"
+                                 data-bs-html="true"
+                                 data-bs-title="{!! htmlspecialchars($hdProgressTooltipHtml, ENT_QUOTES, 'UTF-8') !!}">
+                                @if($tyLeDaThuHd > 0)
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: {{ $tyLeDaThuCss }}%;"
+                                     aria-valuenow="{{ $tyLeDaThuCss }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     aria-label="Đã thu"></div>
+                                @endif
+                                @if($tyLeThieuHd > 0)
+                                <div class="progress-bar bg-danger"
+                                     role="progressbar"
+                                     style="width: {{ $tyLeThieuCss }}%;"
+                                     aria-valuenow="{{ $tyLeThieuCss }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     aria-label="Còn thiếu"></div>
+                                @endif
+                            </div>
+                        </td>
                         <td>
                             @if($item->ngay_thue || $item->ngay_tra_du_kien)
                                 {{ $item->ngay_thue?->format('d/m/Y') ?? '—' }}
@@ -182,7 +242,9 @@
                                        data-url="{{ route('admin.trang-phuc.update-hop-dong-trang-thai', $item) }}"
                                        data-ten-khach="{{ e($item->ten_khach_hang ?? '') }}"
                                        data-trang-thai="{{ (int) ($item->trang_thai ?? 0) }}"
-                                       data-ngay-tra-chinh-thuc="{{ $item->ngay_tra_chinh_thuc?->format('Y-m-d') ?? '' }}">
+                                       data-ngay-tra-chinh-thuc="{{ $item->ngay_tra_chinh_thuc?->format('Y-m-d') ?? '' }}"
+                                       data-tong-tien="{{ $item->tong_tien ?? '' }}"
+                                       data-tien-coc="{{ $item->tien_coc ?? '' }}">
                                         <i class="fa-solid fa-clipboard-check me-2"></i> Cập nhật trạng thái
                                     </a>
                                     <form id="form-xoa-hd-{{ $item->id }}" action="{{ route('admin.trang-phuc.destroy-hop-dong', $item) }}" method="POST" class="d-inline">
@@ -217,7 +279,7 @@
                 <h5 class="modal-title" id="modalThemHopDongLabel">Thêm hợp đồng thuê trang phục</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <form action="{{ route('admin.trang-phuc.store-hop-dong') }}" method="POST" id="formThemHopDong">
+            <form action="{{ route('admin.trang-phuc.store-hop-dong') }}" method="POST" id="formThemHopDong" novalidate>
                 @csrf
                 <div class="modal-body">
                     @if($errors->any())
@@ -232,11 +294,13 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="them_ten_khach_hang">Tên khách hàng <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="them_ten_khach_hang" name="ten_khach_hang" value="{{ old('ten_khach_hang') }}" placeholder="Nhập tên khách hàng" required>
+                            <input type="text" class="form-control" id="them_ten_khach_hang" name="ten_khach_hang" value="{{ old('ten_khach_hang') }}" placeholder="Nhập tên khách hàng" required autocomplete="off">
+                            <div class="invalid-feedback" id="them_fb_ten_khach_hang"></div>
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="them_so_dien_thoai">Số điện thoại <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="them_so_dien_thoai" name="so_dien_thoai" value="{{ old('so_dien_thoai') }}" placeholder="0912345678" maxlength="20" required>
+                            <input type="text" class="form-control" id="them_so_dien_thoai" name="so_dien_thoai" value="{{ old('so_dien_thoai') }}" placeholder="0912345678" maxlength="20" required autocomplete="off">
+                            <div class="invalid-feedback" id="them_fb_so_dien_thoai"></div>
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="them_ghi_chu">Ghi chú</label>
@@ -252,10 +316,12 @@
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                             <label class="form-label" for="them_thoi_gian_bat_dau">Ngày thuê (bắt đầu) <span class="text-danger">*</span></label>
                             <input type="text" class="flatpickr-date-admin form-control" id="them_thoi_gian_bat_dau" name="thoi_gian_thue_bat_dau" value="{{ old('thoi_gian_thue_bat_dau') }}" placeholder="dd/mm/yyyy" required autocomplete="off">
+                            <div class="invalid-feedback" id="them_fb_thoi_gian_bat_dau"></div>
                         </div>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                             <label class="form-label" for="them_thoi_gian_du_kien_tra">Ngày dự kiến trả <span class="text-danger">*</span></label>
                             <input type="text" class="flatpickr-date-admin form-control" id="them_thoi_gian_du_kien_tra" name="thoi_gian_du_kien_tra" value="{{ old('thoi_gian_du_kien_tra') }}" placeholder="dd/mm/yyyy" required autocomplete="off">
+                            <div class="invalid-feedback" id="them_fb_thoi_gian_du_kien_tra"></div>
                         </div>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3" id="them_wrap_so_ngay_thue">
                             <label class="form-label" for="them_so_ngay_thue_display">Số ngày thuê</label>
@@ -294,7 +360,7 @@
                                    id="them_tim_san_pham"
                                    autocomplete="off"
                                    placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
-                            <div class="them-sp-ket-qua-scroll border rounded p-3 mt-2" id="them_sp_ket_qua_scroll">
+                            <div class="them-sp-ket-qua-scroll border rounded p-3 mt-2" id="them_sp_ket_qua_scroll" aria-describedby="them_trang_phuc_err">
                                 <div class="row g-3" id="them_sp_ket_qua"></div>
                                 <div class="text-center text-muted small py-3 d-none" id="them_sp_khong_co">Không có sản phẩm phù hợp.</div>
                             </div>
@@ -320,31 +386,38 @@
                             <script type="application/json" id="them-san-pham-search-url">@json(route('admin.trang-phuc.hop-dong.tim-san-pham'))</script>
                             <script type="application/json" id="them-lich-cho-thue-data">@json($lichChoThueHopDong ?? [])</script>
                         </div>
+                        @php
+                            $themTongTienRaw = old('tong_tien');
+                            $themTienCocRaw = old('tien_coc', '0');
+                        @endphp
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                            <label class="form-label" for="them_tong_tien">Tiền thuê (đ) <span class="text-danger">*</span></label>
-                            <input type="number"
-                                   class="form-control"
+                            <label class="form-label" for="them_tong_tien_hien_thi">Tiền thuê (đ) <span class="text-danger">*</span></label>
+                            <input type="hidden"
                                    id="them_tong_tien"
                                    name="tong_tien"
-                                   value="{{ old('tong_tien') }}"
-                                   min="0"
-                                   step="0.01"
-                                   inputmode="decimal"
+                                   value="{{ $themTongTienRaw }}">
+                            <input type="text"
+                                   class="form-control text-end"
+                                   id="them_tong_tien_hien_thi"
+                                   value="{{ $themTongTienRaw !== null && $themTongTienRaw !== '' ? number_format((float) $themTongTienRaw, 0, ',', '.') : '' }}"
+                                   inputmode="numeric"
                                    placeholder="0"
                                    required
                                    autocomplete="off"
                                    title="Nhập trực tiếp tổng tiền thuê của hợp đồng">
+                            <div class="invalid-feedback" id="them_fb_tong_tien"></div>
                         </div>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                            <label class="form-label" for="them_tien_coc">Tiền cọc (đ)</label>
-                            <input type="number"
-                                   class="form-control"
+                            <label class="form-label" for="them_tien_coc_hien_thi">Tiền cọc (đ)</label>
+                            <input type="hidden"
                                    id="them_tien_coc"
                                    name="tien_coc"
-                                   value="{{ old('tien_coc', '0') }}"
-                                   min="0"
-                                   step="0.01"
-                                   inputmode="decimal"
+                                   value="{{ $themTienCocRaw }}">
+                            <input type="text"
+                                   class="form-control text-end"
+                                   id="them_tien_coc_hien_thi"
+                                   value="{{ number_format((float) $themTienCocRaw, 0, ',', '.') }}"
+                                   inputmode="numeric"
                                    placeholder="0"
                                    autocomplete="off">
                         </div>
@@ -454,28 +527,32 @@
                                    title="Tự động theo khoảng ngày thuê — dùng tham khảo, không nhân vào tiền thuê">
                         </div>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                            <label class="form-label" for="sua_tong_tien">Tiền thuê (đ) <span class="text-danger">*</span></label>
-                            <input type="number"
-                                   class="form-control"
+                            <label class="form-label" for="sua_tong_tien_hien_thi">Tiền thuê (đ) <span class="text-danger">*</span></label>
+                            <input type="hidden"
                                    id="sua_tong_tien"
                                    name="tong_tien"
-                                   min="0"
-                                   step="0.01"
-                                   inputmode="decimal"
+                                   value="">
+                            <input type="text"
+                                   class="form-control text-end"
+                                   id="sua_tong_tien_hien_thi"
+                                   value=""
+                                   inputmode="numeric"
                                    placeholder="0"
                                    required
                                    autocomplete="off"
                                    title="Nhập trực tiếp tổng tiền thuê của hợp đồng">
                         </div>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                            <label class="form-label" for="sua_tien_coc">Tiền cọc (đ)</label>
-                            <input type="number"
-                                   class="form-control"
+                            <label class="form-label" for="sua_tien_coc_hien_thi">Tiền cọc (đ)</label>
+                            <input type="hidden"
                                    id="sua_tien_coc"
                                    name="tien_coc"
-                                   min="0"
-                                   step="0.01"
-                                   inputmode="decimal"
+                                   value="0">
+                            <input type="text"
+                                   class="form-control text-end"
+                                   id="sua_tien_coc_hien_thi"
+                                   value=""
+                                   inputmode="numeric"
                                    placeholder="0"
                                    autocomplete="off">
                         </div>
@@ -504,6 +581,32 @@
                 @csrf
                 @method('PATCH')
                 <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="tt_modal_tong_tien_hien_thi">Tổng tiền (đ)</label>
+                            <input type="text"
+                                   class="form-control text-end bg-body-secondary"
+                                   id="tt_modal_tong_tien_hien_thi"
+                                   value=""
+                                   readonly
+                                   disabled
+                                   tabindex="-1"
+                                   autocomplete="off"
+                                   aria-readonly="true">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="tt_modal_da_thanh_toan_hien_thi">Đã thanh toán (đ)</label>
+                            <input type="hidden" id="tt_modal_tien_coc" name="tien_coc" value="0">
+                            <input type="text"
+                                   class="form-control text-end"
+                                   id="tt_modal_da_thanh_toan_hien_thi"
+                                   value=""
+                                   inputmode="numeric"
+                                   placeholder="0"
+                                   autocomplete="off"
+                                   title="Số tiền khách đã thanh toán (cọc)">
+                        </div>
+                    </div>
                     <div class="d-flex flex-column flex-sm-row gap-3 align-items-stretch tt-modal-trang-thai-row">
                         <div class="flex-fill min-w-0">
                             <label class="form-label" for="tt_modal_select_trang_thai">Trạng thái</label>
@@ -612,6 +715,18 @@
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.hd-thanh-toan-col {
+    min-width: 168px;
+    width: 168px;
+}
+.hd-thanh-toan-cell {
+    min-width: 168px;
+    vertical-align: middle;
+}
+.hd-thanh-toan-progress {
+    height: 0.45rem;
+    cursor: help;
 }
 #modalThemHopDong .modal-hop-dong,
 #modalSuaHopDong .modal-hop-dong {
@@ -907,6 +1022,204 @@ document.addEventListener('DOMContentLoaded', function() {
     var themDaChon = document.getElementById('them_sp_da_chon'); // tbody
     var themTrangPhucErr = document.getElementById('them_trang_phuc_err');
 
+    function hopDongToNumber(v) {
+        var n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+    }
+    function hopDongParseMoneyText(v) {
+        var s = String(v || '').replace(/[^\d]/g, '');
+        if (!s) return 0;
+        return hopDongToNumber(s);
+    }
+    function hopDongFormatMoneyInputNumber(v) {
+        return new Intl.NumberFormat('vi-VN').format(Math.max(0, Math.round(hopDongToNumber(v))));
+    }
+    function hopDongSyncMoneyField(displayId, hiddenId, emptyHiddenValue) {
+        var displayEl = document.getElementById(displayId);
+        var hiddenEl = document.getElementById(hiddenId);
+        if (!displayEl || !hiddenEl) return;
+        var digits = String(displayEl.value || '').replace(/[^\d]/g, '');
+        if (!digits) {
+            hiddenEl.value = emptyHiddenValue;
+            displayEl.value = '';
+            return;
+        }
+        var n = hopDongParseMoneyText(displayEl.value);
+        hiddenEl.value = String(n);
+        displayEl.value = hopDongFormatMoneyInputNumber(n);
+    }
+    function hopDongBindFormattedMoneyInput(displayId, hiddenId, emptyHiddenValue) {
+        var displayEl = document.getElementById(displayId);
+        var hiddenEl = document.getElementById(hiddenId);
+        if (!displayEl || !hiddenEl) return;
+        function sync() {
+            hopDongSyncMoneyField(displayId, hiddenId, emptyHiddenValue);
+        }
+        displayEl.addEventListener('input', sync);
+        displayEl.addEventListener('blur', sync);
+        if (String(displayEl.value || '').replace(/[^\d]/g, '')) sync();
+    }
+    function hopDongSyncThemMoneyInputs() {
+        hopDongSyncMoneyField('them_tong_tien_hien_thi', 'them_tong_tien', '');
+        hopDongSyncMoneyField('them_tien_coc_hien_thi', 'them_tien_coc', '0');
+    }
+    function hopDongSyncSuaMoneyInputs() {
+        hopDongSyncMoneyField('sua_tong_tien_hien_thi', 'sua_tong_tien', '');
+        hopDongSyncMoneyField('sua_tien_coc_hien_thi', 'sua_tien_coc', '0');
+    }
+    function hopDongSetMoneyFields(displayId, hiddenId, rawValue, emptyHiddenValue) {
+        var displayEl = document.getElementById(displayId);
+        var hiddenEl = document.getElementById(hiddenId);
+        if (!displayEl || !hiddenEl) return;
+        var raw = rawValue !== null && rawValue !== undefined ? String(rawValue).trim() : '';
+        if (!raw) {
+            hiddenEl.value = emptyHiddenValue;
+            displayEl.value = '';
+            return;
+        }
+        var n = Math.max(0, Math.round(hopDongToNumber(raw)));
+        if (!Number.isFinite(n)) {
+            hiddenEl.value = emptyHiddenValue;
+            displayEl.value = '';
+            return;
+        }
+        hiddenEl.value = String(n);
+        displayEl.value = hopDongFormatMoneyInputNumber(n);
+    }
+    function hopDongMarkFieldInvalid(inputEl) {
+        if (!inputEl) return;
+        inputEl.classList.add('is-invalid');
+        if (inputEl._flatpickr && inputEl._flatpickr.altInput) {
+            inputEl._flatpickr.altInput.classList.add('is-invalid');
+        }
+    }
+    function hopDongClearFieldInvalid(inputEl) {
+        if (!inputEl) return;
+        inputEl.classList.remove('is-invalid');
+        if (inputEl._flatpickr && inputEl._flatpickr.altInput) {
+            inputEl._flatpickr.altInput.classList.remove('is-invalid');
+        }
+    }
+    function hopDongSetThemFieldError(inputEl, feedbackId, message) {
+        var fb = feedbackId ? document.getElementById(feedbackId) : null;
+        if (message) {
+            hopDongMarkFieldInvalid(inputEl);
+            if (fb) fb.textContent = message;
+        } else {
+            hopDongClearFieldInvalid(inputEl);
+            if (fb) fb.textContent = '';
+        }
+    }
+    function hopDongClearThemFormErrors() {
+        var formThemEl = document.getElementById('formThemHopDong');
+        if (!formThemEl) return;
+        formThemEl.querySelectorAll('.is-invalid').forEach(function (el) {
+            el.classList.remove('is-invalid');
+        });
+        [
+            'them_fb_ten_khach_hang',
+            'them_fb_so_dien_thoai',
+            'them_fb_thoi_gian_bat_dau',
+            'them_fb_thoi_gian_du_kien_tra',
+            'them_fb_tong_tien'
+        ].forEach(function (id) {
+            var fb = document.getElementById(id);
+            if (fb) fb.textContent = '';
+        });
+        if (themTrangPhucErr) themTrangPhucErr.classList.add('d-none');
+        var spScroll = document.getElementById('them_sp_ket_qua_scroll');
+        if (spScroll) spScroll.classList.remove('border-danger');
+    }
+    function hopDongValidateThemHopDongForm() {
+        hopDongClearThemFormErrors();
+        var hasError = false;
+        var firstFocusEl = null;
+
+        function fail(inputEl, feedbackId, message) {
+            hopDongSetThemFieldError(inputEl, feedbackId, message);
+            if (!firstFocusEl && inputEl) {
+                firstFocusEl = (inputEl._flatpickr && inputEl._flatpickr.altInput) ? inputEl._flatpickr.altInput : inputEl;
+            }
+            hasError = true;
+        }
+
+        var tenKh = document.getElementById('them_ten_khach_hang');
+        var tenVal = tenKh ? String(tenKh.value || '').trim() : '';
+        if (!tenVal) fail(tenKh, 'them_fb_ten_khach_hang', 'Vui lòng nhập tên khách hàng.');
+
+        var sdtEl = document.getElementById('them_so_dien_thoai');
+        var sdtVal = sdtEl ? String(sdtEl.value || '').trim() : '';
+        if (!sdtVal) fail(sdtEl, 'them_fb_so_dien_thoai', 'Vui lòng nhập số điện thoại.');
+
+        var bdEl = document.getElementById('them_thoi_gian_bat_dau');
+        var ktEl = document.getElementById('them_thoi_gian_du_kien_tra');
+        var bdRaw = bdEl ? String(bdEl.value || '').trim() : '';
+        var ktRaw = ktEl ? String(ktEl.value || '').trim() : '';
+        var bdDate = bdRaw ? parseThemHopDongYmd(bdRaw) : null;
+        var ktDate = ktRaw ? parseThemHopDongYmd(ktRaw) : null;
+
+        if (!bdRaw) fail(bdEl, 'them_fb_thoi_gian_bat_dau', 'Vui lòng chọn ngày thuê (bắt đầu).');
+        else if (!bdDate) fail(bdEl, 'them_fb_thoi_gian_bat_dau', 'Ngày thuê không hợp lệ.');
+
+        if (!ktRaw) fail(ktEl, 'them_fb_thoi_gian_du_kien_tra', 'Vui lòng chọn ngày dự kiến trả.');
+        else if (!ktDate) fail(ktEl, 'them_fb_thoi_gian_du_kien_tra', 'Ngày dự kiến trả không hợp lệ.');
+        else if (bdDate && ktDate) {
+            var t0 = themHopDongUtcMidnight(bdDate.getFullYear(), bdDate.getMonth(), bdDate.getDate());
+            var t1 = themHopDongUtcMidnight(ktDate.getFullYear(), ktDate.getMonth(), ktDate.getDate());
+            if (t1 < t0) {
+                fail(ktEl, 'them_fb_thoi_gian_du_kien_tra', 'Ngày dự kiến trả phải từ ngày thuê trở đi.');
+            }
+        }
+
+        var coSanPham = themSpSelected.size > 0;
+        if (!coSanPham) {
+            var spScroll = document.getElementById('them_sp_ket_qua_scroll');
+            if (spScroll) spScroll.classList.add('border-danger');
+            if (themTrangPhucErr) themTrangPhucErr.classList.remove('d-none');
+            if (!firstFocusEl && themTimInput) firstFocusEl = themTimInput;
+            hasError = true;
+        }
+
+        var tongTienDisp = document.getElementById('them_tong_tien_hien_thi');
+        var tongDigits = tongTienDisp ? String(tongTienDisp.value || '').replace(/[^\d]/g, '') : '';
+        if (!tongDigits) {
+            fail(tongTienDisp, 'them_fb_tong_tien', 'Vui lòng nhập tiền thuê.');
+        } else {
+            var tongNum = hopDongParseMoneyText(tongTienDisp.value);
+            if (tongNum < 0) fail(tongTienDisp, 'them_fb_tong_tien', 'Tiền thuê không hợp lệ.');
+        }
+
+        if (hasError && firstFocusEl) {
+            firstFocusEl.focus({ preventScroll: true });
+            firstFocusEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+        return !hasError;
+    }
+    function hopDongBindThemFormClearErrors() {
+        var map = {
+            them_ten_khach_hang: 'them_fb_ten_khach_hang',
+            them_so_dien_thoai: 'them_fb_so_dien_thoai',
+            them_thoi_gian_bat_dau: 'them_fb_thoi_gian_bat_dau',
+            them_thoi_gian_du_kien_tra: 'them_fb_thoi_gian_du_kien_tra',
+            them_tong_tien_hien_thi: 'them_fb_tong_tien'
+        };
+        Object.keys(map).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            function clearErr() {
+                hopDongSetThemFieldError(el, map[id], '');
+            }
+            el.addEventListener('input', clearErr);
+            el.addEventListener('change', clearErr);
+        });
+    }
+    hopDongBindThemFormClearErrors();
+    hopDongBindFormattedMoneyInput('them_tong_tien_hien_thi', 'them_tong_tien', '');
+    hopDongBindFormattedMoneyInput('them_tien_coc_hien_thi', 'them_tien_coc', '0');
+    hopDongBindFormattedMoneyInput('sua_tong_tien_hien_thi', 'sua_tong_tien', '');
+    hopDongBindFormattedMoneyInput('sua_tien_coc_hien_thi', 'sua_tien_coc', '0');
+    hopDongBindFormattedMoneyInput('tt_modal_da_thanh_toan_hien_thi', 'tt_modal_tien_coc', '0');
+
     function themSpNorm(s) {
         return String(s || '').toLowerCase().trim();
     }
@@ -1181,6 +1494,8 @@ document.addEventListener('DOMContentLoaded', function() {
         updateThemTongKho();
         updateThemSoNgayThueDisplay();
         if (themTrangPhucErr) themTrangPhucErr.classList.add('d-none');
+        var spScrollPick = document.getElementById('them_sp_ket_qua_scroll');
+        if (spScrollPick) spScrollPick.classList.remove('border-danger');
     }
     function parseThemHopDongYmd(value) {
         var p = String(value || '').trim().split('-');
@@ -1283,17 +1598,20 @@ document.addEventListener('DOMContentLoaded', function() {
         themSpRenderCards();
         updateThemTongKho();
         updateThemSoNgayThueDisplay();
-        function bindThemHopDongFlatpickrNgay(elId) {
+        function bindThemHopDongFlatpickrNgay(elId, feedbackId) {
             var el = document.getElementById(elId);
             if (!el || !el._flatpickr) return;
             var fp = el._flatpickr;
             var oc = fp.config.onChange;
             var list = Array.isArray(oc) ? oc.slice() : (typeof oc === 'function' ? [oc] : []);
-            list.push(function() { updateThemSoNgayThueDisplay(); });
+            list.push(function () {
+                updateThemSoNgayThueDisplay();
+                hopDongSetThemFieldError(el, feedbackId, '');
+            });
             fp.config.onChange = list;
         }
-        bindThemHopDongFlatpickrNgay('them_thoi_gian_bat_dau');
-        bindThemHopDongFlatpickrNgay('them_thoi_gian_du_kien_tra');
+        bindThemHopDongFlatpickrNgay('them_thoi_gian_bat_dau', 'them_fb_thoi_gian_bat_dau');
+        bindThemHopDongFlatpickrNgay('them_thoi_gian_du_kien_tra', 'them_fb_thoi_gian_du_kien_tra');
         updateThemSoNgayThueDisplay();
         function themSpScheduleTimKiem() {
             clearTimeout(themSpSearchTimer);
@@ -1353,15 +1671,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 themSpToggle(btn.getAttribute('data-sp-remove'));
             });
         }
-        var formThem = document.getElementById('formThemHopDong');
-        if (formThem) {
-            formThem.addEventListener('submit', function (ev) {
-                themSpSyncHidden();
-                var coSanPham = themSpSelected.size > 0
-                    || formThem.querySelectorAll('input[name="trang_phuc[]"]').length > 0;
-                if (coSanPham) return;
+        var formThemHopDongEl = document.getElementById('formThemHopDong');
+        var themFormSubmitting = false;
+        if (formThemHopDongEl) {
+            formThemHopDongEl.addEventListener('submit', function (ev) {
+                if (themFormSubmitting) return;
                 ev.preventDefault();
-                if (themTrangPhucErr) themTrangPhucErr.classList.remove('d-none');
+                hopDongSyncThemMoneyInputs();
+                themSpSyncHidden();
+                if (!hopDongValidateThemHopDongForm()) return;
+                themFormSubmitting = true;
+                formThemHopDongEl.submit();
             });
         }
     }
@@ -1609,17 +1929,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             updateSuaSoNgayThueDisplay();
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
-            var tongTienEl = document.getElementById('sua_tong_tien');
-            var cocEl = document.getElementById('sua_tien_coc');
             var ttRaw = btn.getAttribute('data-tong-tien');
             var tc = btn.getAttribute('data-tien-coc');
-            if (tongTienEl) tongTienEl.value = (ttRaw !== null && ttRaw !== '') ? ttRaw : '';
-            if (cocEl) cocEl.value = (tc !== null && tc !== '') ? tc : '0';
+            hopDongSetMoneyFields('sua_tong_tien_hien_thi', 'sua_tong_tien', ttRaw, '');
+            hopDongSetMoneyFields('sua_tien_coc_hien_thi', 'sua_tien_coc', (tc !== null && tc !== '') ? tc : '0', '0');
             if (suaTrangPhucErr) suaTrangPhucErr.classList.add('d-none');
         });
     }
     if (formSua) {
         formSua.addEventListener('submit', function (ev) {
+            hopDongSyncSuaMoneyInputs();
             suaSpSyncHidden();
             var coSanPham = suaSpSelected.size > 0
                 || formSua.querySelectorAll('input[name="trang_phuc[]"]').length > 0;
@@ -1653,6 +1972,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     if (modalCapNhatTt && formCapNhatTt) {
+        formCapNhatTt.addEventListener('submit', function () {
+            hopDongSyncMoneyField('tt_modal_da_thanh_toan_hien_thi', 'tt_modal_tien_coc', '0');
+        });
         modalCapNhatTt.addEventListener('hidden.bs.modal', function() {
             var titleEl = document.getElementById('modalCapNhatTrangThaiHopDongLabel');
             if (titleEl) titleEl.textContent = ttModalTitleDefault;
@@ -1667,6 +1989,19 @@ document.addEventListener('DOMContentLoaded', function() {
             if (titleEl) {
                 titleEl.textContent = tenKhach ? (tenKhach + ' — ' + ttModalTitleDefault) : ttModalTitleDefault;
             }
+            var tongTienRaw = btn.getAttribute('data-tong-tien');
+            var tienCocRaw = btn.getAttribute('data-tien-coc');
+            var tongDisp = document.getElementById('tt_modal_tong_tien_hien_thi');
+            if (tongDisp) {
+                var tongNum = Math.max(0, Math.round(hopDongToNumber(tongTienRaw)));
+                tongDisp.value = tongNum > 0 ? hopDongFormatMoneyInputNumber(tongNum) : '0';
+            }
+            hopDongSetMoneyFields(
+                'tt_modal_da_thanh_toan_hien_thi',
+                'tt_modal_tien_coc',
+                (tienCocRaw !== null && tienCocRaw !== '') ? tienCocRaw : '0',
+                '0'
+            );
             var tt = parseInt(btn.getAttribute('data-trang-thai') || '0', 10);
             var selTt = document.getElementById('tt_modal_select_trang_thai');
             if (selTt) {
