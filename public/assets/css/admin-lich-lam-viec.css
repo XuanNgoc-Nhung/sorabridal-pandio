@@ -543,10 +543,23 @@ input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px soli
     gap: 6px;
 }
 .ws-lich-mobile-month__work .ws-day-contract {
+    position: relative;
     font-size: 14px;
     line-height: 1.4;
     padding: 8px 24px 8px 8px;
     border-radius: 8px;
+    border-left-width: 6px;
+    border-left-style: solid;
+    color: var(--admin-text-body);
+    cursor: pointer;
+}
+#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
+    background: #f8f7ff;
+    border-left-color: #7367f0;
+}
+[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
+    background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
+    border-left-color: #7367f0;
 }
 .ws-lich-mobile-month__work .ws-day-contract__meta {
     font-size: 14px;
