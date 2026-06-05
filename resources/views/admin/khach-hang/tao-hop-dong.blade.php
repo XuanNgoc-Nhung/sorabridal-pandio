@@ -533,35 +533,6 @@
                         <label class="form-label" for="wizard_tong_tien_dich_vu_hien_thi">Tổng số tiền dịch vụ</label>
                         <input type="text" readonly class="form-control" id="wizard_tong_tien_dich_vu_hien_thi" value="0đ">
                     </div>
-                    <div class="col-12 col-lg-4">
-                        <label class="form-label" for="wizard_concept">Concept</label>
-                        <select class="form-select" id="wizard_concept" name="concept_id" data-placeholder="Chọn concept">
-                            <option value="">-- Chọn concept --</option>
-                            @foreach ($concepts ?? [] as $concept)
-                                <option value="{{ $concept->id }}" @selected((string) old('concept_id', $hopDongCuoi->concept_id) === (string) $concept->id)>
-                                    {{ $concept->ten_concept }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-12 col-lg-4">
-                        <label class="form-label" for="wizard_trang_phuc">Trang phục</label>
-                        <select class="form-select" id="wizard_trang_phuc" name="trang_phuc[]" multiple data-placeholder="Chọn trang phục">
-                            @php
-                                $trangPhucDaChon = collect(old('trang_phuc', $hopDongCuoiData['trang_phuc_ids'] ?? []))
-                                    ->map(fn ($value) => (string) $value)
-                                    ->all();
-                            @endphp
-                            @foreach ($trangPhucs ?? [] as $trangPhuc)
-                                @php
-                                    $tenTrangPhuc = trim(($trangPhuc->ten_san_pham ?? '') . (!empty($trangPhuc->ma_san_pham) ? ' (' . $trangPhuc->ma_san_pham . ')' : ''));
-                                @endphp
-                                <option value="{{ $trangPhuc->id }}" @selected(in_array((string) $trangPhuc->id, $trangPhucDaChon, true))>
-                                    {{ $tenTrangPhuc !== '' ? $tenTrangPhuc : ('Trang phục #' . $trangPhuc->id) }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
                 </div>
             </div>
 
@@ -614,6 +585,38 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label" for="wizard_concept">Concept</label>
+                        <select class="form-select" id="wizard_concept" name="concept_id" data-placeholder="Chọn concept">
+                            <option value="">-- Chọn concept --</option>
+                            @foreach ($concepts ?? [] as $concept)
+                                <option value="{{ $concept->id }}" @selected((string) old('concept_id', $hopDongCuoi->concept_id) === (string) $concept->id)>
+                                    {{ $concept->ten_concept }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <label class="form-label" for="wizard_trang_phuc">Trang phục</label>
+                        <select class="form-select" id="wizard_trang_phuc" name="trang_phuc[]" multiple data-placeholder="Chọn trang phục">
+                            @php
+                                $trangPhucDaChon = collect(old('trang_phuc', $hopDongCuoiData['trang_phuc_ids'] ?? []))
+                                    ->map(fn ($value) => (string) $value)
+                                    ->all();
+                            @endphp
+                            @foreach ($trangPhucs ?? [] as $trangPhuc)
+                                @php
+                                    $tenTrangPhuc = trim(($trangPhuc->ten_san_pham ?? '') . (!empty($trangPhuc->ma_san_pham) ? ' (' . $trangPhuc->ma_san_pham . ')' : ''));
+                                @endphp
+                                <option value="{{ $trangPhuc->id }}" @selected(in_array((string) $trangPhuc->id, $trangPhucDaChon, true))>
+                                    {{ $tenTrangPhuc !== '' ? $tenTrangPhuc : ('Trang phục #' . $trangPhuc->id) }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -1113,6 +1116,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var maGiamGiaMsg = document.getElementById('wizard_ma_giam_gia_msg');
     var step2Select2Ready = false;
     var step2RestoreApplied = false;
+    var step3Select2Ready = false;
+    var step3ConceptRestoreApplied = false;
     var discountVoucherValid = false;
 
     /** Bỏ đánh số trước label; chỉ đánh dấu (*) đỏ đậm cho các field bắt buộc. */
@@ -1167,16 +1172,61 @@ document.addEventListener('DOMContentLoaded', function() {
             if ($el.prop('multiple')) opts.closeOnSelect = false;
             $el.select2(opts);
         });
-        $('#wizard_concept, #wizard_trang_phuc').each(function() {
-            var $el = $(this);
-            if ($el.data('wizardStep2ValidateBound')) return;
-            $el.data('wizardStep2ValidateBound', true);
-            $el.on('change.wizardStep2 select2:select.wizardStep2 select2:clear.wizardStep2 select2:unselect.wizardStep2', function() {
-                updateNextButtonState();
-            });
-        });
         step2Select2Ready = true;
         if (currentStep === 2) updateNextButtonState();
+    }
+
+    /** Bước 3 ban đầu ẩn — khởi tạo Select2 Concept / Trang phục sau khi panel hiện. */
+    function ensureStep3Select2() {
+        var $ = window.jQuery;
+        if (!$ || !$.fn.select2 || step3Select2Ready) return;
+        $('#wizard_concept, #wizard_trang_phuc').each(function() {
+            var $el = $(this);
+            if ($el.data('select2')) return;
+            var opts = {
+                placeholder: $el.data('placeholder') || 'Chọn...',
+                allowClear: true,
+                width: '100%'
+            };
+            if ($el.prop('multiple')) opts.closeOnSelect = false;
+            $el.select2(opts);
+        });
+        step3Select2Ready = true;
+    }
+
+    /** Khôi phục Concept / Trang phục lần đầu vào bước 3 (từ DB, không ghi đè khi quay lại bước 3). */
+    function applyWizardStep3ConceptRestore() {
+        if (!formWizard || step3ConceptRestoreApplied) return;
+        step3ConceptRestoreApplied = true;
+
+        var hopRaw = formWizard.getAttribute('data-hop-dong-cuoi') || '{}';
+        var hopData = {};
+        try {
+            hopData = JSON.parse(hopRaw) || {};
+        } catch (eHop) {
+            hopData = {};
+        }
+
+        var conceptEl = document.getElementById('wizard_concept');
+        if (conceptEl && !conceptEl.value && hopData.concept_id != null && hopData.concept_id !== '') {
+            conceptEl.value = String(hopData.concept_id);
+            if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(conceptEl).data('select2')) {
+                window.jQuery(conceptEl).val(String(hopData.concept_id)).trigger('change');
+            }
+        }
+
+        var tpElRestore = document.getElementById('wizard_trang_phuc');
+        var tpSelectedCount = tpElRestore ? (tpElRestore.selectedOptions ? tpElRestore.selectedOptions.length : 0) : 0;
+        if (tpElRestore && !tpSelectedCount && Array.isArray(hopData.trang_phuc_ids) && hopData.trang_phuc_ids.length) {
+            var tpIdsStr = hopData.trang_phuc_ids.map(function(id) { return String(id); });
+            if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(tpElRestore).data('select2')) {
+                window.jQuery(tpElRestore).val(tpIdsStr).trigger('change');
+            } else {
+                Array.from(tpElRestore.options).forEach(function(opt) {
+                    opt.selected = tpIdsStr.indexOf(opt.value) !== -1;
+                });
+            }
+        }
     }
 
     function formatMoneyVnd(v) {
@@ -1387,9 +1437,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!data.loai_dich_vu && hopData.loai_dich_vu) {
             data.loai_dich_vu = hopData.loai_dich_vu;
         }
-        if (data.concept_id == null && hopData.concept_id != null && hopData.concept_id !== '') {
-            data.concept_id = hopData.concept_id;
-        }
         if (data.nhom_dich_vu_id == null && hopData.nhom_dich_vu_id != null) {
             var hid = Number(hopData.nhom_dich_vu_id);
             data.nhom_dich_vu_id = hid > 0 ? hid : null;
@@ -1415,38 +1462,12 @@ document.addEventListener('DOMContentLoaded', function() {
             data.combo_dich_vu_checked_ids = hopData.combo_dich_vu_checked_ids.map(Number);
         }
 
-        if (!Array.isArray(data.trang_phuc_ids) || !data.trang_phuc_ids.length) {
-            if (Array.isArray(hopData.trang_phuc_ids) && hopData.trang_phuc_ids.length) {
-                data.trang_phuc_ids = hopData.trang_phuc_ids.map(Number);
-            }
-        }
-
         if (!data || !data.loai_dich_vu) {
             done();
             return;
         }
 
         step2RestoreApplied = true;
-
-        var conceptEl = document.getElementById('wizard_concept');
-        if (conceptEl && data.concept_id != null && data.concept_id !== '') {
-            conceptEl.value = String(data.concept_id);
-            if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(conceptEl).data('select2')) {
-                window.jQuery(conceptEl).val(String(data.concept_id)).trigger('change');
-            }
-        }
-
-        var tpElRestore = document.getElementById('wizard_trang_phuc');
-        if (tpElRestore && Array.isArray(data.trang_phuc_ids) && data.trang_phuc_ids.length) {
-            var tpIdsStr = data.trang_phuc_ids.map(function(id) { return String(id); });
-            if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(tpElRestore).data('select2')) {
-                window.jQuery(tpElRestore).val(tpIdsStr).trigger('change');
-            } else {
-                Array.from(tpElRestore.options).forEach(function(opt) {
-                    opt.selected = tpIdsStr.indexOf(opt.value) !== -1;
-                });
-            }
-        }
 
         function afterTab() {
             clearAllComboGoiRadios();
@@ -2125,16 +2146,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fd.append('_method', 'PUT');
         fd.append('loai_dich_vu', getLoaiDichVuFromActiveTab());
 
-        var conceptEl = document.getElementById('wizard_concept');
-        if (conceptEl) fd.append('concept_id', conceptEl.value || '');
-
-        var tpEl = document.getElementById('wizard_trang_phuc');
-        if (tpEl && tpEl.multiple) {
-            Array.prototype.forEach.call(tpEl.selectedOptions || [], function(opt) {
-                fd.append('trang_phuc[]', opt.value);
-            });
-        }
-
         var target = getActiveServiceTabTarget();
         if (target === '#wizard-service-combo') {
             var rCombo = document.querySelector('#wizard-service-combo .combo-service-radio:checked');
@@ -2243,7 +2254,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 var hopSync = JSON.parse(formWizard.getAttribute('data-hop-dong-cuoi') || '{}');
                                 if (!hopSync || typeof hopSync !== 'object') hopSync = {};
                                 hopSync.loai_dich_vu = wStep.loai_dich_vu;
-                                hopSync.concept_id = wStep.concept_id;
                                 hopSync.nhom_dich_vu_id = wStep.nhom_dich_vu_id != null && Number(wStep.nhom_dich_vu_id) > 0
                                     ? Number(wStep.nhom_dich_vu_id)
                                     : null;
@@ -2261,7 +2271,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     hopSync.combo_dich_vu_checked_ids = [];
                                     hopSync.hop_dong_cuoi_dich_vu_le = [];
                                 }
-                                hopSync.trang_phuc_ids = wStep.trang_phuc_ids || [];
                                 formWizard.setAttribute('data-hop-dong-cuoi', JSON.stringify(hopSync));
                             } catch (eSync) { /* ignore */ }
                         } else if (res.body.loai_dich_vu) {
@@ -2509,6 +2518,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateTongTienDichVu();
                     updateNextButtonState();
                 });
+            });
+        }
+        if (currentStep === 3) {
+            window.requestAnimationFrame(function() {
+                ensureStep3Select2();
+                applyWizardStep3ConceptRestore();
             });
         }
     }

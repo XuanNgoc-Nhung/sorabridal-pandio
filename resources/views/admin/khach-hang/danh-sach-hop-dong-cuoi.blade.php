@@ -36,6 +36,24 @@
     .dpc-date-col .dpc-date-row--chup {
         white-space: nowrap;
     }
+    /* Modal thanh toán: cuộn phần nội dung khi vượt chiều cao màn hình */
+    #modalThanhToanHopDongCuoi .modal-dialog {
+        max-height: calc(100vh - 2rem);
+    }
+    #modalThanhToanHopDongCuoi .modal-content {
+        max-height: calc(100vh - 2rem);
+        display: flex;
+        flex-direction: column;
+    }
+    #modalThanhToanHopDongCuoi .modal-header,
+    #modalThanhToanHopDongCuoi .modal-footer {
+        flex-shrink: 0;
+    }
+    #modalThanhToanHopDongCuoi .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
 </style>
 @endpush
 
@@ -871,7 +889,7 @@
 </div>
 
 <div class="modal fade" id="modalThanhToanHopDongCuoi" tabindex="-1" aria-labelledby="modalThanhToanHopDongCuoiLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalThanhToanHopDongCuoiLabel">

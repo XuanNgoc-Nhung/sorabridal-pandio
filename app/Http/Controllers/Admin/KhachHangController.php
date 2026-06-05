@@ -524,37 +524,14 @@ class KhachHangController extends Controller
     }
 
     /**
-     * Lưu bước 2 (dịch vụ): loại hình, concept, combo / ghép dịch vụ lẻ / combo nâng cấp và pivot tương ứng.
+     * Lưu bước 2 (dịch vụ): loại hình, combo / ghép dịch vụ lẻ / combo nâng cấp và pivot tương ứng.
      */
     public function capNhatTaoHopDongBuoc2(Request $request, HopDongCuoi $hopDongCuoi)
     {
-        $merge = $request->all();
-        $cid = $merge['concept_id'] ?? null;
-        if ($cid === '' || $cid === null) {
-            $merge['concept_id'] = null;
-        } else {
-            $i = (int) $cid;
-            $merge['concept_id'] = $i > 0 ? $i : null;
-        }
-        $request->merge($merge);
-
         $loai = $request->input('loai_dich_vu');
-
-        $tpRaw = $request->input('trang_phuc', []);
-        if (! is_array($tpRaw)) {
-            $tpRaw = [];
-        }
-        $tpNormalized = array_values(array_unique(array_map(
-            static fn ($v) => (int) $v,
-            array_filter($tpRaw, static fn ($v) => $v !== null && $v !== '')
-        )));
-        $request->merge(['trang_phuc' => $tpNormalized]);
 
         $rules = [
             'loai_dich_vu' => 'required|in:combo_tron_goi,ghep_dich_vu_le,combo_va_nang_cap',
-            'concept_id' => 'nullable|integer|exists:concept,id',
-            'trang_phuc' => 'nullable|array',
-            'trang_phuc.*' => 'integer|exists:trang_phuc,id',
             'combo_goi' => [
                 Rule::excludeIf($loai === 'ghep_dich_vu_le'),
                 'nullable',
@@ -578,24 +555,9 @@ class KhachHangController extends Controller
 
         $validated = $request->validate($rules, [], [
             'loai_dich_vu' => 'hình thức dịch vụ',
-            'concept_id' => 'concept',
             'combo_goi' => 'combo',
             'dich_vu_chon' => 'dịch vụ lẻ',
-            'trang_phuc' => 'trang phục',
         ]);
-
-        $tpIdsValidated = array_values(array_unique(array_map('intval', $validated['trang_phuc'] ?? [])));
-        if ($tpIdsValidated !== []) {
-            $tpActiveCount = TrangPhuc::query()
-                ->whereIn('id', $tpIdsValidated)
-                ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
-                ->count();
-            if ($tpActiveCount !== count($tpIdsValidated)) {
-                throw ValidationException::withMessages([
-                    'trang_phuc' => ['Một hoặc nhiều trang phục không hợp lệ hoặc đang ẩn.'],
-                ]);
-            }
-        }
 
         if ($validated['loai_dich_vu'] === 'ghep_dich_vu_le') {
             $ids = array_map('intval', array_keys($validated['dich_vu_chon']));
@@ -642,11 +604,10 @@ class KhachHangController extends Controller
 
         $tongTien = $this->tinhTongTienDichVuBuoc2($validated);
 
-        DB::transaction(function () use ($hopDongCuoi, $validated, $tongTien, $tpIdsValidated) {
+        DB::transaction(function () use ($hopDongCuoi, $validated, $tongTien) {
             // Ghép lẻ: nhom_dich_vu_id = -1. Có combo (trọn gói hoặc nâng cấp): lưu id nhóm (nhom_dich_vu.id).
             $hopDongCuoi->fill([
                 'loai_dich_vu' => $validated['loai_dich_vu'],
-                'concept_id' => $validated['concept_id'] ?? null,
                 'nhom_dich_vu_id' => $validated['loai_dich_vu'] === 'ghep_dich_vu_le'
                     ? -1
                     : (int) $validated['combo_goi'],
@@ -702,24 +663,13 @@ class KhachHangController extends Controller
                     ]);
                 }
             }
-
-            $hopDongCuoi->hopDongCuoiTrangPhuc()->delete();
-            foreach ($tpIdsValidated as $tpId) {
-                if ($tpId <= 0) {
-                    continue;
-                }
-                HopDongCuoiTrangPhuc::query()->create([
-                    'hop_dong_cuoi_id' => $hopDongCuoi->id,
-                    'trang_phuc_id' => $tpId,
-                ]);
-            }
         });
 
         $hopDongCuoi->refresh();
-        $hopDongCuoi->load(['hopDongCuoiNhomDichVu', 'hopDongCuoiDichVuLe', 'hopDongCuoiTrangPhuc']);
+        $hopDongCuoi->load(['hopDongCuoiNhomDichVu', 'hopDongCuoiDichVuLe']);
 
         return response()->json([
-            'message' => 'Đã lưu dịch vụ, concept và tổng tiền dịch vụ.',
+            'message' => 'Đã lưu dịch vụ và tổng tiền dịch vụ.',
             'tong_tien' => (float) $hopDongCuoi->tong_tien,
             'loai_dich_vu' => $hopDongCuoi->loai_dich_vu,
             'nhom_dich_vu_id' => (int) $hopDongCuoi->nhom_dich_vu_id,
@@ -733,6 +683,21 @@ class KhachHangController extends Controller
     public function capNhatTaoHopDongBuoc3(Request $request, HopDongCuoi $hopDongCuoi)
     {
         $merge = $request->all();
+        $cid = $merge['concept_id'] ?? null;
+        if ($cid === '' || $cid === null) {
+            $merge['concept_id'] = null;
+        } else {
+            $i = (int) $cid;
+            $merge['concept_id'] = $i > 0 ? $i : null;
+        }
+        $tpRaw = $merge['trang_phuc'] ?? [];
+        if (! is_array($tpRaw)) {
+            $tpRaw = [];
+        }
+        $merge['trang_phuc'] = array_values(array_unique(array_map(
+            static fn ($v) => (int) $v,
+            array_filter($tpRaw, static fn ($v) => $v !== null && $v !== '')
+        )));
         foreach (['han_thanh_toan_lan2', 'han_thanh_toan_lan3', 'ngay_ky_hop_dong'] as $k) {
             if (! array_key_exists($k, $merge)) {
                 continue;
@@ -753,6 +718,9 @@ class KhachHangController extends Controller
         $request->merge($merge);
 
         $validated = $request->validate([
+            'concept_id' => 'nullable|integer|exists:concept,id',
+            'trang_phuc' => 'nullable|array',
+            'trang_phuc.*' => 'integer|exists:trang_phuc,id',
             'tong_tien' => 'required|numeric|min:0',
             'chiet_khau' => 'nullable|numeric|min:0',
             'tien_coc' => 'nullable|numeric|min:0',
@@ -762,6 +730,8 @@ class KhachHangController extends Controller
             'dong_y' => 'accepted',
             'chinh_sua_hoan_tat' => 'nullable|boolean',
         ], [], [
+            'concept_id' => 'concept',
+            'trang_phuc' => 'trang phục',
             'tong_tien' => 'tổng tiền',
             'chiet_khau' => 'chiết khấu',
             'tien_coc' => 'tiền cọc',
@@ -771,7 +741,21 @@ class KhachHangController extends Controller
             'dong_y' => 'xác nhận thông tin',
         ]);
 
+        $tpIdsValidated = array_values(array_unique(array_map('intval', $validated['trang_phuc'] ?? [])));
+        if ($tpIdsValidated !== []) {
+            $tpActiveCount = TrangPhuc::query()
+                ->whereIn('id', $tpIdsValidated)
+                ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
+                ->count();
+            if ($tpActiveCount !== count($tpIdsValidated)) {
+                throw ValidationException::withMessages([
+                    'trang_phuc' => ['Một hoặc nhiều trang phục không hợp lệ hoặc đang ẩn.'],
+                ]);
+            }
+        }
+
         $payload = [
+            'concept_id' => $validated['concept_id'] ?? null,
             'tong_tien' => $validated['tong_tien'],
             'chiet_khau' => $validated['chiet_khau'] ?? 0,
             'tien_coc' => $validated['tien_coc'] ?? 0,
@@ -783,10 +767,23 @@ class KhachHangController extends Controller
             $payload['trang_thai_hop_dong'] = 'dang_thuc_hien';
         }
 
-        $hopDongCuoi->fill($payload);
-        $hopDongCuoi->save();
+        DB::transaction(function () use ($hopDongCuoi, $payload, $tpIdsValidated): void {
+            $hopDongCuoi->fill($payload);
+            $hopDongCuoi->save();
 
-        $message = 'Đã lưu thông tin thanh toán.';
+            $hopDongCuoi->hopDongCuoiTrangPhuc()->delete();
+            foreach ($tpIdsValidated as $tpId) {
+                if ($tpId <= 0) {
+                    continue;
+                }
+                HopDongCuoiTrangPhuc::query()->create([
+                    'hop_dong_cuoi_id' => $hopDongCuoi->id,
+                    'trang_phuc_id' => $tpId,
+                ]);
+            }
+        });
+
+        $message = 'Đã lưu concept, trang phục và thông tin thanh toán.';
         $payload = ['message' => $message];
 
         if ($request->boolean('chinh_sua_hoan_tat')) {
@@ -979,13 +976,7 @@ class KhachHangController extends Controller
         }
         $payload = [
             'loai_dich_vu' => $hop->loai_dich_vu,
-            'concept_id' => $hop->concept_id,
             'nhom_dich_vu_id' => (int) $hop->nhom_dich_vu_id > 0 ? (int) $hop->nhom_dich_vu_id : null,
-            'trang_phuc_ids' => $hop->hopDongCuoiTrangPhuc
-                ->pluck('trang_phuc_id')
-                ->map(static fn ($id) => (int) $id)
-                ->values()
-                ->all(),
         ];
         if ($hop->loai_dich_vu === 'ghep_dich_vu_le') {
             $payload['dich_vu_le'] = $hop->hopDongCuoiDichVuLe
