@@ -206,6 +206,5 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
 });
 
 Route::fallback(function () {
-    \Log::info('fallback hit');
-    return response()->view('errors.404', [], 404);
+    return view('errors.404');
 });

@@ -151,13 +151,6 @@
                             </select>
                             <div class="form-text">Chỉ hiển thị HĐ chưa điều phối.</div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-5 col-lg-3 ws-add-work-field-ngay-chup">
-                            <label class="form-label" for="wsAddWorkNgayChup">Ngày chụp chính thức</label>
-                            <input type="hidden" name="ngay_chup_thuc_te" id="wsAddWorkNgayChupHidden" value="">
-                            <input type="text" class="form-control" id="wsAddWorkNgayChup" disabled placeholder="dd/mm/yyyy" autocomplete="off" aria-describedby="wsAddWorkNgayChupHint">
-                            <div class="form-text" id="wsAddWorkNgayChupHint">Theo ngày đã chọn trên lịch.</div>
-                        </div>
-
                         <div id="wsAddWorkDieuPhoiFields" class="col-12 d-none">
                             <div class="border rounded p-3">
                                 <div class="fw-semibold mb-3" id="wsAddWorkHopDongTitle">Thông tin điều phối</div>
@@ -165,6 +158,11 @@
                                     <div class="col-12 col-sm-6 col-lg-3">
                                         <label class="form-label" for="wsAddWorkGioChup">Giờ chụp</label>
                                         <input type="text" class="form-control flatpickr-time-admin" id="wsAddWorkGioChup" name="gio_chup" placeholder="HH:mm" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-lg-3">
+                                        <label class="form-label" for="wsAddWorkNgayChup">Ngày chụp chính thức</label>
+                                        <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayChup" name="ngay_chup_thuc_te" placeholder="dd/mm/yyyy" autocomplete="off">
+                                        <div class="form-text d-none" id="wsAddWorkNgayChupHintCreate">Theo ngày đã chọn trên lịch.</div>
                                     </div>
                                     <div class="col-12 col-sm-6 col-lg-3">
                                         <label class="form-label" for="wsAddWorkNgayCuoi">Ngày cưới chính thức</label>
@@ -1606,6 +1604,26 @@
                         hopDongEl.setAttribute('required', '');
                     }
                 }
+                var ngayHint = document.getElementById('wsAddWorkNgayChupHintCreate');
+                if (ngayHint) ngayHint.classList.toggle('d-none', mode === 'edit');
+                wsAddWorkSetNgayChupPickerEnabled(mode === 'edit');
+            }
+
+            function wsAddWorkSetNgayChupPickerEnabled(enabled) {
+                var el = document.getElementById('wsAddWorkNgayChup');
+                if (!el) return;
+                if (el._flatpickr) {
+                    var fp = el._flatpickr;
+                    fp.set('clickOpens', enabled);
+                    if (fp.altInput) {
+                        fp.altInput.disabled = !enabled;
+                        fp.altInput.readOnly = !enabled;
+                    }
+                    if (fp.input) fp.input.disabled = !enabled;
+                    return;
+                }
+                el.disabled = !enabled;
+                el.readOnly = !enabled;
             }
 
             function wsAddWorkHideDetailModal() {
@@ -1642,25 +1660,19 @@
             }
 
             function wsAddWorkSetNgayChup(ymd) {
-                var hidden = document.getElementById('wsAddWorkNgayChupHidden');
-                var display = document.getElementById('wsAddWorkNgayChup');
                 ymd = (ymd || '').trim();
-                if (hidden) hidden.value = ymd;
-                if (!display) return;
-                if (!ymd) {
-                    display.value = '';
+                if (window.setAdminDateInput) {
+                    window.setAdminDateInput('wsAddWorkNgayChup', ymd);
                     return;
                 }
-                var parts = ymd.split('-');
-                display.value = parts.length === 3
-                    ? (parts[2] + '/' + parts[1] + '/' + parts[0])
-                    : ymd;
+                var el = document.getElementById('wsAddWorkNgayChup');
+                if (el) el.value = ymd;
             }
 
             function wsAddWorkGetNgayChupYmd() {
-                var hidden = document.getElementById('wsAddWorkNgayChupHidden');
-                if (hidden) return (hidden.value || '').trim();
-                return '';
+                var el = document.getElementById('wsAddWorkNgayChup');
+                if (!el) return '';
+                return (el.value || '').trim();
             }
 
             function wsAddWorkBindSelect2($sel, placeholder) {
@@ -1760,6 +1772,11 @@
                     var gioEl = document.getElementById('wsAddWorkGioChup');
                     if (gioEl) gioEl.value = '';
                 }
+                if (window.setAdminDateInput) window.setAdminDateInput('wsAddWorkNgayChup', '');
+                else {
+                    var ngayChupEl = document.getElementById('wsAddWorkNgayChup');
+                    if (ngayChupEl) ngayChupEl.value = '';
+                }
                 ['wsAddWorkNgayCuoi', 'wsAddWorkNgayTraDemo', 'wsAddWorkNgayTraIn'].forEach(function (id) {
                     if (window.setAdminDateInput) window.setAdminDateInput(id, '');
                     else {
@@ -1788,7 +1805,7 @@
                     var ten = (cd || cr) ? (cd + (cd && cr ? ' - ' : '') + cr) : '';
                     titleEl.textContent = 'Điều phối: ' + ma + (ten ? (' — ' + ten) : '');
                 }
-                var ngayChupYmd = (scheduleDate || payload.ngay_chup_thuc_te || '').trim();
+                var ngayChupYmd = (payload.ngay_chup_thuc_te || scheduleDate || '').trim();
                 wsAddWorkSetNgayChup(ngayChupYmd);
                 if (window.setAdminTimeInput) window.setAdminTimeInput('wsAddWorkGioChup', payload.gio_chup != null ? String(payload.gio_chup) : '');
                 if (window.setAdminDateInput) {
@@ -1971,6 +1988,7 @@
             (function bindHopDongDieuPhoi() {
                 var modalEl = document.getElementById('wsAddWorkModal');
                 var hopDongEl = document.getElementById('wsAddWorkHopDong');
+                var ngayChupEl = document.getElementById('wsAddWorkNgayChup');
                 if (!modalEl || !hopDongEl) return;
 
                 function onHopDongSelected() {
@@ -1982,11 +2000,23 @@
                     wsAddWorkLoadHopDongDieuPhoi(hopId, scheduleDate);
                 }
 
+                function onNgayChupChanged() {
+                    if (modalEl.dataset.wsMode !== 'edit' || !wsAddWorkHopId) return;
+                    var ymd = wsAddWorkGetNgayChupYmd();
+                    var $ = window.jQuery || window.$;
+                    var wantChup = $ ? ($('#wsAddWorkThoChup').val() || '') : '';
+                    var wantMake = $ ? ($('#wsAddWorkThoMake').val() || '') : '';
+                    wsAddWorkFetchChupMake(ymd, wantChup, wantMake);
+                }
+
                 var $ = window.jQuery || window.$;
                 if ($) {
                     $(hopDongEl).on('change.wsAddWorkHopDong', onHopDongSelected);
                 } else {
                     hopDongEl.addEventListener('change', onHopDongSelected);
+                }
+                if (ngayChupEl) {
+                    ngayChupEl.addEventListener('change', onNgayChupChanged);
                 }
             })();
 
