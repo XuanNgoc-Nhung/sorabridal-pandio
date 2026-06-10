@@ -44,16 +44,25 @@
   background-color: #fffafb;
   border-color: rgba(233, 30, 99, 0.15) !important;
 }
-
+.table th{
+  text-transform: capitalize;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-size: 14px;
+  padding: 0.5rem 0.5rem !important;
+  background-color: var(--bs-primary);
+  color: #fff;
+}
 [data-bs-theme='light'] .pink .table thead th,
 [data-bs-theme='light'] .pink table.dataTable thead th,
 [data-bs-theme='light'] .pink table.dataTable thead td {
-  background-color: #ffe4ef;
-  color: #ad1457;
-  border-color: rgba(233, 30, 99, 0.12);
+  background-color: var(--bs-primary);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
   padding: 0.5rem 0.5rem !important;
   font-size: 14px;
-  font-weight: 600;
+  /* font-weight: 600; */
+  text-transform: capitalize;
   line-height: 1.25;
   white-space: nowrap;
 }

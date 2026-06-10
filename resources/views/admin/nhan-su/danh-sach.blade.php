@@ -114,7 +114,6 @@
                         <th>Email</th>
                         <th>Số điện thoại</th>
                         <th>Vai trò</th>
-                        <th>Vị trí làm việc</th>
                         <th>Phòng ban</th>
                         <th>Ngày vào công ty</th>
                         <th>Ngày ký hợp đồng</th>
@@ -136,7 +135,7 @@
                             @if(!empty($hinhAnh))
                             <img src="{{ asset('storage/' . $hinhAnh) }}" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                             @else
-                            <div class="avatar avatar-sm rounded-circle bg-label-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <div class="avatar avatar-sm rounded-circle bg-label-primary d-flex align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
                                 <span class="text-primary fw-medium">{{ strtoupper(mb_substr($item->name ?? 'N', 0, 1)) }}</span>
                             </div>
                             @endif
@@ -148,7 +147,6 @@
                         <td>{{ $item->email ?? '—' }}</td>
                         <td>{{ $item->phone ?? '—' }}</td>
                         <td>{{ $vaiTroLabel }}</td>
-                        <td>{{ $nv?->vi_tri_lam_viec ?? '—' }}</td>
                         <td>{{ $nv?->phongBans->pluck('ten_phong_ban')->join(', ') ?: '—' }}</td>
                         <td>{{ $nv?->ngay_vao_cong_ty ? $nv->ngay_vao_cong_ty->format('d/m/Y') : '—' }}</td>
                         <td>{{ $nv?->ngay_ky_hop_dong ? $nv->ngay_ky_hop_dong->format('d/m/Y') : '—' }}</td>
@@ -172,7 +170,6 @@
                                        data-ngay-sinh="{{ $nv?->ngay_sinh?->format('Y-m-d') ?? '' }}"
                                        data-cccd="{{ e($nv?->cccd ?? '') }}"
                                        data-role="{{ $item->role !== null && $item->role !== '' ? (string) $item->role : '' }}"
-                                       data-vi-tri="{{ e($nv?->vi_tri_lam_viec ?? '') }}"
                                        data-phong-ban-ids="{{ $nv?->phongBans->pluck('id')->values()->toJson() }}"
                                        data-ngay-vao-cong-ty="{{ $nv?->ngay_vao_cong_ty?->format('Y-m-d') ?? '' }}"
                                        data-ngay-ky-hop-dong="{{ $nv?->ngay_ky_hop_dong?->format('Y-m-d') ?? '' }}"
@@ -202,7 +199,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="16" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
+                        <td colspan="15" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -332,10 +329,6 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_vi_tri">Vị trí làm việc</label>
-                                    <input type="text" class="form-control" id="them_vi_tri" name="vi_tri_lam_viec" value="{{ old('vi_tri_lam_viec') }}" placeholder="Ví dụ: Photographer, Makeup...">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
                                     <label for="them_phong_ban" class="form-label">Phòng ban</label>
                                     <select id="them_phong_ban" name="phong_ban_ids[]" class="select2-phong-ban form-select" multiple>
                                         @foreach($phongBans ?? [] as $pb)
@@ -450,10 +443,6 @@
                                         <option value="{{ $vt->ma_vai_tro }}">{{ $vt->ten_vai_tro }}</option>
                                         @endforeach
                                     </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_vi_tri">Vị trí làm việc</label>
-                                    <input type="text" class="form-control" id="sua_vi_tri" name="vi_tri_lam_viec" placeholder="Ví dụ: Photographer, Makeup...">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_phong_ban">Phòng ban</label>
@@ -725,7 +714,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.setAdminDateInput) setAdminDateInput('sua_ngay_sinh', btn.getAttribute('data-ngay-sinh') || ''); else document.getElementById('sua_ngay_sinh').value = btn.getAttribute('data-ngay-sinh') || '';
             document.getElementById('sua_cccd').value = btn.getAttribute('data-cccd') || '';
             setAdminSelect2Value('sua_vai_tro', btn.getAttribute('data-role'));
-            document.getElementById('sua_vi_tri').value = btn.getAttribute('data-vi-tri') || '';
             var phongBanIds = [];
             try {
                 var raw = btn.getAttribute('data-phong-ban-ids');
