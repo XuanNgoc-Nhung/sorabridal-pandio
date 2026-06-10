@@ -207,6 +207,7 @@
     vertical-align: middle;
     word-break: break-word;
     overflow-wrap: break-word;
+    color: black;
   }
 
   .table thead th {

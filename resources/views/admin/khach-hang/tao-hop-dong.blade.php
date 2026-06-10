@@ -77,8 +77,6 @@
             <input type="hidden" name="hop_dong_cuoi_id" value="{{ $hopDongCuoi->id }}">
             <input type="hidden" name="ma_hop_dong" value="{{ $hopDongCuoi->ma_hop_dong }}">
             <input type="hidden" id="wizard_buoi_chup" name="buoi_chup" value="{{ old('buoi_chup', $hopDongCuoi->buoi_chup) }}">
-            <input type="hidden" id="wizard_ngay_chup_du_kien" name="ngay_chup_du_kien" value="{{ old('ngay_chup_du_kien', optional($hopDongCuoi->ngay_chup_du_kien)->format('Y-m-d')) }}">
-            <input type="hidden" id="wizard_ngay_cuoi_du_kien" name="ngay_cuoi_du_kien" value="{{ old('ngay_cuoi_du_kien', optional($hopDongCuoi->ngay_cuoi_du_kien)->format('Y-m-d')) }}">
 
             {{-- Bước 1: Thông tin khách hàng --}}
             <div class="wizard-panel active" data-wizard-panel="1" role="tabpanel">
@@ -113,6 +111,14 @@
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_email_sdt_co_dau">SĐT cô dâu</label>
                         <input type="text" class="form-control" id="wizard_email_sdt_co_dau" name="email_sdt_co_dau" value="{{ old('email_sdt_co_dau', $hopDongCuoi->email_sdt_co_dau) }}" placeholder="Số điện thoại" autocomplete="tel">
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <label class="form-label" for="wizard_ngay_chup_du_kien">Ngày chụp dự kiến</label>
+                        <input type="text" class="flatpickr-date-admin form-control" id="wizard_ngay_chup_du_kien" name="ngay_chup_du_kien" value="{{ old('ngay_chup_du_kien', optional($hopDongCuoi->ngay_chup_du_kien)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <label class="form-label" for="wizard_ngay_cuoi_du_kien">Ngày cưới dự kiến</label>
+                        <input type="text" class="flatpickr-date-admin form-control" id="wizard_ngay_cuoi_du_kien" name="ngay_cuoi_du_kien" value="{{ old('ngay_cuoi_du_kien', optional($hopDongCuoi->ngay_cuoi_du_kien)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_kenh_tiep_can">Kênh tiếp cận</label>
@@ -2032,7 +2038,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
-                el.value = String(value);
+                if (el._flatpickr) {
+                    if (value) el._flatpickr.setDate(String(value), false);
+                    else el._flatpickr.clear();
+                } else {
+                    el.value = String(value);
+                }
             }
         });
 
@@ -2524,6 +2535,8 @@ document.addEventListener('DOMContentLoaded', function() {
             window.requestAnimationFrame(function() {
                 ensureStep3Select2();
                 applyWizardStep3ConceptRestore();
+                syncStep3PaymentFields();
+                updateSummary();
             });
         }
     }
