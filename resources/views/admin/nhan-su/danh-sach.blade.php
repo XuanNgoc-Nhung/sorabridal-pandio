@@ -422,11 +422,11 @@
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_email">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="sua_email" placeholder="email@example.com" disabled>
+                                    <input type="email" class="form-control" id="sua_email" name="email" placeholder="email@example.com" required>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_so_dien_thoai">Số điện thoại</label>
-                                    <input type="text" class="form-control" id="sua_so_dien_thoai" placeholder="0912345678" maxlength="20" disabled>
+                                    <input type="text" class="form-control" id="sua_so_dien_thoai" name="phone" placeholder="0912345678" maxlength="20">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_ngay_sinh">Ngày sinh</label>

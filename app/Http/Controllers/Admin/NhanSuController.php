@@ -571,6 +571,8 @@ class NhanSuController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
             'gioi_tinh' => 'nullable|string|in:nam,nu,khac',
             'ngay_sinh' => 'nullable|date',
             'cccd' => ['nullable', 'string', 'max:20'],
@@ -587,6 +589,12 @@ class NhanSuController extends Controller
             'name.required' => 'Vui lòng nhập họ tên.',
             'name.string' => 'Họ tên phải là chuỗi ký tự.',
             'name.max' => 'Họ tên không được quá 255 ký tự.',
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email này đã được sử dụng.',
+            'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
+            'phone.max' => 'Số điện thoại không được quá 20 ký tự.',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng.',
             'gioi_tinh.string' => 'Giới tính phải là chuỗi ký tự.',
             'gioi_tinh.in' => 'Giới tính không hợp lệ.',
             'ngay_sinh.date' => 'Ngày sinh không đúng định dạng.',
@@ -612,6 +620,8 @@ class NhanSuController extends Controller
         try {
             $user->update([
                 'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $request->input('phone'),
                 'role' => (int) $request->input('role', $user->role),
             ]);
 
