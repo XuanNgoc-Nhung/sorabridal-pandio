@@ -279,7 +279,8 @@
         btnCheckOut.addEventListener('click', function () {
             submitDiemDanh(btnCheckOut, {
                 loadingText: 'Đang check out...',
-                expectJson: false,
+                expectJson: true,
+                successFallback: 'Check-out thành công.',
                 errorFallback: 'Không thể check-out. Vui lòng thử lại.'
             });
         });

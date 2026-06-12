@@ -20,18 +20,30 @@ use Illuminate\Support\Facades\Log;
 class DiemDanhController extends Controller
 {
     /**
-     * IP công cộng của người dùng (lấy từ trình duyệt qua https://api.myip.com) được phép check-in / check-out.
+     * IP công cộng được phép điểm danh (check-in).
      *
      * | key (gợi nhớ) | value (IP) |
      * |---------------|------------|
      * | van_phong     | 1.2.3.4    |
-     * | chi_nhanh     | 5.6.7.8    |
      *
-     * Thay value bằng IP thật (mở api.myip.com trên cùng mạng với máy người dùng).
+     * Thay value bằng IP thật (mở get.geojs.io/v1/ip.json trên cùng mạng với máy người dùng).
      */
-    private const DIEM_DANH_IP_ALLOWLIST = [
-        'van_phong' => '1.2.3.4',
-        'chi_nhanh' => '14.162.129.132',
+    private const DIEM_DANH_CHECK_IN_IP_ALLOWLIST = [
+        'van_phong_252F' => '42.119.222.154',
+        'xuan_ngoc' => '14.162.129.132',
+        'chi_nhanh_2' => '14.231.244.24',
+    ];
+
+    /**
+     * IP công cộng được phép check-out (có thể khác danh sách check-in).
+     *
+     * | key (gợi nhớ) | value (IP) |
+     * |---------------|------------|
+     * | van_phong     | 1.2.3.4    |
+     */
+    private const DIEM_DANH_CHECK_OUT_IP_ALLOWLIST = [
+        'van_phong_252F' => '42.119.222.154',
+        'xuan_ngoc' => '14.162.129.132',
         'chi_nhanh_2' => '14.231.244.24',
     ];
 
@@ -213,7 +225,13 @@ class DiemDanhController extends Controller
             'client_ip' => 'required|string|max:45',
         ]);
 
-        if ($guardResponse = $this->guardDiemDanhPublicIp('Check-in', $validated['client_ip'], true)) {
+        if ($guardResponse = $this->guardDiemDanhPublicIp(
+            'Check-in',
+            $validated['client_ip'],
+            self::DIEM_DANH_CHECK_IN_IP_ALLOWLIST,
+            'Chỉ được điểm danh khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).',
+            true
+        )) {
             return $guardResponse;
         }
 
@@ -249,14 +267,14 @@ class DiemDanhController extends Controller
      * Tính giờ làm cơ bản (từ giờ vào đến 21:00), giờ tăng ca (từ 21:00 đến giờ ra),
      * và lương cơ bản, lương tăng ca theo đơn giá ở bảng nhan_vien.
      */
-    public function checkOut(Request $request)
+    public function checkOut(Request $request): JsonResponse
     {
         Log::info('Check-out: yêu cầu từ user', ['user_id' => Auth::id()]);
 
         if (! Auth::check()) {
             Log::warning('Check-out: thất bại - chưa đăng nhập');
 
-            return redirect()->route('admin.diem-danh.diem-danh')->with('error', 'Vui lòng đăng nhập.');
+            return $this->jsonDiemDanhError('Vui lòng đăng nhập.', 401);
         }
 
         $record = DiemDanh::query()
@@ -271,15 +289,21 @@ class DiemDanhController extends Controller
                 'today' => today()->toDateString(),
             ]);
 
-            return redirect()->route('admin.diem-danh.diem-danh')->with('error', 'Chưa có bản ghi check-in hôm nay hoặc đã check-out rồi.');
+            return $this->jsonDiemDanhError('Chưa có bản ghi check-in hôm nay hoặc đã check-out rồi.');
         }
 
         $validated = $request->validate([
             'client_ip' => 'required|string|max:45',
         ]);
 
-        if ($redirect = $this->guardDiemDanhPublicIp('Check-out', $validated['client_ip'])) {
-            return $redirect;
+        if ($guardResponse = $this->guardDiemDanhPublicIp(
+            'Check-out',
+            $validated['client_ip'],
+            self::DIEM_DANH_CHECK_OUT_IP_ALLOWLIST,
+            'Chỉ được check-out khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).',
+            true
+        )) {
+            return $guardResponse;
         }
 
         $gioRa = Carbon::now();
@@ -322,7 +346,11 @@ class DiemDanhController extends Controller
             'luong_tang_ca' => $luongTangCa,
         ]);
 
-        return redirect()->route('admin.diem-danh.diem-danh')->with('success', 'Check-out thành công lúc '.$gioRa->format('H:i d/m/Y').'.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Check-out thành công lúc '.$gioRa->format('H:i d/m/Y').'.',
+            'gio_ra' => $gioRa->format('d/m/Y H:i'),
+        ]);
     }
 
     // Điều phối công việc (chỉ xem danh sách hợp đồng, không thêm/sửa)
@@ -396,14 +424,20 @@ class DiemDanhController extends Controller
     }
 
     /**
-     * Chặn điểm danh nếu IP công cộng do trình duyệt gửi lên không nằm trong {@see self::DIEM_DANH_IP_ALLOWLIST}.
+     * Chặn điểm danh / check-out nếu IP công cộng do trình duyệt gửi lên không nằm trong allowlist.
      *
+     * @param  array<string, string>  $allowlist
      * @return RedirectResponse|JsonResponse|null null nếu được phép tiếp tục
      */
-    private function guardDiemDanhPublicIp(string $hanhDong, string $clientIp, bool $asJson = false): RedirectResponse|JsonResponse|null
-    {
+    private function guardDiemDanhPublicIp(
+        string $hanhDong,
+        string $clientIp,
+        array $allowlist,
+        string $ipKhongHopLeMessage,
+        bool $asJson = false
+    ): RedirectResponse|JsonResponse|null {
         $allowed = [];
-        foreach (self::DIEM_DANH_IP_ALLOWLIST as $key => $ip) {
+        foreach ($allowlist as $key => $ip) {
             $ip = trim((string) $ip);
             if ($ip !== '') {
                 $allowed[$key] = $ip;
@@ -419,7 +453,7 @@ class DiemDanhController extends Controller
         };
 
         if ($allowed === []) {
-            Log::warning("{$hanhDong}: DIEM_DANH_IP_ALLOWLIST không có value IP hợp lệ.", [
+            Log::warning("{$hanhDong}: allowlist IP không có value hợp lệ.", [
                 'user_id' => Auth::id(),
             ]);
 
@@ -450,7 +484,7 @@ class DiemDanhController extends Controller
                 'allowlist_keys' => array_keys($allowed),
             ]);
 
-            return $fail('Chỉ được điểm danh khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).');
+            return $fail($ipKhongHopLeMessage);
         }
 
         return null;
