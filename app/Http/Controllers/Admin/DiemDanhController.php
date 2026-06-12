@@ -15,21 +15,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class DiemDanhController extends Controller
 {
     /**
-     * IP công cộng (theo https://api.myip.com) được phép check-in / check-out.
-     * So khớp với trường `ip` trong JSON phản hồi của API.
+     * IP công cộng của người dùng (lấy từ trình duyệt qua https://api.myip.com) được phép check-in / check-out.
      *
      * | key (gợi nhớ) | value (IP) |
      * |---------------|------------|
      * | van_phong     | 1.2.3.4    |
      * | chi_nhanh     | 5.6.7.8    |
      *
-     * Thay value bằng IP thật (xem log sau lần gọi API hoặc mở api.myip.com trên cùng mạng với máy chủ).
+     * Thay value bằng IP thật (mở api.myip.com trên cùng mạng với máy người dùng).
      */
     private const DIEM_DANH_IP_ALLOWLIST = [
         'van_phong' => '1.2.3.4',
@@ -211,7 +209,11 @@ class DiemDanhController extends Controller
             return $this->jsonDiemDanhError('Bạn đã điểm danh vào hôm nay rồi.');
         }
 
-        if ($guardResponse = $this->guardDiemDanhPublicIp('Check-in', true)) {
+        $validated = $request->validate([
+            'client_ip' => 'required|string|max:45',
+        ]);
+
+        if ($guardResponse = $this->guardDiemDanhPublicIp('Check-in', $validated['client_ip'], true)) {
             return $guardResponse;
         }
 
@@ -272,7 +274,11 @@ class DiemDanhController extends Controller
             return redirect()->route('admin.diem-danh.diem-danh')->with('error', 'Chưa có bản ghi check-in hôm nay hoặc đã check-out rồi.');
         }
 
-        if ($redirect = $this->guardDiemDanhPublicIp('Check-out')) {
+        $validated = $request->validate([
+            'client_ip' => 'required|string|max:45',
+        ]);
+
+        if ($redirect = $this->guardDiemDanhPublicIp('Check-out', $validated['client_ip'])) {
             return $redirect;
         }
 
@@ -390,11 +396,11 @@ class DiemDanhController extends Controller
     }
 
     /**
-     * Chặn điểm danh nếu IP công cộng (api.myip.com) không nằm trong {@see self::DIEM_DANH_IP_ALLOWLIST}.
+     * Chặn điểm danh nếu IP công cộng do trình duyệt gửi lên không nằm trong {@see self::DIEM_DANH_IP_ALLOWLIST}.
      *
      * @return RedirectResponse|JsonResponse|null null nếu được phép tiếp tục
      */
-    private function guardDiemDanhPublicIp(string $hanhDong, bool $asJson = false): RedirectResponse|JsonResponse|null
+    private function guardDiemDanhPublicIp(string $hanhDong, string $clientIp, bool $asJson = false): RedirectResponse|JsonResponse|null
     {
         $allowed = [];
         foreach (self::DIEM_DANH_IP_ALLOWLIST as $key => $ip) {
@@ -421,53 +427,30 @@ class DiemDanhController extends Controller
         }
 
         $allowedValues = array_values($allowed);
+        $ip = trim($clientIp);
 
-        try {
-            $response = Http::timeout(3)->get('https://api.myip.com');
-            if (! $response->successful()) {
-                Log::warning("{$hanhDong}: api.myip.com trả về lỗi", [
-                    'user_id' => Auth::id(),
-                    'status' => $response->status(),
-                ]);
-
-                return $fail('Không xác minh được mạng hiện tại. Thử lại sau hoặc liên hệ quản trị.');
-            }
-
-            $payload = $response->json();
-            $ip = is_array($payload) ? trim((string) ($payload['ip'] ?? '')) : '';
-
-            if ($ip === '') {
-                Log::warning("{$hanhDong}: api.myip.com không trả về IP", [
-                    'user_id' => Auth::id(),
-                    'payload' => $payload,
-                ]);
-
-                return $fail('Không xác minh được mạng hiện tại. Thử lại sau hoặc liên hệ quản trị.');
-            }
-
-            Log::info("{$hanhDong}: địa chỉ IP (api.myip.com)", [
+        if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            Log::warning("{$hanhDong}: client_ip không hợp lệ", [
                 'user_id' => Auth::id(),
-                'ip' => $ip,
-                'country' => is_array($payload) ? ($payload['country'] ?? null) : null,
-                'cc' => is_array($payload) ? ($payload['cc'] ?? null) : null,
-            ]);
-
-            if (! in_array($ip, $allowedValues, true)) {
-                Log::warning("{$hanhDong}: IP không nằm trong allowlist", [
-                    'user_id' => Auth::id(),
-                    'ip' => $ip,
-                    'allowlist_keys' => array_keys($allowed),
-                ]);
-
-                return $fail('Chỉ được điểm danh khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).');
-            }
-        } catch (\Throwable $e) {
-            Log::warning("{$hanhDong}: không gọi được api.myip.com", [
-                'user_id' => Auth::id(),
-                'message' => $e->getMessage(),
+                'client_ip' => $clientIp,
             ]);
 
             return $fail('Không xác minh được mạng hiện tại. Thử lại sau hoặc liên hệ quản trị.');
+        }
+
+        Log::info("{$hanhDong}: địa chỉ IP (từ trình duyệt)", [
+            'user_id' => Auth::id(),
+            'ip' => $ip,
+        ]);
+
+        if (! in_array($ip, $allowedValues, true)) {
+            Log::warning("{$hanhDong}: IP không nằm trong allowlist", [
+                'user_id' => Auth::id(),
+                'ip' => $ip,
+                'allowlist_keys' => array_keys($allowed),
+            ]);
+
+            return $fail('Chỉ được điểm danh khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).');
         }
 
         return null;

@@ -106,7 +106,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::get('/', [AdminDiemDanh::class, 'diemDanh'])->name('diem-danh.diem-danh');
         Route::get('/cham-cong', [AdminDiemDanh::class, 'chamCong'])->name('diem-danh.cham-cong');
         Route::post('/check-in', [AdminDiemDanh::class, 'checkIn'])->name('diem-danh.check-in');
-        Route::get('/check-out', [AdminDiemDanh::class, 'checkOut'])->name('diem-danh.check-out');
+        Route::post('/check-out', [AdminDiemDanh::class, 'checkOut'])->name('diem-danh.check-out');
     });
 
     // Nhân sự

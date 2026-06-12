@@ -54,9 +54,9 @@
                         <i class="fa-solid fa-sign-in-alt me-1"></i> Check in
                     </button>
                 @elseif($canCheckOut ?? false)
-                    <a href="{{ route('admin.diem-danh.check-out') }}" class="btn btn-warning btn-sm text-dark">
+                    <button type="button" id="btnCheckOut" class="btn btn-warning btn-sm text-dark" data-url="{{ route('admin.diem-danh.check-out') }}">
                         <i class="fa-solid fa-sign-out-alt me-1"></i> Check out
-                    </a>
+                    </button>
                 @endif
                 <a href="{{ route('admin.diem-danh.cham-cong') }}" class="btn btn-primary btn-sm">
                     <i class="fa-solid fa-clock me-1"></i> Chấm công
@@ -158,11 +158,13 @@
 <script>
 (function () {
     var btnCheckIn = document.getElementById('btnCheckIn');
-    if (!btnCheckIn) return;
+    var btnCheckOut = document.getElementById('btnCheckOut');
+    if (!btnCheckIn && !btnCheckOut) return;
 
     var alertBox = document.getElementById('diemDanhAlert');
     var alertMessage = document.getElementById('diemDanhAlertMessage');
     var csrfToken = @json(csrf_token());
+    var clientIpApiUrl = 'https://get.geojs.io/v1/ip.json';
 
     function showAlert(type, message) {
         if (!alertBox || !alertMessage) return;
@@ -171,50 +173,117 @@
         alertMessage.textContent = message || '';
     }
 
-    btnCheckIn.addEventListener('click', function () {
-        var url = btnCheckIn.getAttribute('data-url');
-        if (!url) return;
-
-        btnCheckIn.disabled = true;
-        var originalHtml = btnCheckIn.innerHTML;
-        btnCheckIn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang check in...';
-
-        var formData = new FormData();
-        formData.append('_token', csrfToken);
-
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
+    function fetchClientPublicIpFromUrl(url) {
+        return fetch(url, {
+            method: 'GET',
+            headers: { Accept: 'application/json' }
         })
             .then(function (response) {
-                return response.json().catch(function () { return {}; }).then(function (body) {
-                    return { ok: response.ok, body: body || {} };
+                if (!response.ok) {
+                    throw new Error('ip_api_status_' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (payload) {
+                var ip = payload && typeof payload.ip === 'string' ? payload.ip.trim() : '';
+                if (!ip) {
+                    throw new Error('ip_api_empty');
+                }
+                return ip;
+            });
+    }
+
+    function fetchClientPublicIp() {
+        return fetchClientPublicIpFromUrl(clientIpApiUrl);
+    }
+
+    function submitDiemDanh(btn, options) {
+        var url = btn.getAttribute('data-url');
+        if (!url) return;
+
+        btn.disabled = true;
+        var originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ' + (options.loadingText || 'Đang xử lý...');
+
+        function resetButton() {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+
+        fetchClientPublicIp()
+            .then(function (clientIp) {
+                var formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('client_ip', clientIp);
+
+                return fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: options.accept || 'application/json'
+                    },
+                    credentials: 'same-origin'
                 });
             })
+            .then(function (response) {
+                if (options.expectJson) {
+                    return response.json().catch(function () { return {}; }).then(function (body) {
+                        return { ok: response.ok, redirected: response.redirected, url: response.url, body: body || {} };
+                    });
+                }
+
+                return { ok: response.ok, redirected: response.redirected, url: response.url, body: {} };
+            })
             .then(function (result) {
-                if (result.ok && result.body.success) {
-                    showAlert('success', result.body.message || 'Check-in thành công.');
-                    window.setTimeout(function () {
-                        window.location.reload();
-                    }, 800);
+                if (options.expectJson) {
+                    if (result.ok && result.body.success) {
+                        showAlert('success', result.body.message || options.successFallback || 'Thành công.');
+                        window.setTimeout(function () {
+                            window.location.reload();
+                        }, 800);
+                        return;
+                    }
+
+                    showAlert('error', result.body.message || options.errorFallback || 'Không thể hoàn tất. Vui lòng thử lại.');
+                    resetButton();
                     return;
                 }
 
-                showAlert('error', result.body.message || 'Không thể check-in. Vui lòng thử lại.');
-                btnCheckIn.disabled = false;
-                btnCheckIn.innerHTML = originalHtml;
+                if (result.redirected || result.ok) {
+                    window.location.href = result.url || window.location.href;
+                    return;
+                }
+
+                showAlert('error', options.errorFallback || 'Không thể hoàn tất. Vui lòng thử lại.');
+                resetButton();
             })
             .catch(function () {
-                showAlert('error', 'Không kết nối được máy chủ. Vui lòng thử lại.');
-                btnCheckIn.disabled = false;
-                btnCheckIn.innerHTML = originalHtml;
+                showAlert('error', 'Không xác minh được mạng hiện tại. Thử lại sau hoặc liên hệ quản trị.');
+                resetButton();
             });
-    });
+    }
+
+    if (btnCheckIn) {
+        btnCheckIn.addEventListener('click', function () {
+            submitDiemDanh(btnCheckIn, {
+                loadingText: 'Đang check in...',
+                expectJson: true,
+                successFallback: 'Check-in thành công.',
+                errorFallback: 'Không thể check-in. Vui lòng thử lại.'
+            });
+        });
+    }
+
+    if (btnCheckOut) {
+        btnCheckOut.addEventListener('click', function () {
+            submitDiemDanh(btnCheckOut, {
+                loadingText: 'Đang check out...',
+                expectJson: false,
+                errorFallback: 'Không thể check-out. Vui lòng thử lại.'
+            });
+        });
+    }
 })();
 </script>
 @endpush
