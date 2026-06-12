@@ -33,7 +33,7 @@ class DiemDanhController extends Controller
      */
     private const DIEM_DANH_IP_ALLOWLIST = [
         'van_phong' => '1.2.3.4',
-        'chi_nhanh' => '5.6.7.8',
+        'chi_nhanh' => '14.162.129.132',
         'chi_nhanh_2' => '14.231.244.24',
     ];
 

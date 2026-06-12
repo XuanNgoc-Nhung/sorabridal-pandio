@@ -277,7 +277,6 @@
                                    maxlength="5000">
                         </div>
                     </div>
-                    <p class="form-text text-muted mt-3 mb-0">Người tạo và ngày tạo được ghi tự động khi lưu.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
