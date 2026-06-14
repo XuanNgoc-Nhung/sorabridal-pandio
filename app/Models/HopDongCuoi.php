@@ -27,6 +27,16 @@ class HopDongCuoi extends Model
         'tre_edit',
     ];
 
+    public const HINH_THUC_COC_TAI_CUA_HANG = 'tai_cua_hang';
+
+    public const HINH_THUC_COC_ONLINE = 'online';
+
+    /** @var array<string, string> Giá trị => nhãn hiển thị cột hinh_thuc_coc */
+    public const HINH_THUC_COC = [
+        self::HINH_THUC_COC_TAI_CUA_HANG => 'Tại cửa hàng',
+        self::HINH_THUC_COC_ONLINE => 'Online',
+    ];
+
     /** @var array<string, string> Giá trị => nhãn hiển thị cột loai_hop_dong */
     public const LOAI_HOP_DONG = [
         'hop_dong_cuoi' => 'Hợp đồng cưới',
@@ -91,6 +101,7 @@ class HopDongCuoi extends Model
         'tong_tien',
         'chiet_khau',
         'tien_coc',
+        'hinh_thuc_coc',
         'trang_thai_hop_dong',
         'link_demo',
         'ngay_tra_link_demo_du_kien',

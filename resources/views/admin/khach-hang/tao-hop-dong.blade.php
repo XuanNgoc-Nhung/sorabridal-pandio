@@ -661,6 +661,15 @@
                         <input type="text" class="form-control text-end" id="wizard_tien_coc_hien_thi" placeholder="0" value="{{ number_format((float) old('tien_coc', $hopDongCuoi->tien_coc), 0, ',', '.') }}" inputmode="numeric" autocomplete="off">
                     </div>
                     <div class="col-12 col-sm-6 col-xl-3">
+                        <label class="form-label" for="wizard_hinh_thuc_coc">Hình thức cọc</label>
+                        <select class="select2-admin form-select" id="wizard_hinh_thuc_coc" name="hinh_thuc_coc" data-placeholder="Chọn hình thức cọc" required>
+                            <option value="">-- Chọn hình thức cọc --</option>
+                            @foreach (\App\Models\HopDongCuoi::HINH_THUC_COC as $value => $label)
+                                <option value="{{ $value }}" @selected((string) old('hinh_thuc_coc', $hopDongCuoi->hinh_thuc_coc) === (string) $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-3">
                         <label class="form-label" for="wizard_han_thanh_toan_lan2">Hạn thanh toán lần 2 (dự kiến)</label>
                         <input type="text" readonly tabindex="-1" class="form-control bg-body-secondary" id="wizard_han_thanh_toan_lan2" name="han_thanh_toan_lan2" value="{{ old('han_thanh_toan_lan2', optional($hopDongCuoi->han_thanh_toan_lan2)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
@@ -1182,13 +1191,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 2) updateNextButtonState();
     }
 
-    /** Bước 3 ban đầu ẩn — khởi tạo Select2 Concept / Trang phục sau khi panel hiện. */
+    /** Bước 3 ban đầu ẩn — khởi tạo Select2 Concept / Trang phục / Hình thức cọc sau khi panel hiện. */
     function ensureStep3Select2() {
         var $ = window.jQuery;
         if (!$ || !$.fn.select2 || step3Select2Ready) return;
-        $('#wizard_concept, #wizard_trang_phuc').each(function() {
+        $('#wizard_concept, #wizard_trang_phuc, #wizard_hinh_thuc_coc').each(function() {
             var $el = $(this);
-            if ($el.data('select2')) return;
+            if ($el.data('select2')) {
+                $el.select2('destroy');
+            }
             var opts = {
                 placeholder: $el.data('placeholder') || 'Chọn...',
                 allowClear: true,
