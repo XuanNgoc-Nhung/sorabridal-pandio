@@ -84,6 +84,7 @@ class HopDongCuoiLocTienDoFilter
                             ->whereColumn('tien_coc', '<', 'tong_tien'),
                         'da_tat_toan' => $q->where('tong_tien', '>', 0)
                             ->whereColumn('tien_coc', '>=', 'tong_tien'),
+                        'da_huy' => $q->where('trang_thai_hop_dong', 'da_huy'),
                         default => null,
                     };
                 });

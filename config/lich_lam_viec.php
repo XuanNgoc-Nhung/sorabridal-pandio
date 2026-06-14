@@ -59,5 +59,6 @@ return [
         'up_link_in' => ['label' => 'Đã up link in'],
         'da_nhan_coc' => ['label' => 'Đã nhận cọc'],
         'da_tat_toan' => ['label' => 'Đã tất toán'],
+        'da_huy' => ['label' => 'Đã huỷ'],
     ],
 ];

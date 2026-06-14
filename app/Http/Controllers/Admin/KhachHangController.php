@@ -49,6 +49,11 @@ class KhachHangController extends Controller
             ->whereRaw('LENGTH(TRIM(COALESCE(ten_chu_re, ?))) > 0', [''])
             ->where('trang_thai_hop_dong', '!=', 'nhap');
 
+        $locFilters = HopDongCuoiLocTienDoFilter::parseFromRequest($request);
+        if (! in_array('da_huy', $locFilters, true)) {
+            $query->where('trang_thai_hop_dong', '!=', 'da_huy');
+        }
+
         $tuKhoa = trim((string) ($validated['tu_khoa'] ?? ''));
         if ($tuKhoa !== '') {
             $like = '%'.addcslashes($tuKhoa, '%_\\').'%';
@@ -66,7 +71,6 @@ class KhachHangController extends Controller
             $query->where('loai_hop_dong', $loaiHopDong);
         }
 
-        $locFilters = HopDongCuoiLocTienDoFilter::parseFromRequest($request);
         HopDongCuoiLocTienDoFilter::apply($query, $locFilters);
 
         $ngayTu = $validated['ngay_cuoi_tu'] ?? null;
