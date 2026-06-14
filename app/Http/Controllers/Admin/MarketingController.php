@@ -157,7 +157,7 @@ class MarketingController extends Controller
             $data['nguon_khach'] = HopDongCuoi::normalizeNguonKhachInput($data['nguon_khach']);
         }
 
-        if (($data['trang_thai'] ?? null) !== NoteKhachMoi::TRANG_THAI_KHONG_CHOT) {
+        if (! in_array($data['trang_thai'] ?? null, NoteKhachMoi::trangThaiCanLyDoKhongChot(), true)) {
             $data['ly_do_khong_chot'] = null;
         }
 

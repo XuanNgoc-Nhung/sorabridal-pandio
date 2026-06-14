@@ -13,6 +13,8 @@ class NoteKhachMoi extends Model
 
     public const TRANG_THAI_DANG_TU_VAN = 'dang_tu_van';
 
+    public const TRANG_THAI_CO_ADD_ZALO = 'co_add_zalo';
+
     public const TRANG_THAI_DA_HEN_LICH = 'da_hen_lich';
 
     public const TRANG_THAI_DA_DEN = 'da_den';
@@ -74,10 +76,37 @@ class NoteKhachMoi extends Model
     {
         return [
             self::TRANG_THAI_DANG_TU_VAN => 'Đang tư vấn',
+            self::TRANG_THAI_CO_ADD_ZALO => 'Có add zalo',
             self::TRANG_THAI_DA_HEN_LICH => 'Đã hẹn lịch',
             self::TRANG_THAI_DA_DEN => 'Đã đến',
             self::TRANG_THAI_DA_CHOT => 'Đã chốt',
             self::TRANG_THAI_KHONG_CHOT => 'Không chốt',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function trangThaiBadgeClasses(): array
+    {
+        return [
+            self::TRANG_THAI_DANG_TU_VAN => 'bg-label-secondary',
+            self::TRANG_THAI_CO_ADD_ZALO => 'bg-label-primary',
+            self::TRANG_THAI_DA_HEN_LICH => 'bg-label-warning',
+            self::TRANG_THAI_DA_DEN => 'bg-label-info',
+            self::TRANG_THAI_DA_CHOT => 'bg-label-success',
+            self::TRANG_THAI_KHONG_CHOT => 'bg-label-danger',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function trangThaiCanLyDoKhongChot(): array
+    {
+        return [
+            self::TRANG_THAI_KHONG_CHOT,
+            self::TRANG_THAI_CO_ADD_ZALO,
         ];
     }
 
@@ -125,5 +154,14 @@ class NoteKhachMoi extends Model
         }
 
         return self::trangThaiLabels()[$this->trang_thai] ?? $this->trang_thai;
+    }
+
+    public function getTrangThaiBadgeClassAttribute(): string
+    {
+        if ($this->trang_thai === null || $this->trang_thai === '') {
+            return 'bg-label-secondary';
+        }
+
+        return self::trangThaiBadgeClasses()[$this->trang_thai] ?? 'bg-label-secondary';
     }
 }

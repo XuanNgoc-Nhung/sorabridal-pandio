@@ -126,7 +126,7 @@
                         <td>{{ $item->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
                         <td>
                             @if($item->trang_thai)
-                            <span class="badge bg-label-secondary">{{ $item->trang_thai_label }}</span>
+                            <span class="badge {{ $item->trang_thai_badge_class }}">{{ $item->trang_thai_label }}</span>
                             @else
                             —
                             @endif
@@ -267,7 +267,7 @@
                             </select>
                         </div>
                         <div class="col-12 col-md-9 js-ly-do-khong-chot-wrap d-none" data-ly-do-prefix="them">
-                            <label class="form-label" for="them_ly_do_khong_chot">Lý do không chốt <span class="text-danger">*</span></label>
+                            <label class="form-label" for="them_ly_do_khong_chot">Lý do không chốt <span class="text-danger js-ly-do-required-mark">*</span></label>
                             <input type="text"
                                    class="form-control"
                                    id="them_ly_do_khong_chot"
@@ -357,7 +357,7 @@
                             </select>
                         </div>
                         <div class="col-12 col-md-9 js-ly-do-khong-chot-wrap d-none" data-ly-do-prefix="sua">
-                            <label class="form-label" for="sua_ly_do_khong_chot">Lý do không chốt <span class="text-danger">*</span></label>
+                            <label class="form-label" for="sua_ly_do_khong_chot">Lý do không chốt <span class="text-danger js-ly-do-required-mark">*</span></label>
                             <input type="text"
                                    class="form-control"
                                    id="sua_ly_do_khong_chot"
@@ -425,6 +425,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var TRANG_THAI_KHONG_CHOT = @json(\App\Models\NoteKhachMoi::TRANG_THAI_KHONG_CHOT);
+    var TRANG_THAI_CAN_LY_DO = @json(\App\Models\NoteKhachMoi::trangThaiCanLyDoKhongChot());
     var URL_TIM_HOP_DONG_THEO_SDT = @json(route('admin.note-khach-moi.tim-hop-dong-theo-sdt'));
     var KENH_TIEP_CAN_LABELS = @json($kenhTiepCanLabels);
     var timHopDongAbort = null;
@@ -631,11 +632,17 @@ document.addEventListener('DOMContentLoaded', function () {
         var lyDoInput = document.getElementById(prefix + '_ly_do_khong_chot');
         if (!select || !wrap) return;
 
-        var isKhongChot = getTrangThaiValue(select) === TRANG_THAI_KHONG_CHOT;
-        wrap.classList.toggle('d-none', !isKhongChot);
+        var trangThai = getTrangThaiValue(select);
+        var showLyDo = TRANG_THAI_CAN_LY_DO.indexOf(trangThai) !== -1;
+        var requireLyDo = trangThai === TRANG_THAI_KHONG_CHOT;
+        wrap.classList.toggle('d-none', !showLyDo);
+        var requiredMark = wrap.querySelector('.js-ly-do-required-mark');
+        if (requiredMark) {
+            requiredMark.classList.toggle('d-none', !requireLyDo);
+        }
         if (lyDoInput) {
-            lyDoInput.required = isKhongChot;
-            if (!isKhongChot) {
+            lyDoInput.required = requireLyDo;
+            if (!showLyDo) {
                 lyDoInput.value = '';
             }
         }
