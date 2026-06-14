@@ -164,7 +164,7 @@
     var alertBox = document.getElementById('diemDanhAlert');
     var alertMessage = document.getElementById('diemDanhAlertMessage');
     var csrfToken = @json(csrf_token());
-    var clientIpApiUrl = 'https://get.geojs.io/v1/ip.json';
+    var clientIpApiUrl = 'https://ipv4.geojs.io/v1/ip.json';
 
     function showAlert(type, message) {
         if (!alertBox || !alertMessage) return;
@@ -186,8 +186,8 @@
             })
             .then(function (payload) {
                 var ip = payload && typeof payload.ip === 'string' ? payload.ip.trim() : '';
-                if (!ip) {
-                    throw new Error('ip_api_empty');
+                if (!ip || !/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+                    throw new Error('ip_api_not_ipv4');
                 }
                 return ip;
             });

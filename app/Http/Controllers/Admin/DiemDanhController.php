@@ -26,7 +26,7 @@ class DiemDanhController extends Controller
      * |---------------|------------|
      * | van_phong     | 1.2.3.4    |
      *
-     * Thay value bằng IP thật (mở get.geojs.io/v1/ip.json trên cùng mạng với máy người dùng).
+     * Thay value bằng IPv4 thật (mở https://ipv4.geojs.io/v1/ip.json trên cùng mạng với máy người dùng).
      */
     private const DIEM_DANH_CHECK_IN_IP_ALLOWLIST = [
         'van_phong_252F' => '42.119.222.154',
@@ -255,9 +255,15 @@ class DiemDanhController extends Controller
             );
         });
 
+        $clientIp = trim($validated['client_ip']);
+
         return response()->json([
             'success' => true,
-            'message' => 'Check-in thành công lúc '.$gioVao->format('H:i d/m/Y').'.',
+            'message' => $this->diemDanhMessageWithIp(
+                'Check-in thành công lúc '.$gioVao->format('H:i d/m/Y').'.',
+                $clientIp
+            ),
+            'client_ip' => $clientIp,
             'gio_vao' => $gioVao->format('d/m/Y H:i'),
         ]);
     }
@@ -346,9 +352,15 @@ class DiemDanhController extends Controller
             'luong_tang_ca' => $luongTangCa,
         ]);
 
+        $clientIp = trim($validated['client_ip']);
+
         return response()->json([
             'success' => true,
-            'message' => 'Check-out thành công lúc '.$gioRa->format('H:i d/m/Y').'.',
+            'message' => $this->diemDanhMessageWithIp(
+                'Check-out thành công lúc '.$gioRa->format('H:i d/m/Y').'.',
+                $clientIp
+            ),
+            'client_ip' => $clientIp,
             'gio_ra' => $gioRa->format('d/m/Y H:i'),
         ]);
     }
@@ -444,12 +456,14 @@ class DiemDanhController extends Controller
             }
         }
 
-        $fail = function (string $message) use ($asJson): RedirectResponse|JsonResponse {
+        $fail = function (string $message, ?string $ipForMessage = null) use ($asJson): RedirectResponse|JsonResponse {
+            $messageWithIp = $this->diemDanhMessageWithIp($message, $ipForMessage);
+
             if ($asJson) {
-                return $this->jsonDiemDanhError($message);
+                return $this->jsonDiemDanhError($messageWithIp, 422, $ipForMessage);
             }
 
-            return redirect()->route('admin.diem-danh.diem-danh')->with('error', $message);
+            return redirect()->route('admin.diem-danh.diem-danh')->with('error', $messageWithIp);
         };
 
         if ($allowed === []) {
@@ -463,13 +477,16 @@ class DiemDanhController extends Controller
         $allowedValues = array_values($allowed);
         $ip = trim($clientIp);
 
-        if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
-            Log::warning("{$hanhDong}: client_ip không hợp lệ", [
+        if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
+            Log::warning("{$hanhDong}: client_ip không phải IPv4 hợp lệ", [
                 'user_id' => Auth::id(),
                 'client_ip' => $clientIp,
             ]);
 
-            return $fail('Không xác minh được mạng hiện tại. Thử lại sau hoặc liên hệ quản trị.');
+            return $fail(
+                'Không xác minh được địa chỉ IPv4 hiện tại. Thử lại sau hoặc liên hệ quản trị.',
+                trim($clientIp) !== '' ? trim($clientIp) : null
+            );
         }
 
         Log::info("{$hanhDong}: địa chỉ IP (từ trình duyệt)", [
@@ -484,17 +501,36 @@ class DiemDanhController extends Controller
                 'allowlist_keys' => array_keys($allowed),
             ]);
 
-            return $fail($ipKhongHopLeMessage);
+            return $fail($ipKhongHopLeMessage, $ip);
         }
 
         return null;
     }
 
-    private function jsonDiemDanhError(string $message, int $status = 422): JsonResponse
+    private function diemDanhMessageWithIp(string $message, ?string $clientIp = null): string
     {
-        return response()->json([
+        $ip = trim((string) $clientIp);
+        if ($ip === '') {
+            return $message;
+        }
+
+        $suffix = " IP hiện tại: {$ip}.";
+
+        return rtrim($message, '.').$suffix;
+    }
+
+    private function jsonDiemDanhError(string $message, int $status = 422, ?string $clientIp = null): JsonResponse
+    {
+        $payload = [
             'success' => false,
             'message' => $message,
-        ], $status);
+        ];
+
+        $ip = trim((string) $clientIp);
+        if ($ip !== '') {
+            $payload['client_ip'] = $ip;
+        }
+
+        return response()->json($payload, $status);
     }
 }
