@@ -333,14 +333,16 @@
                             ])
                             ->values()
                             ->all();
+                        $tenCrRutGon = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_chu_re);
+                        $tenCdRutGon = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_co_dau);
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($hopDongCuois->currentPage() - 1) * $hopDongCuois->perPage() + $index + 1 }}</td>
                         <td class="text-wrap">
                             <div class="fw-medium">
-                                {{ $item->ten_chu_re ?: '—' }}
+                                {{ $tenCrRutGon }}
                                 <span class="text-muted fw-normal">&amp;</span>
-                                {{ $item->ten_co_dau ?: '—' }}
+                                {{ $tenCdRutGon }}
                             </div>
                             <div class="small text-muted mt-1 lh-sm">
                                 @if($item->email_sdt_chu_re)
@@ -544,15 +546,19 @@
                         if ($item->ngay_cuoi_chinh_thuc && $item->ngay_cuoi_du_kien && $item->ngay_cuoi_chinh_thuc->format('Y-m-d') !== $item->ngay_cuoi_du_kien->format('Y-m-d')) {
                             $ngayCuoiTitle .= ' (DK ' . $item->ngay_cuoi_du_kien->format('d/m/Y') . ')';
                         }
-                        $tenCr = $item->ten_chu_re ?: '—';
-                        $tenCd = $item->ten_co_dau ?: '—';
-                        $coupleTitle = $tenCr . ' & ' . $tenCd;
+                        $tenCr = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_chu_re);
+                        $tenCd = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_co_dau);
+                        $coupleTitle = trim(
+                            ($item->ten_chu_re ?: '—')
+                            . ' & '
+                            . ($item->ten_co_dau ?: '—')
+                        );
                         $initialHd = '';
-                        if ($item->ten_chu_re !== null && $item->ten_chu_re !== '') {
-                            $initialHd .= mb_strtoupper(mb_substr($item->ten_chu_re, 0, 1));
+                        if ($tenCr !== '—') {
+                            $initialHd .= mb_strtoupper(mb_substr($tenCr, 0, 1));
                         }
-                        if ($item->ten_co_dau !== null && $item->ten_co_dau !== '') {
-                            $initialHd .= mb_strtoupper(mb_substr($item->ten_co_dau, 0, 1));
+                        if ($tenCd !== '—') {
+                            $initialHd .= mb_strtoupper(mb_substr($tenCd, 0, 1));
                         }
                         if ($initialHd === '') {
                             $initialHd = 'HD';
