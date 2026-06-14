@@ -39,11 +39,8 @@ class HopDongCuoi extends Model
 
     /** @var array<string, string> Giá trị => nhãn hiển thị cột loai_hop_dong */
     public const LOAI_HOP_DONG = [
-        'hop_dong_cuoi' => 'Hợp đồng cưới',
         'pre_wedding' => 'Pre-wedding',
-        'chup_anh_cuoi' => 'Chụp ảnh cưới',
-        'chup_engagement' => 'Chụp engagement',
-        'khac' => 'Khác',
+        'phong_su_cuoi' => 'Phóng sự cưới',
     ];
 
     public const SAP_XEP_ID = 'id';

@@ -490,7 +490,6 @@ class KhachHangController extends Controller
             'ngay_cuoi_du_kien' => 'nullable|date',
             'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
             'kenh_tiep_can' => 'nullable|string|max:100',
-            'yeu_cau_dac_biet' => 'nullable|string',
             'thanh_vien_nhan_vien_ids' => 'nullable|array',
             'thanh_vien_nhan_vien_ids.*' => 'integer|exists:nhan_vien,id',
         ], [], [
@@ -502,7 +501,6 @@ class KhachHangController extends Controller
             'ngay_cuoi_du_kien' => 'ngày cưới dự kiến',
             'loai_hop_dong' => 'loại hợp đồng',
             'kenh_tiep_can' => 'kênh tiếp cận',
-            'yeu_cau_dac_biet' => 'yêu cầu đặc biệt',
             'thanh_vien_nhan_vien_ids' => 'thành viên sale',
         ]);
 
@@ -738,6 +736,7 @@ class KhachHangController extends Controller
             'chiet_khau' => 'nullable|numeric|min:0',
             'tien_coc' => 'nullable|numeric|min:0',
             'hinh_thuc_coc' => 'required|in:'.HopDongCuoi::HINH_THUC_COC_TAI_CUA_HANG.','.HopDongCuoi::HINH_THUC_COC_ONLINE,
+            'yeu_cau_dac_biet' => 'nullable|string',
             'han_thanh_toan_lan2' => 'nullable|date',
             'han_thanh_toan_lan3' => 'nullable|date',
             'ngay_ky_hop_dong' => 'nullable|date',
@@ -750,6 +749,7 @@ class KhachHangController extends Controller
             'chiet_khau' => 'chiết khấu',
             'tien_coc' => 'tiền cọc',
             'hinh_thuc_coc' => 'hình thức cọc',
+            'yeu_cau_dac_biet' => 'yêu cầu đặc biệt',
             'han_thanh_toan_lan2' => 'hạn thanh toán lần 2',
             'han_thanh_toan_lan3' => 'hạn thanh toán lần 3',
             'ngay_ky_hop_dong' => 'ngày ký hợp đồng',
@@ -775,6 +775,7 @@ class KhachHangController extends Controller
             'chiet_khau' => $validated['chiet_khau'] ?? 0,
             'tien_coc' => $validated['tien_coc'] ?? 0,
             'hinh_thuc_coc' => $validated['hinh_thuc_coc'],
+            'yeu_cau_dac_biet' => $validated['yeu_cau_dac_biet'] ?? null,
             'han_thanh_toan_lan2' => $validated['han_thanh_toan_lan2'] ?? null,
             'han_thanh_toan_lan3' => $validated['han_thanh_toan_lan3'] ?? null,
             'ngay_ky_hop_dong' => $validated['ngay_ky_hop_dong'] ?? null,

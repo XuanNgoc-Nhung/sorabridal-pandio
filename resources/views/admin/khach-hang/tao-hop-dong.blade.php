@@ -149,10 +149,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label" for="wizard_yeu_cau_dac_biet">Yêu cầu đặc biệt</label>
-                        <textarea class="form-control" id="wizard_yeu_cau_dac_biet" name="yeu_cau_dac_biet" rows="3" placeholder="Ghi chú yêu cầu riêng của khách như yêu cầu thợ, địa điểm chụp,...">{{ old('yeu_cau_dac_biet', $hopDongCuoi->yeu_cau_dac_biet) }}</textarea>
-                    </div>
                 </div>
             </div>
 
@@ -623,6 +619,13 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" for="wizard_yeu_cau_dac_biet">Yêu cầu đặc biệt</label>
+                        <textarea class="form-control" id="wizard_yeu_cau_dac_biet" name="yeu_cau_dac_biet" rows="3" placeholder="Ghi chú yêu cầu riêng của khách như yêu cầu thợ, địa điểm chụp,...">{{ old('yeu_cau_dac_biet', $hopDongCuoi->yeu_cau_dac_biet) }}</textarea>
                     </div>
                 </div>
 
