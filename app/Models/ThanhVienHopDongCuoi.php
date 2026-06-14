@@ -13,6 +13,12 @@ class ThanhVienHopDongCuoi extends Model
 
     public const VAI_TRO_THANH_VIEN = 'thanh_vien';
 
+    /** @var array<string, string> */
+    public const VAI_TRO_LABELS = [
+        self::VAI_TRO_NGUOI_TAO => 'Người tạo',
+        self::VAI_TRO_THANH_VIEN => 'Thành viên',
+    ];
+
     protected $fillable = [
         'hop_dong_id',
         'nhan_vien_id',
@@ -27,5 +33,14 @@ class ThanhVienHopDongCuoi extends Model
     public function nhanVien(): BelongsTo
     {
         return $this->belongsTo(NhanVien::class, 'nhan_vien_id');
+    }
+
+    public static function vaiTroLabel(?string $vaiTro): string
+    {
+        if ($vaiTro === null || $vaiTro === '') {
+            return '—';
+        }
+
+        return self::VAI_TRO_LABELS[$vaiTro] ?? $vaiTro;
     }
 }

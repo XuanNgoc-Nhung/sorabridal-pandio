@@ -270,6 +270,7 @@
                         <th style="min-width: 200px;">Dịch vụ</th>
                         <th style="min-width: 100px;">Trạng thái</th>
                         <th style="min-width: 150px;">Ekip</th>
+                        <th style="min-width: 140px;">Thành viên</th>
                         <th style="min-width: 160px;">Thanh toán</th>
                         <th class="text-center" style="min-width: 108px;">Hành động</th>
                     </tr>
@@ -325,6 +326,13 @@
                             ENT_QUOTES,
                             'UTF-8'
                         );
+                        $thanhVienSaleRows = $item->thanhVienHopDongCuis
+                            ->map(static fn ($tv) => [
+                                'ten' => $tv->nhanVien?->user?->name,
+                                'vai_tro' => \App\Models\ThanhVienHopDongCuoi::vaiTroLabel($tv->vai_tro),
+                            ])
+                            ->values()
+                            ->all();
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($hopDongCuois->currentPage() - 1) * $hopDongCuois->perPage() + $index + 1 }}</td>
@@ -392,6 +400,16 @@
                             <div class="dpc-ekip-row"><span class="text-muted">Chụp:</span> {{ $tenThoChup }}</div>
                             <div class="dpc-ekip-row"><span class="text-muted">Make:</span> {{ $item->thoMake?->user?->name ?? '—' }}</div>
                             <div class="dpc-ekip-row"><span class="text-muted">Edit:</span> {{ $item->thoEdit?->user?->name ?? '—' }}</div>
+                        </td>
+                        <td class="dpc-ekip-col small">
+                            @forelse($thanhVienSaleRows as $saleRow)
+                            <div class="dpc-ekip-row">
+                                {{ $saleRow['ten'] ?: '—' }}
+                                <span class="text-muted">({{ $saleRow['vai_tro'] }})</span>
+                            </div>
+                            @empty
+                            —
+                            @endforelse
                         </td>
                         <td class="text-wrap" style="min-width: 150px;">
                             <div class="fw-semibold">{{ number_format((float) ($item->tong_tien ?? 0), 0, ',', '.') }} đ</div>
@@ -491,7 +509,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-4 text-muted">Không có hợp đồng cưới phù hợp bộ lọc.</td>
+                        <td colspan="11" class="text-center py-4 text-muted">Không có hợp đồng cưới phù hợp bộ lọc.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -591,6 +609,18 @@
                             ['short' => 'Make', 'name' => $item->thoMake?->user?->name, 'bg' => 'bg-label-info'],
                             ['short' => 'Edit', 'name' => $item->thoEdit?->user?->name, 'bg' => 'bg-label-success'],
                         ];
+                        $thanhVienSaleRows = $item->thanhVienHopDongCuis
+                            ->map(static fn ($tv) => [
+                                'ten' => $tv->nhanVien?->user?->name,
+                                'vai_tro' => \App\Models\ThanhVienHopDongCuoi::vaiTroLabel($tv->vai_tro),
+                            ])
+                            ->values()
+                            ->all();
+                        $saleCardRows = collect($thanhVienSaleRows)->map(static fn (array $row) => [
+                            'short' => $row['vai_tro'],
+                            'name' => $row['ten'],
+                            'bg' => 'bg-label-warning',
+                        ])->all();
                     @endphp
                     <div class="col-12 col-md-6 col-lg-6 col-xl-4">
                         <div class="card h-100 dpc-project-card">
@@ -725,13 +755,14 @@
                                         aria-valuemin="0"
                                         aria-valuemax="100"></div>
                                 </div>
-                                <div class="dpc-ekip-col small mb-3">
+                                <div class="dpc-ekip-col small mb-1">
                                     <div class="dpc-ekip-row"><span class="text-muted">Chụp:</span> {{ $tenThoChup }}</div>
                                     <div class="dpc-ekip-row"><span class="text-muted">Make:</span> {{ $item->thoMake?->user?->name ?? '—' }}</div>
                                     <div class="dpc-ekip-row"><span class="text-muted">Edit:</span> {{ $item->thoEdit?->user?->name ?? '—' }}</div>
                                 </div>
-                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center flex-wrap gap-3">
                                     <ul class="list-unstyled d-flex align-items-center avatar-group mb-0 z-2 flex-wrap">
+                                        <li class="pr-12"><small class="text-body-secondary">Ekip:</small></li>
                                         @foreach($ekipCardRows as $row)
                                             @php
                                                 $nm = $row['name'];
@@ -745,8 +776,25 @@
                                                 <span class="avatar-initial rounded-circle {{ $row['bg'] }}">{{ $ini }}</span>
                                             </li>
                                         @endforeach
-                                        <li class="ms-1"><small class="text-body-secondary">Ekip 1</small></li>
                                     </ul>
+                                    @if(! empty($saleCardRows))
+                                    <ul class="list-unstyled d-flex align-items-center avatar-group mb-0 z-2 flex-wrap">
+                                        <li class="pr-12"><small class="text-body-secondary">Thành viên:</small></li>
+                                        @foreach($saleCardRows as $row)
+                                            @php
+                                                $nm = $row['name'];
+                                                $ini = ($nm !== null && $nm !== '') ? mb_strtoupper(mb_substr($nm, 0, 1)) : '?';
+                                            @endphp
+                                            <li
+                                                class="avatar avatar-sm pull-up"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                title="{{ $row['short'] }}: {{ e($nm ?: '—') }}">
+                                                <span class="avatar-initial rounded-circle {{ $row['bg'] }}">{{ $ini }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    @endif
                                 </div>
                             </div>
                         </div>

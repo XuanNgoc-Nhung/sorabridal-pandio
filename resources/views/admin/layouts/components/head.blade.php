@@ -148,6 +148,9 @@ body > .flatpickr-calendar.open,
 .menu-vertical .menu-sub .menu-link {
   padding-inline-start: 1.75rem !important;
 }
+.pr-12{
+  padding-right: 12px;
+}
 </style>
 
 <!-- Admin: responsive — font/table gọn trên tablet & mobile -->

@@ -37,7 +37,14 @@ class KhachHangController extends Controller
         ]);
 
         $query = HopDongCuoi::query()
-            ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
+            ->with([
+                'concept',
+                'nhomDichVu',
+                'thoChup.user',
+                'thoMake.user',
+                'thoEdit.user',
+                'thanhVienHopDongCuis.nhanVien.user',
+            ])
             ->whereRaw('LENGTH(TRIM(COALESCE(ten_co_dau, ?))) > 0', [''])
             ->whereRaw('LENGTH(TRIM(COALESCE(ten_chu_re, ?))) > 0', [''])
             ->where('trang_thai_hop_dong', '!=', 'nhap');
