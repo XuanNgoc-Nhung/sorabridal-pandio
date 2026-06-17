@@ -130,6 +130,7 @@
     };
     $routeTtGet = route('admin.khach-hang.hop-dong-cuoi.thanh-toan', ['hopDongCuoi' => 999999999]);
     $routeTtPost = route('admin.khach-hang.hop-dong-cuoi.thanh-toan.luu', ['hopDongCuoi' => 999999999]);
+    $coQuyenDieuChinhHopDongCuoi = (bool) (auth()->user()?->vaiTro?->dieu_chinh_hop_dong_cuoi ?? false);
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))
@@ -471,6 +472,7 @@
                                           data-bs-toggle="tooltip"
                                           data-bs-placement="top"
                                           title="Điều phối công việc">
+                                        @if($coQuyenDieuChinhHopDongCuoi)
                                         <button type="button"
                                                 class="btn btn-sm btn-icon btn-text-warning"
                                                 data-bs-toggle="modal"
@@ -479,6 +481,14 @@
                                                 aria-label="Điều phối công việc">
                                             <i class="bi bi-sliders2 dpc-action-icon" aria-hidden="true"></i>
                                         </button>
+                                        @else
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-warning btn-khong-du-quyen-thao-tac"
+                                                data-khong-du-quyen-message="Bạn không có đủ quyền thao tác"
+                                                aria-label="Điều phối công việc">
+                                            <i class="bi bi-sliders2 dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                        @endif
                                     </span>
                                     <a href="{{ route('admin.khach-hang.chinh-sua-hop-dong-cuoi', $item) }}"
                                        class="btn btn-sm btn-icon btn-text-primary btn-dpc-edit"
@@ -535,11 +545,18 @@
                                     @method('PUT')
                                 </form>
                                 <button type="button"
+                                        @if($coQuyenDieuChinhHopDongCuoi)
                                         class="btn btn-sm btn-icon btn-text-danger btn-huy-hop-dong-cuoi"
+                                        @else
+                                        class="btn btn-sm btn-icon btn-text-danger btn-khong-du-quyen-thao-tac"
+                                        data-khong-du-quyen-message="Bạn không có đủ quyền thao tác"
+                                        @endif
                                         data-bs-toggle="tooltip"
                                         data-bs-placement="top"
+                                        @if($coQuyenDieuChinhHopDongCuoi)
                                         data-form-id="form-huy-hdc-{{ $item->id }}"
                                         data-ma="{{ e($item->ma_hop_dong ?? '') }}"
+                                        @endif
                                         title="Huỷ hợp đồng"
                                         aria-label="Huỷ hợp đồng">
                                     <i class="bi bi-x-circle-fill dpc-action-icon" aria-hidden="true"></i>
@@ -727,6 +744,7 @@
                                                         </button>
                                                     </li>
                                                     <li>
+                                                        @if($coQuyenDieuChinhHopDongCuoi)
                                                         <button
                                                             type="button"
                                                             class="dropdown-item d-flex align-items-center"
@@ -736,6 +754,15 @@
                                                             <i class="icon-base ti tabler-adjustments me-2"></i>
                                                             Điều phối
                                                         </button>
+                                                        @else
+                                                        <button
+                                                            type="button"
+                                                            class="dropdown-item d-flex align-items-center btn-khong-du-quyen-thao-tac"
+                                                            data-khong-du-quyen-message="Bạn không có đủ quyền thao tác">
+                                                            <i class="icon-base ti tabler-adjustments me-2"></i>
+                                                            Điều phối
+                                                        </button>
+                                                        @endif
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item d-flex align-items-center" href="{{ route('admin.khach-hang.chinh-sua-hop-dong-cuoi', $item) }}">
@@ -745,6 +772,7 @@
                                                     </li>
                                                     <li><hr class="dropdown-divider" /></li>
                                                     <li>
+                                                        @if($coQuyenDieuChinhHopDongCuoi)
                                                         <button
                                                             type="button"
                                                             class="dropdown-item text-danger d-flex align-items-center btn-huy-hop-dong-cuoi"
@@ -753,6 +781,15 @@
                                                             <i class="icon-base ti tabler-ban me-2"></i>
                                                             Huỷ hợp đồng
                                                         </button>
+                                                        @else
+                                                        <button
+                                                            type="button"
+                                                            class="dropdown-item text-danger d-flex align-items-center btn-khong-du-quyen-thao-tac"
+                                                            data-khong-du-quyen-message="Bạn không có đủ quyền thao tác">
+                                                            <i class="icon-base ti tabler-ban me-2"></i>
+                                                            Huỷ hợp đồng
+                                                        </button>
+                                                        @endif
                                                     </li>
                                                 @else
                                                     <li><span class="dropdown-item-text text-muted small">Hợp đồng đã huỷ</span></li>
@@ -1378,6 +1415,28 @@ document.addEventListener('DOMContentLoaded', function () {
             var inst = bootstrap.Modal.getInstance(modalEl);
             if (inst) inst.hide();
             formId = null;
+        });
+    })();
+
+    (function () {
+        function thongBaoKhongDuQuyen(msg) {
+            var message = msg || 'Bạn không có đủ quyền thao tác';
+            if (typeof Swal !== 'undefined' && Swal.fire) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không đủ quyền',
+                    text: message,
+                    confirmButtonText: 'Đã hiểu'
+                });
+                return;
+            }
+            window.alert(message);
+        }
+
+        document.querySelectorAll('.btn-khong-du-quyen-thao-tac').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                thongBaoKhongDuQuyen(this.getAttribute('data-khong-du-quyen-message'));
+            });
         });
     })();
 
