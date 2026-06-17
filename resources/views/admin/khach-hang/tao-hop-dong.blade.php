@@ -89,7 +89,7 @@
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_loai_hop_dong">Loại hợp đồng</label>
-                        <select class="select2-admin form-select" id="wizard_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
+                        <select class="select2-admin form-select" id="wizard_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng" data-wizard-step1-required>
                             <option value="">-- Chọn loại --</option>
                             @foreach (\App\Models\HopDongCuoi::LOAI_HOP_DONG as $value => $label)
                                 <option value="{{ $value }}" @selected(old('loai_hop_dong', $hopDongCuoi->loai_hop_dong) === $value)>{{ $label }}</option>
@@ -3732,7 +3732,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var loaiHopDongEl = document.getElementById('wizard_loai_hop_dong');
     if (loaiHopDongEl) {
         function onLoaiHopDongChangedForStep2() {
-            if (currentStep === 2) {
+            if (currentStep === 1) {
+                updateNextButtonState();
+            } else if (currentStep === 2) {
                 applyStep2LoaiFilter();
                 updateNangCapComboDichVuPanel();
                 updateNextButtonState();

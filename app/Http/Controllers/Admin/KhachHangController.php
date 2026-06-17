@@ -543,7 +543,7 @@ class KhachHangController extends Controller
             'email_sdt_chu_re' => 'nullable|string|max:500',
             'ngay_chup_du_kien' => 'nullable|date',
             'ngay_cuoi_du_kien' => 'nullable|date',
-            'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
+            'loai_hop_dong' => 'required|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
             'kenh_tiep_can' => 'nullable|string|max:100',
             'thanh_vien_nhan_vien_ids' => 'nullable|array',
             'thanh_vien_nhan_vien_ids.*' => 'integer|exists:nhan_vien,id',
