@@ -1200,6 +1200,11 @@
     background-color: #ffe4ef;
 }
 .tao-hop-dong-wizard .them-sp-card .them-sp-check {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    font-size: 1rem;
+    line-height: 1;
     opacity: 0.35;
 }
 .tao-hop-dong-wizard .them-sp-card.is-selected .them-sp-check {
@@ -1209,14 +1214,11 @@
 .tao-hop-dong-wizard .them-sp-card__layout {
     display: flex;
     flex-direction: row;
-    align-items: stretch;
+    align-items: center;
     gap: 0.5rem;
     min-width: 0;
 }
 .tao-hop-dong-wizard .them-sp-card__details {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
     flex: 1 1 auto;
     min-width: 0;
 }
@@ -1252,14 +1254,22 @@
 }
 .tao-hop-dong-wizard .them-sp-su-dung-badge {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    z-index: 1;
+    z-index: 2;
     color: var(--bs-success, #71dd37);
     font-size: 0.875rem;
     line-height: 1;
     text-shadow: 0 0 2px #fff, 0 0 4px #fff;
     pointer-events: none;
+}
+.tao-hop-dong-wizard .them-sp-card > .them-sp-su-dung-badge {
+    top: 8px;
+    right: 8px;
+    left: auto;
+}
+.tao-hop-dong-wizard .them-sp-thumb-wrap .them-sp-su-dung-badge {
+    top: 2px;
+    left: 2px;
+    z-index: 1;
 }
 .tao-hop-dong-wizard .them-sp-thumb-wrap {
     position: relative;
@@ -1522,6 +1532,11 @@ document.addEventListener('DOMContentLoaded', function() {
         var layout = document.createElement('div');
         layout.className = 'them-sp-card__layout';
 
+        var chk = document.createElement('div');
+        chk.className = 'them-sp-check flex-shrink-0';
+        chk.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        layout.appendChild(chk);
+
         var thumbWrap = document.createElement('div');
         thumbWrap.className = 'them-sp-thumb them-sp-thumb-wrap flex-shrink-0';
         if (p.hinh_anh_url) {
@@ -1537,14 +1552,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ph.innerHTML = '<i class="fa-regular fa-image"></i>';
             thumbWrap.appendChild(ph);
         }
-        wizardTpAppendSdDatesBadge(thumbWrap, p);
         layout.appendChild(thumbWrap);
 
         var details = document.createElement('div');
         details.className = 'them-sp-card__details';
-        var chk = document.createElement('div');
-        chk.className = 'them-sp-check flex-shrink-0 pt-1';
-        chk.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
         var body = document.createElement('div');
         body.className = 'them-sp-card__body';
         var t1 = document.createElement('div');
@@ -1559,10 +1570,10 @@ document.addEventListener('DOMContentLoaded', function() {
         body.appendChild(t1);
         body.appendChild(t2);
         body.appendChild(t3);
-        details.appendChild(chk);
         details.appendChild(body);
         layout.appendChild(details);
         card.appendChild(layout);
+        wizardTpAppendSdDatesBadge(card, p);
 
         var actions = document.createElement('div');
         actions.className = 'them-sp-card__actions';
