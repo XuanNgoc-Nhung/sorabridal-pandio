@@ -39,7 +39,7 @@ class HopDongCuoi extends Model
 
     /** @var array<string, string> Giá trị => nhãn hiển thị cột loai_hop_dong */
     public const LOAI_HOP_DONG = [
-        'pre_wedding' => 'Pre-wedding',
+        'pre_wedding' => 'Hợp đồng cưới',
         'phong_su_cuoi' => 'Phóng sự cưới',
     ];
 
