@@ -619,6 +619,8 @@
                         ->filter(fn ($id) => $id > 0)
                         ->values()
                         ->all();
+                    $coNgayChupChinhThuc = filled($hopDongCuoi->ngay_chup_thuc_te);
+                    $coNgayCuoiChinhThuc = filled($hopDongCuoi->ngay_cuoi_chinh_thuc);
                 @endphp
 
                 <div class="row g-3 mb-3">
@@ -628,8 +630,9 @@
                                class="form-control"
                                id="wizard_tp_chup_tim"
                                autocomplete="off"
-                               placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
-                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2" id="wizard_tp_chup_ket_qua_scroll">
+                               @disabled(!$coNgayChupChinhThuc)
+                               placeholder="{{ $coNgayChupChinhThuc ? 'Nhập tên hoặc mã sản phẩm để lọc…' : 'Hợp đồng chưa có ngày chụp chính thức' }}">
+                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2{{ $coNgayChupChinhThuc ? '' : ' d-none' }}" id="wizard_tp_chup_ket_qua_scroll">
                             <div class="row g-3" id="wizard_tp_chup_ket_qua"></div>
                             <div class="text-center text-muted small py-3 d-none" id="wizard_tp_chup_khong_co">Không có sản phẩm phù hợp.</div>
                         </div>
@@ -644,8 +647,9 @@
                                class="form-control"
                                id="wizard_tp_cuoi_tim"
                                autocomplete="off"
-                               placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
-                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2" id="wizard_tp_cuoi_ket_qua_scroll">
+                               @disabled(!$coNgayCuoiChinhThuc)
+                               placeholder="{{ $coNgayCuoiChinhThuc ? 'Nhập tên hoặc mã sản phẩm để lọc…' : 'Hợp đồng chưa có ngày cưới chính thức' }}">
+                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2{{ $coNgayCuoiChinhThuc ? '' : ' d-none' }}" id="wizard_tp_cuoi_ket_qua_scroll">
                             <div class="row g-3" id="wizard_tp_cuoi_ket_qua"></div>
                             <div class="text-center text-muted small py-3 d-none" id="wizard_tp_cuoi_khong_co">Không có sản phẩm phù hợp.</div>
                         </div>
@@ -1474,6 +1478,55 @@ document.addEventListener('DOMContentLoaded', function() {
         return String(s || '').toLowerCase().trim();
     }
 
+    function wizardTpGetHopDongDates() {
+        if (!formWizard) {
+            return { ngay_chup_thuc_te: '', ngay_cuoi_chinh_thuc: '' };
+        }
+        try {
+            var hop = JSON.parse(formWizard.getAttribute('data-hop-dong-cuoi') || '{}') || {};
+            return {
+                ngay_chup_thuc_te: String(hop.ngay_chup_thuc_te || '').trim(),
+                ngay_cuoi_chinh_thuc: String(hop.ngay_cuoi_chinh_thuc || '').trim()
+            };
+        } catch (e) {
+            return { ngay_chup_thuc_te: '', ngay_cuoi_chinh_thuc: '' };
+        }
+    }
+
+    function wizardTpPickerIsEnabled(loai) {
+        var dates = wizardTpGetHopDongDates();
+        if (loai === 'chup') return !!dates.ngay_chup_thuc_te;
+        if (loai === 'cuoi') return !!dates.ngay_cuoi_chinh_thuc;
+        return false;
+    }
+
+    function wizardTpApplyPickerAvailability(picker) {
+        if (!picker || !picker.timInput) return;
+        var enabled = wizardTpPickerIsEnabled(picker.loai);
+        picker.enabled = enabled;
+        picker.timInput.disabled = !enabled;
+        picker.timInput.placeholder = enabled
+            ? (picker.placeholderEnabled || 'Nhập tên hoặc mã sản phẩm để lọc…')
+            : (picker.placeholderDisabled || 'Hợp đồng chưa có ngày chụp/cưới chính thức');
+        if (picker.ketQuaScroll) {
+            picker.ketQuaScroll.classList.toggle('d-none', !enabled);
+        }
+        if (!enabled) {
+            picker.timInput.value = '';
+            picker.remoteList = null;
+            if (picker.ketQua) picker.ketQua.innerHTML = '';
+            if (picker.khongCo) picker.khongCo.classList.add('d-none');
+            return;
+        }
+        picker.renderCards();
+    }
+
+    function wizardTpApplyAllPickersAvailability() {
+        wizardTpState.pickers.forEach(function(picker) {
+            wizardTpApplyPickerAvailability(picker);
+        });
+    }
+
     function wizardTpToRelativeUrl(u) {
         if (!u) return '';
         try {
@@ -1691,6 +1744,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function wizardTpToggle(id) {
         id = parseInt(id, 10);
         if (isNaN(id)) return;
+        var p = wizardTpState.byId[id];
+        var loai = p && p.loai ? String(p.loai) : '';
+        if (!wizardTpState.selected.has(id)) {
+            if (loai === 'chup' && !wizardTpPickerIsEnabled('chup')) return;
+            if (loai === 'cuoi' && !wizardTpPickerIsEnabled('cuoi')) return;
+        }
         if (wizardTpState.selected.has(id)) wizardTpState.selected.delete(id);
         else wizardTpState.selected.add(id);
         wizardTpSyncHidden();
@@ -1724,9 +1783,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var picker = {
             loai: opts.loai || '',
+            enabled: true,
             timInput: document.getElementById(opts.timId),
             ketQua: document.getElementById(opts.ketQuaId),
+            ketQuaScroll: document.getElementById(opts.ketQuaScrollId || ''),
             khongCo: document.getElementById(opts.khongCoId),
+            placeholderEnabled: opts.placeholderEnabled || 'Nhập tên hoặc mã sản phẩm để lọc…',
+            placeholderDisabled: opts.placeholderDisabled || 'Hợp đồng chưa có ngày chụp/cưới chính thức',
             remoteList: null,
             searchTimer: null,
             searchReqId: 0,
@@ -1738,6 +1801,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             },
             renderCards: function() {
+                if (!picker.enabled) return;
                 if (!picker.ketQua || !picker.khongCo) return;
                 var list = picker.remoteList !== null ? picker.remoteList : picker.filterLocal(picker.timInput ? picker.timInput.value : '');
                 picker.ketQua.innerHTML = '';
@@ -1762,6 +1826,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             },
             scheduleSearch: function() {
+                if (!picker.enabled) return;
                 clearTimeout(picker.searchTimer);
                 picker.searchTimer = setTimeout(function() {
                     var raw = picker.timInput ? picker.timInput.value : '';
@@ -1801,15 +1866,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (picker.timInput && picker.ketQua) {
             picker.timInput.addEventListener('input', function() {
+                if (!picker.enabled) return;
                 picker.scheduleSearch();
             });
             picker.ketQua.addEventListener('click', function(ev) {
+                if (!picker.enabled) return;
                 if (ev.target.closest('.them-sp-btn-lich')) return;
                 var card = ev.target.closest('[data-sp-id]');
                 if (!card || !picker.ketQua.contains(card)) return;
                 wizardTpToggle(card.getAttribute('data-sp-id'));
             });
             picker.ketQua.addEventListener('keydown', function(ev) {
+                if (!picker.enabled) return;
                 if (ev.target.closest('.them-sp-btn-lich')) return;
                 if (ev.key !== 'Enter' && ev.key !== ' ') return;
                 var card = ev.target.closest('[data-sp-id]');
@@ -1819,8 +1887,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        picker.renderCards();
         wizardTpState.pickers.push(picker);
+        wizardTpApplyPickerAvailability(picker);
         return picker;
     }
 
@@ -1840,7 +1908,9 @@ document.addEventListener('DOMContentLoaded', function() {
             loai: 'chup',
             timId: 'wizard_tp_chup_tim',
             ketQuaId: 'wizard_tp_chup_ket_qua',
+            ketQuaScrollId: 'wizard_tp_chup_ket_qua_scroll',
             khongCoId: 'wizard_tp_chup_khong_co',
+            placeholderDisabled: 'Hợp đồng chưa có ngày chụp chính thức',
             catalog: chupCatalog,
             searchUrl: searchUrl
         });
@@ -1848,7 +1918,9 @@ document.addEventListener('DOMContentLoaded', function() {
             loai: 'cuoi',
             timId: 'wizard_tp_cuoi_tim',
             ketQuaId: 'wizard_tp_cuoi_ket_qua',
+            ketQuaScrollId: 'wizard_tp_cuoi_ket_qua_scroll',
             khongCoId: 'wizard_tp_cuoi_khong_co',
+            placeholderDisabled: 'Hợp đồng chưa có ngày cưới chính thức',
             catalog: cuoiCatalog,
             searchUrl: searchUrl
         });
@@ -3415,6 +3487,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.requestAnimationFrame(function() {
                 ensureStep3Select2();
                 ensureWizardTrangPhucPicker();
+                wizardTpApplyAllPickersAvailability();
                 applyWizardStep3ConceptRestore();
                 syncStep3PaymentFields();
                 updateSummary();
