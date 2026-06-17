@@ -63,6 +63,7 @@ class HopDongCuoiLocTienDoFilter
             foreach ($filters as $key) {
                 $outer->orWhere(function ($q) use ($key) {
                     match ($key) {
+                        'chua_xep_lich_soft' => $q->whereNull('ngay_tra_link_demo_chinh_thuc'),
                         'chua_phan_cong' => $q->tap(fn ($qq) => self::applyChuaPhanCong($qq)),
                         'phan_chup' => $q->whereNotNull('tho_chup_id')
                             ->whereNull('tho_make_id')

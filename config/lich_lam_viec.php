@@ -55,6 +55,7 @@ return [
         'phan_chup' => ['label' => 'Đã phân chụp'],
         'phan_make' => ['label' => 'Đã phân make'],
         'phan_edit' => ['label' => 'Đã phân edit'],
+        'chua_xep_lich_soft' => ['label' => 'Chưa xếp lịch soft'],
         'up_link_demo' => ['label' => 'Đã up link demo'],
         'up_link_in' => ['label' => 'Đã up link in'],
         'da_nhan_coc' => ['label' => 'Đã nhận cọc'],
