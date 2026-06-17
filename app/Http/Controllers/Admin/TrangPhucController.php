@@ -266,13 +266,23 @@ class TrangPhucController extends Controller
     {
         $validated = $request->validate([
             'q' => 'nullable|string|max:255',
+            'loai' => 'nullable|string|in:'.implode(',', LoaiTrangPhuc::values()),
         ]);
 
         $needle = trim((string) ($validated['q'] ?? ''));
 
         $query = TrangPhuc::query()
+            ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
             ->orderByDesc('id')
             ->limit(80);
+
+        if (! empty($validated['loai'])) {
+            if ($validated['loai'] === LoaiTrangPhuc::CHUP) {
+                $query->whereIn('loai', [LoaiTrangPhuc::CHUP, 'phong_su']);
+            } else {
+                $query->where('loai', LoaiTrangPhuc::CUOI);
+            }
+        }
 
         if ($needle !== '') {
             $query->where(function ($qb) use ($needle) {
@@ -281,22 +291,101 @@ class TrangPhucController extends Controller
             });
         }
 
+        $rows = $query->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'loai']);
+        $coLichSuIds = $this->cacSanPhamIdCoLichSuSuDung(
+            $rows->pluck('id')->map(static fn ($id): int => (int) $id)->all()
+        );
+
         $items = [];
-        foreach ($query->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri']) as $sp) {
-            $id = (int) $sp->id;
-            $items[] = [
-                'id' => $id,
-                'ten' => (string) ($sp->ten_san_pham ?? ''),
-                'ma' => (string) ($sp->ma_san_pham ?? ''),
-                'hinh_anh_url' => $this->trangPhucHinhAnhPublicUrl($sp->hinh_anh),
-                'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
-                'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),
-                'stock' => $this->tonKhoKhaDungChoThue($id),
-                'sdDates' => $this->cacNgayTraDuKienDangThueTuHomNay($id),
-            ];
+        foreach ($rows as $sp) {
+            $items[] = $this->buildSanPhamCatalogEntry($sp, isset($coLichSuIds[(int) $sp->id]));
         }
 
         return response()->json(['items' => $items]);
+    }
+
+    /**
+     * Catalog sản phẩm trang phục cho wizard HĐ cưới (tách theo loại chụp / cưới).
+     *
+     * @return array{chup: list<array<string, mixed>>, cuoi: list<array<string, mixed>>}
+     */
+    public function sanPhamCatalogChoWizardHopDongCuoi(): array
+    {
+        $items = TrangPhuc::query()
+            ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
+            ->orderBy('ten_san_pham')
+            ->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'loai']);
+
+        $chup = [];
+        $cuoi = [];
+        $coLichSuIds = $this->cacSanPhamIdCoLichSuSuDung(
+            $items->pluck('id')->map(static fn ($id): int => (int) $id)->all()
+        );
+
+        foreach ($items as $sp) {
+            $entry = $this->buildSanPhamCatalogEntry($sp, isset($coLichSuIds[(int) $sp->id]));
+            if (LoaiTrangPhuc::normalize($sp->loai) === LoaiTrangPhuc::CHUP) {
+                $chup[] = $entry;
+            } else {
+                $cuoi[] = $entry;
+            }
+        }
+
+        return ['chup' => $chup, 'cuoi' => $cuoi];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildSanPhamCatalogEntry(TrangPhuc $sp, bool $coLichSuSuDung = false): array
+    {
+        $id = (int) $sp->id;
+        $hinhPath = $sp->hinh_anh ?? null;
+
+        return [
+            'id' => $id,
+            'ten' => (string) ($sp->ten_san_pham ?? ''),
+            'ma' => (string) ($sp->ma_san_pham ?? ''),
+            'hinh_anh_url' => $hinhPath ? '/storage/'.ltrim($hinhPath, '/') : '',
+            'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
+            'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),
+            'stock' => $this->tonKhoKhaDungChoThue($id),
+            'sdDates' => array_values(array_map('strval', $this->cacNgayTraDuKienDangThueTuHomNay($id))),
+            'coLichSuSuDung' => $coLichSuSuDung,
+        ];
+    }
+
+    /**
+     * @param  list<int>  $trangPhucIds
+     * @return array<int, true>
+     */
+    private function cacSanPhamIdCoLichSuSuDung(array $trangPhucIds): array
+    {
+        $trangPhucIds = array_values(array_unique(array_filter(array_map('intval', $trangPhucIds), static fn (int $id): bool => $id > 0)));
+        if ($trangPhucIds === []) {
+            return [];
+        }
+
+        $tuThue = SanPhamChoThue::query()
+            ->whereIn('san_pham_id', $trangPhucIds)
+            ->distinct()
+            ->pluck('san_pham_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        $tuCuoi = HopDongCuoiTrangPhuc::query()
+            ->whereIn('trang_phuc_id', $trangPhucIds)
+            ->distinct()
+            ->pluck('trang_phuc_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        $map = [];
+        foreach (array_merge($tuThue, $tuCuoi) as $id) {
+            $map[$id] = true;
+        }
+
+        return $map;
     }
 
     public function hopDong(Request $request)

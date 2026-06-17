@@ -611,23 +611,68 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-lg-8">
-                        <label class="form-label" for="wizard_trang_phuc">Trang phục</label>
-                        <select class="form-select" id="wizard_trang_phuc" name="trang_phuc[]" multiple data-placeholder="Chọn trang phục">
-                            @php
-                                $trangPhucDaChon = collect(old('trang_phuc', $hopDongCuoiData['trang_phuc_ids'] ?? []))
-                                    ->map(fn ($value) => (string) $value)
-                                    ->all();
-                            @endphp
-                            @foreach ($trangPhucs ?? [] as $trangPhuc)
-                                @php
-                                    $tenTrangPhuc = trim(($trangPhuc->ten_san_pham ?? '') . (!empty($trangPhuc->ma_san_pham) ? ' (' . $trangPhuc->ma_san_pham . ')' : ''));
-                                @endphp
-                                <option value="{{ $trangPhuc->id }}" @selected(in_array((string) $trangPhuc->id, $trangPhucDaChon, true))>
-                                    {{ $tenTrangPhuc !== '' ? $tenTrangPhuc : ('Trang phục #' . $trangPhuc->id) }}
-                                </option>
-                            @endforeach
-                        </select>
+                </div>
+
+                @php
+                    $trangPhucDaChon = collect(old('trang_phuc', $hopDongCuoiData['trang_phuc_ids'] ?? []))
+                        ->map(fn ($value) => (int) $value)
+                        ->filter(fn ($id) => $id > 0)
+                        ->values()
+                        ->all();
+                @endphp
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" for="wizard_tp_chup_tim">Trang phục chụp</label>
+                        <input type="text"
+                               class="form-control"
+                               id="wizard_tp_chup_tim"
+                               autocomplete="off"
+                               placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
+                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2" id="wizard_tp_chup_ket_qua_scroll">
+                            <div class="row g-3" id="wizard_tp_chup_ket_qua"></div>
+                            <div class="text-center text-muted small py-3 d-none" id="wizard_tp_chup_khong_co">Không có sản phẩm phù hợp.</div>
+                        </div>
+                        <script type="application/json" id="wizard-tp-chup-catalog-data">@json($wizardTrangPhucChupCatalog ?? [])</script>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" for="wizard_tp_cuoi_tim">Trang phục cưới</label>
+                        <input type="text"
+                               class="form-control"
+                               id="wizard_tp_cuoi_tim"
+                               autocomplete="off"
+                               placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
+                        <div class="wizard-tp-ket-qua-scroll border rounded p-3 mt-2" id="wizard_tp_cuoi_ket_qua_scroll">
+                            <div class="row g-3" id="wizard_tp_cuoi_ket_qua"></div>
+                            <div class="text-center text-muted small py-3 d-none" id="wizard_tp_cuoi_khong_co">Không có sản phẩm phù hợp.</div>
+                        </div>
+                        <script type="application/json" id="wizard-tp-cuoi-catalog-data">@json($wizardTrangPhucCuoiCatalog ?? [])</script>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <div class="d-none" id="wizard_tp_da_chon_wrap">
+                            <div class="small text-muted mb-1">Trang phục đã chọn</div>
+                            <div class="table-responsive border rounded">
+                                <table class="table table-sm mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 84px;">Ảnh</th>
+                                            <th style="width: 140px;">Mã</th>
+                                            <th style="width: 70px;" class="text-end">Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wizard_tp_da_chon"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="wizard_trang_phuc_hidden_wrap" class="visually-hidden" aria-hidden="true"></div>
+                        <script type="application/json" id="wizard-tp-search-url">@json(route('admin.trang-phuc.hop-dong.tim-san-pham'))</script>
+                        <script type="application/json" id="wizard-tp-selected-data">@json($trangPhucDaChon)</script>
                     </div>
                 </div>
 
@@ -714,6 +759,40 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+{{-- Modal lịch sử sử dụng sản phẩm (bước 3 — chọn trang phục) --}}
+<div class="modal fade" id="modalWizardKiemTraSp" tabindex="-1" aria-labelledby="modalWizardKiemTraSpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 92vw; width: 820px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalWizardKiemTraSpLabel">Lịch sử dụng sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <div>
+                        <div class="fw-semibold" id="wizardKtspTen">—</div>
+                        <div class="text-muted small" id="wizardKtspMa">—</div>
+                    </div>
+                    <div class="text-muted small" id="wizardKtspStatus"></div>
+                </div>
+                <div id="wizardKtspLoading" class="py-4 text-center text-muted d-none">
+                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                    Đang tải dữ liệu...
+                </div>
+                <div id="wizardKtspError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="wizardKtspContent" class="d-none">
+                    <div class="fw-semibold mb-1">Lịch sử sử dụng theo ngày</div>
+                    <div id="wizardKtspGroupedEmpty" class="text-muted small d-none">Chưa có dữ liệu sử dụng.</div>
+                    <div id="wizardKtspGroupedWrap" class="accordion accordion-flush"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1090,6 +1169,132 @@
 .tao-hop-dong-wizard .wizard-list-pagination .pagination {
     margin-bottom: 0;
 }
+/* Bước 3 — chọn trang phục (card picker giống HĐ thuê) */
+.tao-hop-dong-wizard .wizard-tp-ket-qua-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+    background-color: #fffafb;
+}
+.tao-hop-dong-wizard .wizard-tp-ket-qua-scroll .row {
+    --bs-gutter-y: 1rem;
+    --bs-gutter-x: 0.75rem;
+}
+.tao-hop-dong-wizard .them-sp-card {
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 0.35rem !important;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.375rem;
+    background-color: #fff5f8;
+    border-color: rgba(233, 30, 99, 0.12);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.tao-hop-dong-wizard .them-sp-card:hover {
+    border-color: var(--bs-primary, #696cff);
+    box-shadow: 0 0.125rem 0.25rem rgba(233, 30, 99, 0.08);
+    background-color: #ffecf2;
+}
+.tao-hop-dong-wizard .them-sp-card.is-selected {
+    border-color: var(--bs-primary, #696cff);
+    border-width: 2px;
+    background-color: #ffe4ef;
+}
+.tao-hop-dong-wizard .them-sp-card .them-sp-check {
+    opacity: 0.35;
+}
+.tao-hop-dong-wizard .them-sp-card.is-selected .them-sp-check {
+    opacity: 1;
+    color: var(--bs-primary, #696cff);
+}
+.tao-hop-dong-wizard .them-sp-card__layout {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.5rem;
+    min-width: 0;
+}
+.tao-hop-dong-wizard .them-sp-card__details {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.tao-hop-dong-wizard .them-sp-card__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.tao-hop-dong-wizard .them-sp-card__actions {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    left: auto;
+    top: auto;
+    z-index: 2;
+}
+.tao-hop-dong-wizard .them-sp-btn-lich {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--bs-primary, #696cff);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
+}
+.tao-hop-dong-wizard .them-sp-btn-lich:hover,
+.tao-hop-dong-wizard .them-sp-btn-lich:focus-visible {
+    opacity: 1;
+    color: var(--bs-primary, #696cff);
+}
+.tao-hop-dong-wizard .them-sp-su-dung-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    z-index: 1;
+    color: var(--bs-success, #71dd37);
+    font-size: 0.875rem;
+    line-height: 1;
+    text-shadow: 0 0 2px #fff, 0 0 4px #fff;
+    pointer-events: none;
+}
+.tao-hop-dong-wizard .them-sp-thumb-wrap {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.tao-hop-dong-wizard .them-sp-thumb {
+    width: 72px;
+    flex: 0 0 72px;
+}
+.tao-hop-dong-wizard .them-sp-thumb-img {
+    width: 72px;
+    height: 96px;
+    object-fit: cover;
+    display: block;
+}
+.tao-hop-dong-wizard .them-sp-thumb-placeholder {
+    width: 72px;
+    height: 50px;
+    font-size: 1.35rem;
+    background-color: #fff;
+}
+body.modal-wizard-ktsp-open .modal-backdrop:last-of-type {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0.58;
+}
+#modalWizardKiemTraSp.modal.show .modal-content {
+    box-shadow:
+        0 0 40px 0 rgba(33, 37, 41, 0.16),
+        0 0 80px 40px rgba(33, 37, 41, 0.14);
+}
+#modalWizardKiemTraSp .list-group-item .hd-ktsp-list-info {
+    padding: 12px;
+}
 </style>
 @endpush
 
@@ -1145,6 +1350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var step2RestoreApplied = false;
     var step3Select2Ready = false;
     var step3ConceptRestoreApplied = false;
+    var step3TrangPhucReady = false;
     var discountVoucherValid = false;
 
     /** Bỏ đánh số trước label; chỉ đánh dấu (*) đỏ đậm cho các field bắt buộc. */
@@ -1203,11 +1409,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 2) updateNextButtonState();
     }
 
-    /** Bước 3 ban đầu ẩn — khởi tạo Select2 Concept / Trang phục / Hình thức cọc sau khi panel hiện. */
+    /** Bước 3 ban đầu ẩn — khởi tạo Select2 Concept / Hình thức cọc sau khi panel hiện. */
     function ensureStep3Select2() {
         var $ = window.jQuery;
         if (!$ || !$.fn.select2 || step3Select2Ready) return;
-        $('#wizard_concept, #wizard_trang_phuc, #wizard_hinh_thuc_coc').each(function() {
+        $('#wizard_concept, #wizard_hinh_thuc_coc').each(function() {
             var $el = $(this);
             if ($el.data('select2')) {
                 $el.select2('destroy');
@@ -1217,11 +1423,597 @@ document.addEventListener('DOMContentLoaded', function() {
                 allowClear: true,
                 width: '100%'
             };
-            if ($el.prop('multiple')) opts.closeOnSelect = false;
             $el.select2(opts);
         });
         step3Select2Ready = true;
     }
+
+    function wizardTpParseJsonEl(id, fallback) {
+        var el = document.getElementById(id);
+        if (!el) return fallback;
+        try {
+            return JSON.parse(el.textContent || 'null') ?? fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    var wizardTpState = {
+        selected: new Set(),
+        byId: {},
+        hiddenWrap: null,
+        daChon: null,
+        daChonWrap: null,
+        pickers: []
+    };
+
+    function wizardTpNorm(s) {
+        return String(s || '').toLowerCase().trim();
+    }
+
+    function wizardTpToRelativeUrl(u) {
+        if (!u) return '';
+        try {
+            var url = new URL(String(u), window.location.origin);
+            return url.pathname + url.search + url.hash;
+        } catch (e) {
+            return String(u);
+        }
+    }
+
+    function wizardTpEscHtml(s) {
+        return String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function wizardTpFormatGiaTri(val) {
+        if (val === null || val === undefined || val === '') return '—';
+        var n = Number(val);
+        if (isNaN(n)) return '—';
+        return n.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' đ';
+    }
+
+    function wizardTpCoSuDung(p) {
+        if (!p) return false;
+        if (p.sdDates && p.sdDates.length) return true;
+        return !!p.coLichSuSuDung;
+    }
+
+    function wizardTpSuDungBadgeTitle(p) {
+        if (p && p.sdDates && p.sdDates.length) {
+            return 'Đang/đã có lịch sử dụng: ' + p.sdDates.join(', ');
+        }
+        return 'Đã có lịch sử sử dụng';
+    }
+
+    function wizardTpAppendSuDungBadge(wrap, p) {
+        if (!wrap || !wizardTpCoSuDung(p)) return;
+        var badge = document.createElement('span');
+        badge.className = 'them-sp-su-dung-badge';
+        badge.title = wizardTpSuDungBadgeTitle(p);
+        badge.setAttribute('aria-label', badge.title);
+        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        wrap.appendChild(badge);
+    }
+
+    function wizardTpAppendSdDatesBadge(wrap, p) {
+        if (!wrap || !p || !p.sdDates || !p.sdDates.length) return;
+        wrap.title = 'Sản phẩm có lịch sử dụng';
+        wrap.setAttribute('aria-label', wrap.title);
+        var badge = document.createElement('span');
+        badge.className = 'them-sp-su-dung-badge';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        wrap.appendChild(badge);
+    }
+
+    function wizardTpCreateProductCard(p, selected) {
+        var pid = parseInt(p && p.id != null ? p.id : '', 10);
+        if (isNaN(pid)) return null;
+        var card = document.createElement('div');
+        card.className = 'them-sp-card h-100 p-2 p-md-3' + (selected ? ' is-selected' : '');
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('data-sp-id', String(pid));
+
+        var layout = document.createElement('div');
+        layout.className = 'them-sp-card__layout';
+
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'them-sp-thumb them-sp-thumb-wrap flex-shrink-0';
+        if (p.hinh_anh_url) {
+            var imgEl = document.createElement('img');
+            imgEl.className = 'them-sp-thumb-img rounded border bg-body';
+            imgEl.src = wizardTpToRelativeUrl(p.hinh_anh_url);
+            imgEl.alt = '';
+            imgEl.loading = 'lazy';
+            thumbWrap.appendChild(imgEl);
+        } else {
+            var ph = document.createElement('div');
+            ph.className = 'them-sp-thumb-placeholder rounded border d-flex align-items-center justify-content-center text-muted';
+            ph.innerHTML = '<i class="fa-regular fa-image"></i>';
+            thumbWrap.appendChild(ph);
+        }
+        wizardTpAppendSdDatesBadge(thumbWrap, p);
+        layout.appendChild(thumbWrap);
+
+        var details = document.createElement('div');
+        details.className = 'them-sp-card__details';
+        var chk = document.createElement('div');
+        chk.className = 'them-sp-check flex-shrink-0 pt-1';
+        chk.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        var body = document.createElement('div');
+        body.className = 'them-sp-card__body';
+        var t1 = document.createElement('div');
+        t1.className = 'fw-semibold text-break';
+        t1.textContent = p.ten || '—';
+        var t2 = document.createElement('div');
+        t2.className = 'small text-muted';
+        t2.textContent = 'Mã: ' + (p.ma || '—');
+        var t3 = document.createElement('div');
+        t3.className = 'small';
+        t3.innerHTML = '<span class="text-muted">Giá trị: </span><strong>' + wizardTpEscHtml(wizardTpFormatGiaTri(p.gia_tri)) + '</strong>';
+        body.appendChild(t1);
+        body.appendChild(t2);
+        body.appendChild(t3);
+        details.appendChild(chk);
+        details.appendChild(body);
+        layout.appendChild(details);
+        card.appendChild(layout);
+
+        var actions = document.createElement('div');
+        actions.className = 'them-sp-card__actions';
+        var btnLich = document.createElement('button');
+        btnLich.type = 'button';
+        btnLich.className = 'them-sp-btn-lich';
+        btnLich.setAttribute('data-ten', p.ten || '');
+        btnLich.setAttribute('data-ma', p.ma || '');
+        btnLich.setAttribute('data-url', p.kiem_tra_url || '');
+        btnLich.title = 'Check lịch sử dụng sản phẩm';
+        btnLich.setAttribute('aria-label', 'Check lịch sử dụng sản phẩm');
+        btnLich.innerHTML = '<i class="fa-regular fa-calendar-days" aria-hidden="true"></i>';
+        actions.appendChild(btnLich);
+        card.appendChild(actions);
+        return card;
+    }
+
+    function wizardTpSyncHidden() {
+        if (!wizardTpState.hiddenWrap) return;
+        wizardTpState.hiddenWrap.innerHTML = '';
+        wizardTpState.selected.forEach(function(id) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'trang_phuc[]';
+            inp.value = String(id);
+            wizardTpState.hiddenWrap.appendChild(inp);
+        });
+    }
+
+    function wizardTpRenderSelectedTable() {
+        if (!wizardTpState.daChon || !wizardTpState.daChonWrap) return;
+        wizardTpState.daChon.innerHTML = '';
+        if (!wizardTpState.selected.size) {
+            wizardTpState.daChonWrap.classList.add('d-none');
+            return;
+        }
+        wizardTpState.daChonWrap.classList.remove('d-none');
+        wizardTpState.selected.forEach(function(id) {
+            var p = wizardTpState.byId[id];
+            var tr = document.createElement('tr');
+
+            var tdImg = document.createElement('td');
+            var ten = p && p.ten ? String(p.ten) : ('#' + id);
+            var thumbWrap = document.createElement('div');
+            thumbWrap.className = 'them-sp-thumb-wrap';
+            if (p && p.hinh_anh_url) {
+                var img = document.createElement('img');
+                img.src = wizardTpToRelativeUrl(p.hinh_anh_url);
+                img.alt = ten;
+                img.title = ten;
+                img.loading = 'lazy';
+                img.className = 'rounded border bg-body';
+                img.style.width = '72px';
+                img.style.height = '96px';
+                img.style.objectFit = 'cover';
+                thumbWrap.appendChild(img);
+            } else {
+                var ph = document.createElement('div');
+                ph.className = 'rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
+                ph.title = ten;
+                ph.style.width = '72px';
+                ph.style.height = '96px';
+                ph.innerHTML = '<i class="fa-regular fa-image"></i>';
+                thumbWrap.appendChild(ph);
+            }
+            wizardTpAppendSuDungBadge(thumbWrap, p);
+            tdImg.appendChild(thumbWrap);
+
+            var tdMa = document.createElement('td');
+            tdMa.className = 'text-muted';
+            tdMa.textContent = p && p.ma ? String(p.ma) : '—';
+
+            var tdAct = document.createElement('td');
+            tdAct.className = 'text-end';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-outline-danger';
+            btn.setAttribute('data-sp-remove', String(id));
+            btn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
+            btn.title = 'Bỏ chọn';
+            tdAct.appendChild(btn);
+
+            tr.appendChild(tdImg);
+            tr.appendChild(tdMa);
+            tr.appendChild(tdAct);
+            wizardTpState.daChon.appendChild(tr);
+        });
+    }
+
+    function wizardTpToggle(id) {
+        id = parseInt(id, 10);
+        if (isNaN(id)) return;
+        if (wizardTpState.selected.has(id)) wizardTpState.selected.delete(id);
+        else wizardTpState.selected.add(id);
+        wizardTpSyncHidden();
+        wizardTpRenderSelectedTable();
+        wizardTpState.pickers.forEach(function(picker) {
+            picker.renderCards();
+        });
+    }
+
+    function wizardTpRestoreSelection(ids) {
+        if (!Array.isArray(ids)) return;
+        ids.forEach(function(rawId) {
+            var id = parseInt(rawId, 10);
+            if (!isNaN(id) && id > 0) wizardTpState.selected.add(id);
+        });
+        wizardTpSyncHidden();
+        wizardTpRenderSelectedTable();
+        wizardTpState.pickers.forEach(function(picker) {
+            picker.renderCards();
+        });
+    }
+
+    function initWizardTrangPhucPicker(opts) {
+        var catalog = Array.isArray(opts.catalog) ? opts.catalog : [];
+        catalog.forEach(function(p) {
+            if (p && p.id != null) wizardTpState.byId[p.id] = p;
+        });
+
+        var picker = {
+            loai: opts.loai || '',
+            timInput: document.getElementById(opts.timId),
+            ketQua: document.getElementById(opts.ketQuaId),
+            khongCo: document.getElementById(opts.khongCoId),
+            remoteList: null,
+            searchTimer: null,
+            searchReqId: 0,
+            filterLocal: function(query) {
+                var q = wizardTpNorm(query);
+                if (!q) return catalog.slice();
+                return catalog.filter(function(p) {
+                    return wizardTpNorm(p.ten).indexOf(q) !== -1 || wizardTpNorm(p.ma).indexOf(q) !== -1;
+                });
+            },
+            renderCards: function() {
+                if (!picker.ketQua || !picker.khongCo) return;
+                var list = picker.remoteList !== null ? picker.remoteList : picker.filterLocal(picker.timInput ? picker.timInput.value : '');
+                picker.ketQua.innerHTML = '';
+                if (!list.length) {
+                    picker.khongCo.classList.remove('d-none');
+                    return;
+                }
+                picker.khongCo.classList.add('d-none');
+                list.forEach(function(p) {
+                    var pid = parseInt(p && p.id != null ? p.id : '', 10);
+                    if (isNaN(pid)) return;
+                    if (p && p.id != null) wizardTpState.byId[p.id] = p;
+                    var col = document.createElement('div');
+                    col.className = 'col-12 col-sm-6 col-md-4 col-xl-3';
+                    var card = wizardTpCreateProductCard(p, wizardTpState.selected.has(pid));
+                    if (!card) return;
+                    col.appendChild(card);
+                    picker.ketQua.appendChild(col);
+                });
+            },
+            scheduleSearch: function() {
+                clearTimeout(picker.searchTimer);
+                picker.searchTimer = setTimeout(function() {
+                    var raw = picker.timInput ? picker.timInput.value : '';
+                    if (!wizardTpNorm(raw)) {
+                        picker.remoteList = null;
+                        picker.renderCards();
+                        return;
+                    }
+                    var ax = window.axios;
+                    if (!ax || !opts.searchUrl) {
+                        picker.remoteList = null;
+                        picker.renderCards();
+                        return;
+                    }
+                    var reqId = ++picker.searchReqId;
+                    ax.get(opts.searchUrl, { params: { q: raw.trim(), loai: picker.loai } })
+                        .then(function(res) {
+                            if (reqId !== picker.searchReqId) return;
+                            var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
+                            items.forEach(function(p) {
+                                if (p && p.id != null) wizardTpState.byId[p.id] = p;
+                            });
+                            picker.remoteList = items;
+                            picker.renderCards();
+                        })
+                        .catch(function() {
+                            if (reqId !== picker.searchReqId) return;
+                            picker.remoteList = [];
+                            picker.renderCards();
+                        });
+                }, 300);
+            }
+        };
+
+        if (picker.timInput && picker.ketQua) {
+            picker.timInput.addEventListener('input', function() {
+                picker.scheduleSearch();
+            });
+            picker.ketQua.addEventListener('click', function(ev) {
+                if (ev.target.closest('.them-sp-btn-lich')) return;
+                var card = ev.target.closest('[data-sp-id]');
+                if (!card || !picker.ketQua.contains(card)) return;
+                wizardTpToggle(card.getAttribute('data-sp-id'));
+            });
+            picker.ketQua.addEventListener('keydown', function(ev) {
+                if (ev.target.closest('.them-sp-btn-lich')) return;
+                if (ev.key !== 'Enter' && ev.key !== ' ') return;
+                var card = ev.target.closest('[data-sp-id]');
+                if (!card || !picker.ketQua.contains(card)) return;
+                ev.preventDefault();
+                wizardTpToggle(card.getAttribute('data-sp-id'));
+            });
+        }
+
+        picker.renderCards();
+        wizardTpState.pickers.push(picker);
+        return picker;
+    }
+
+    function ensureWizardTrangPhucPicker() {
+        if (step3TrangPhucReady) return;
+        step3TrangPhucReady = true;
+
+        wizardTpState.hiddenWrap = document.getElementById('wizard_trang_phuc_hidden_wrap');
+        wizardTpState.daChon = document.getElementById('wizard_tp_da_chon');
+        wizardTpState.daChonWrap = document.getElementById('wizard_tp_da_chon_wrap');
+
+        var searchUrl = wizardTpParseJsonEl('wizard-tp-search-url', '');
+        var chupCatalog = wizardTpParseJsonEl('wizard-tp-chup-catalog-data', []);
+        var cuoiCatalog = wizardTpParseJsonEl('wizard-tp-cuoi-catalog-data', []);
+
+        initWizardTrangPhucPicker({
+            loai: 'chup',
+            timId: 'wizard_tp_chup_tim',
+            ketQuaId: 'wizard_tp_chup_ket_qua',
+            khongCoId: 'wizard_tp_chup_khong_co',
+            catalog: chupCatalog,
+            searchUrl: searchUrl
+        });
+        initWizardTrangPhucPicker({
+            loai: 'cuoi',
+            timId: 'wizard_tp_cuoi_tim',
+            ketQuaId: 'wizard_tp_cuoi_ket_qua',
+            khongCoId: 'wizard_tp_cuoi_khong_co',
+            catalog: cuoiCatalog,
+            searchUrl: searchUrl
+        });
+
+        if (wizardTpState.daChon) {
+            wizardTpState.daChon.addEventListener('click', function(ev) {
+                var btn = ev.target.closest('[data-sp-remove]');
+                if (!btn || !wizardTpState.daChon.contains(btn)) return;
+                ev.preventDefault();
+                wizardTpToggle(btn.getAttribute('data-sp-remove'));
+            });
+        }
+
+        var initialSelected = wizardTpParseJsonEl('wizard-tp-selected-data', []);
+        if (initialSelected.length) {
+            wizardTpRestoreSelection(initialSelected);
+        }
+    }
+
+    var modalWizardKtsp = document.getElementById('modalWizardKiemTraSp');
+    var wizardKtspTen = document.getElementById('wizardKtspTen');
+    var wizardKtspMa = document.getElementById('wizardKtspMa');
+    var wizardKtspStatus = document.getElementById('wizardKtspStatus');
+    var wizardKtspLoading = document.getElementById('wizardKtspLoading');
+    var wizardKtspError = document.getElementById('wizardKtspError');
+    var wizardKtspContent = document.getElementById('wizardKtspContent');
+    var wizardKtspGroupedWrap = document.getElementById('wizardKtspGroupedWrap');
+    var wizardKtspGroupedEmpty = document.getElementById('wizardKtspGroupedEmpty');
+
+    function wizardKtspResetUI() {
+        if (wizardKtspStatus) wizardKtspStatus.textContent = '';
+        if (wizardKtspError) {
+            wizardKtspError.classList.add('d-none');
+            wizardKtspError.textContent = '';
+        }
+        if (wizardKtspContent) wizardKtspContent.classList.add('d-none');
+        if (wizardKtspLoading) wizardKtspLoading.classList.add('d-none');
+        if (wizardKtspGroupedWrap) wizardKtspGroupedWrap.innerHTML = '';
+        if (wizardKtspGroupedEmpty) wizardKtspGroupedEmpty.classList.add('d-none');
+    }
+
+    function wizardKtspFmtRange(tu, den) {
+        if (!tu && !den) return '—';
+        if (tu && den && tu !== den) return tu + ' → ' + den;
+        return (tu || den);
+    }
+
+    function wizardKtspAddDaysInclusive(startYmd, endYmd) {
+        if (!startYmd || !endYmd) return [];
+        var start = new Date(startYmd + 'T00:00:00');
+        var end = new Date(endYmd + 'T00:00:00');
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return [];
+        var out = [];
+        for (var d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            out.push(y + '-' + m + '-' + day);
+        }
+        return out;
+    }
+
+    function wizardKtspBuildGroupedByDay(thueItems, cuoiItems) {
+        var map = new Map();
+        function ensure(ymd) {
+            if (!map.has(ymd)) map.set(ymd, { thue: [], cuoi: [] });
+            return map.get(ymd);
+        }
+        (Array.isArray(thueItems) ? thueItems : []).forEach(function(row) {
+            wizardKtspAddDaysInclusive(row.tu_ngay, row.den_ngay).forEach(function(ymd) {
+                ensure(ymd).thue.push(row);
+            });
+        });
+        (Array.isArray(cuoiItems) ? cuoiItems : []).forEach(function(row) {
+            if (!row.ngay) return;
+            ensure(row.ngay).cuoi.push(row);
+        });
+        return { map: map, days: Array.from(map.keys()).sort(function(a, b) { return a.localeCompare(b); }) };
+    }
+
+    function wizardKtspRenderGrouped(thueItems, cuoiItems) {
+        var grouped = wizardKtspBuildGroupedByDay(thueItems, cuoiItems);
+        if (!grouped.days.length) {
+            if (wizardKtspGroupedEmpty) wizardKtspGroupedEmpty.classList.remove('d-none');
+            return;
+        }
+        grouped.days.forEach(function(ymd, idx) {
+            var bucket = grouped.map.get(ymd) || { thue: [], cuoi: [] };
+            var headId = 'wizard-ktsp-day-head-' + idx;
+            var collapseId = 'wizard-ktsp-day-body-' + idx;
+            var total = (bucket.thue?.length || 0) + (bucket.cuoi?.length || 0);
+            var item = document.createElement('div');
+            item.className = 'accordion-item';
+            item.innerHTML =
+                '<h2 class="accordion-header" id="' + headId + '">' +
+                    '<button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false">' +
+                        '<div class="d-flex w-100 align-items-center justify-content-between gap-2">' +
+                            '<div class="fw-semibold ms-2">' + wizardTpEscHtml(ymd) + '</div>' +
+                            '<span class="badge bg-label-primary">' + wizardTpEscHtml(total) + ' đơn</span>' +
+                        '</div>' +
+                    '</button>' +
+                '</h2>' +
+                '<div id="' + collapseId + '" class="accordion-collapse collapse" data-bs-parent="#wizardKtspGroupedWrap">' +
+                    '<div class="px-0"><ul class="list-group list-group-flush" data-wizard-ktsp-day-list="1"></ul></div>' +
+                '</div>';
+            if (wizardKtspGroupedWrap) wizardKtspGroupedWrap.appendChild(item);
+            var ul = item.querySelector('ul[data-wizard-ktsp-day-list="1"]');
+            if (!ul) return;
+            bucket.thue.forEach(function(row) {
+                var rangeTxt = wizardKtspFmtRange(row.tu_ngay, row.den_ngay);
+                var kh = row.khach_hang || {};
+                var ten = (kh.ten || '').trim();
+                var sdt = (kh.sdt || '').trim();
+                var sub = (ten || sdt) ? (wizardTpEscHtml(ten) + (sdt ? (' • ' + wizardTpEscHtml(sdt)) : '')) : '';
+                var trangThai = (row.trang_thai === 0) ? 'Đang thuê' : ((row.trang_thai === 1) ? 'Hoàn thành' : 'Đã huỷ');
+                var badgeCls = (row.trang_thai === 0) ? 'bg-label-warning' : ((row.trang_thai === 1) ? 'bg-label-success' : 'bg-label-danger');
+                var li = document.createElement('li');
+                li.className = 'list-group-item px-0';
+                li.innerHTML =
+                    '<div class="d-flex align-items-start justify-content-between gap-2" style="padding-right: 12px;">' +
+                        '<div class="min-w-0 hd-ktsp-list-info">' +
+                            '<div class="fw-medium text-body text-truncate"><span class="badge bg-label-secondary me-2">Thuê</span>HĐ #' + wizardTpEscHtml(row.hop_dong_id) + '</div>' +
+                            (sub ? ('<div class="text-muted small text-truncate">' + sub + '</div>') : '') +
+                            '<div class="text-body small mt-1"><i class="fa-regular fa-calendar me-1 text-muted"></i>' + wizardTpEscHtml(rangeTxt) + '</div>' +
+                        '</div>' +
+                        '<span class="badge ' + badgeCls + ' align-self-start">' + wizardTpEscHtml(trangThai) + '</span>' +
+                    '</div>';
+                ul.appendChild(li);
+            });
+            bucket.cuoi.forEach(function(row) {
+                var ma = (row.ma_hop_dong || '').trim();
+                var capdoi = (row.cap_doi || '').trim();
+                var li = document.createElement('li');
+                li.className = 'list-group-item px-0';
+                li.innerHTML =
+                    '<div class="d-flex align-items-start justify-content-between gap-2">' +
+                        '<div class="min-w-0 hd-ktsp-list-info">' +
+                            '<div class="fw-medium text-body text-truncate"><span class="badge bg-label-info me-2">Cưới</span>HĐ #' + wizardTpEscHtml(row.hop_dong_id) + (ma ? (' • ' + wizardTpEscHtml(ma)) : '') + '</div>' +
+                            (capdoi ? ('<div class="text-muted small text-truncate">' + wizardTpEscHtml(capdoi) + '</div>') : '') +
+                        '</div>' +
+                    '</div>';
+                ul.appendChild(li);
+            });
+        });
+    }
+
+    function wizardKtspFetch(url) {
+        return fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'application/json'
+            },
+            credentials: 'same-origin'
+        }).then(function(res) {
+            if (!res.ok) {
+                return res.text().then(function(t) {
+                    throw new Error('HTTP ' + res.status + ': ' + t);
+                });
+            }
+            return res.json();
+        });
+    }
+
+    function wizardTpOpenKiemTra(btn) {
+        if (!modalWizardKtsp || !btn) return;
+        var url = btn.getAttribute('data-url') || '';
+        if (!url) return;
+        if (wizardKtspTen) wizardKtspTen.textContent = btn.getAttribute('data-ten') || '—';
+        if (wizardKtspMa) wizardKtspMa.textContent = btn.getAttribute('data-ma') ? ('Mã: ' + btn.getAttribute('data-ma')) : '—';
+        wizardKtspResetUI();
+        if (wizardKtspLoading) wizardKtspLoading.classList.remove('d-none');
+        var inst = bootstrap.Modal.getOrCreateInstance(modalWizardKtsp);
+        inst.show();
+        wizardKtspFetch(url)
+            .then(function(data) {
+                if (wizardKtspLoading) wizardKtspLoading.classList.add('d-none');
+                if (wizardKtspContent) wizardKtspContent.classList.remove('d-none');
+                var thue = data && data.thue ? data.thue : [];
+                var cuoi = data && data.cuoi ? data.cuoi : [];
+                wizardKtspRenderGrouped(thue, cuoi);
+                if (wizardKtspStatus) {
+                    wizardKtspStatus.textContent = 'Thuê: ' + thue.length + ' • Cưới: ' + cuoi.length;
+                }
+            })
+            .catch(function(err) {
+                if (wizardKtspLoading) wizardKtspLoading.classList.add('d-none');
+                if (wizardKtspError) {
+                    wizardKtspError.textContent = 'Không tải được dữ liệu lịch sử dụng. ' + (err && err.message ? err.message : '');
+                    wizardKtspError.classList.remove('d-none');
+                }
+            });
+    }
+
+    if (modalWizardKtsp) {
+        modalWizardKtsp.addEventListener('show.bs.modal', function() {
+            document.body.classList.add('modal-wizard-ktsp-open');
+        });
+        modalWizardKtsp.addEventListener('hidden.bs.modal', function() {
+            document.body.classList.remove('modal-wizard-ktsp-open');
+        });
+    }
+
+    document.addEventListener('click', function(ev) {
+        var btnLich = ev.target.closest('.them-sp-btn-lich');
+        if (!btnLich || !panel3 || !panel3.contains(btnLich)) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        wizardTpOpenKiemTra(btnLich);
+    });
 
     /** Khôi phục Concept / Trang phục lần đầu vào bước 3 (từ DB, không ghi đè khi quay lại bước 3). */
     function applyWizardStep3ConceptRestore() {
@@ -1244,17 +2036,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        var tpElRestore = document.getElementById('wizard_trang_phuc');
-        var tpSelectedCount = tpElRestore ? (tpElRestore.selectedOptions ? tpElRestore.selectedOptions.length : 0) : 0;
-        if (tpElRestore && !tpSelectedCount && Array.isArray(hopData.trang_phuc_ids) && hopData.trang_phuc_ids.length) {
-            var tpIdsStr = hopData.trang_phuc_ids.map(function(id) { return String(id); });
-            if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(tpElRestore).data('select2')) {
-                window.jQuery(tpElRestore).val(tpIdsStr).trigger('change');
-            } else {
-                Array.from(tpElRestore.options).forEach(function(opt) {
-                    opt.selected = tpIdsStr.indexOf(opt.value) !== -1;
-                });
-            }
+        var tpElRestore = document.getElementById('wizard_trang_phuc_hidden_wrap');
+        var hasTpSelected = wizardTpState.selected.size > 0;
+        if (!hasTpSelected && Array.isArray(hopData.trang_phuc_ids) && hopData.trang_phuc_ids.length) {
+            wizardTpRestoreSelection(hopData.trang_phuc_ids);
         }
     }
 
@@ -2087,20 +2872,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        var tpIds = data.trang_phuc_ids;
-        if (Array.isArray(tpIds) && tpIds.length) {
-            var tpEl = document.getElementById('wizard_trang_phuc');
-            if (tpEl && tpEl.tagName === 'SELECT' && tpEl.multiple) {
-                var idsStr = tpIds.map(function(x) { return String(x); });
-                if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(tpEl).data('select2')) {
-                    window.jQuery(tpEl).val(idsStr).trigger('change');
-                } else {
-                    Array.from(tpEl.options).forEach(function(opt) {
-                        opt.selected = idsStr.indexOf(opt.value) !== -1;
-                    });
-                }
-            }
-        }
+        /* Trang phục: khôi phục khi vào bước 3 (ensureWizardTrangPhucPicker / applyWizardStep3ConceptRestore). */
 
         var tvIds = data.thanh_vien_nhan_vien_ids;
         if (Array.isArray(tvIds) && tvIds.length) {
@@ -2466,6 +3238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             errBox.innerHTML = '';
         }
         syncStep3PaymentFields();
+        wizardTpSyncHidden();
         var fd = buildStep3SaveFormData();
         if (btnSubmit) btnSubmit.disabled = true;
 
@@ -2596,6 +3369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 3) {
             window.requestAnimationFrame(function() {
                 ensureStep3Select2();
+                ensureWizardTrangPhucPicker();
                 applyWizardStep3ConceptRestore();
                 syncStep3PaymentFields();
                 updateSummary();

@@ -443,10 +443,9 @@ class KhachHangController extends Controller
             ->orderBy('ten_concept')
             ->get(['id', 'ten_concept']);
 
-        $trangPhucs = TrangPhuc::query()
-            ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
-            ->orderBy('ten_san_pham')
-            ->get(['id', 'ten_san_pham', 'ma_san_pham']);
+        $trangPhucCatalogs = app(TrangPhucController::class)->sanPhamCatalogChoWizardHopDongCuoi();
+        $wizardTrangPhucChupCatalog = $trangPhucCatalogs['chup'];
+        $wizardTrangPhucCuoiCatalog = $trangPhucCatalogs['cuoi'];
 
         $danhSachNhanVien = NhanVien::query()
             ->with('user')
@@ -460,7 +459,8 @@ class KhachHangController extends Controller
             'nhomDichVus',
             'dichVuLes',
             'concepts',
-            'trangPhucs',
+            'wizardTrangPhucChupCatalog',
+            'wizardTrangPhucCuoiCatalog',
             'danhSachNhanVien',
             'laManChinhSuaHopDong'
         ));
