@@ -263,6 +263,9 @@ class KhachHangController extends Controller
             'tho_chup_id' => 'nullable|exists:nhan_vien,id',
             'tho_make_id' => 'nullable|exists:nhan_vien,id',
             'tho_edit_id' => 'nullable|exists:nhan_vien,id',
+            'tho_chup_freelancer' => 'nullable|string|max:255',
+            'tho_make_freelancer' => 'nullable|string|max:255',
+            'tho_edit_freelancer' => 'nullable|string|max:255',
             'ghi_chu_sale' => 'nullable|string',
         ], [], [
             'buoi_chup' => 'buổi chụp',
@@ -275,8 +278,29 @@ class KhachHangController extends Controller
             'tho_chup_id' => 'người chụp',
             'tho_make_id' => 'người make',
             'tho_edit_id' => 'người edit',
+            'tho_chup_freelancer' => 'người chụp (nv ngoài)',
+            'tho_make_freelancer' => 'người make (nv ngoài)',
+            'tho_edit_freelancer' => 'người edit (nv ngoài)',
             'ghi_chu_sale' => 'ghi chú',
         ]);
+
+        foreach (['tho_chup_freelancer', 'tho_make_freelancer', 'tho_edit_freelancer'] as $freelancerField) {
+            $value = trim((string) ($validated[$freelancerField] ?? ''));
+            $validated[$freelancerField] = $value !== '' ? $value : null;
+        }
+
+        $freelancerIdMap = [
+            'tho_chup_freelancer' => 'tho_chup_id',
+            'tho_make_freelancer' => 'tho_make_id',
+            'tho_edit_freelancer' => 'tho_edit_id',
+        ];
+        foreach ($freelancerIdMap as $freelancerField => $idField) {
+            if ($request->has($freelancerField)) {
+                $validated[$idField] = null;
+            } else {
+                $validated[$freelancerField] = null;
+            }
+        }
 
         $ngayChup = $validated['ngay_chup_thuc_te'] ?? null;
         $ngayCuoiChinhThuc = $validated['ngay_cuoi_chinh_thuc'] ?? null;

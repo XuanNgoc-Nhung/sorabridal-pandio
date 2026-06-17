@@ -337,6 +337,9 @@
                             'tho_chup_id' => $item->tho_chup_id,
                             'tho_make_id' => $item->tho_make_id,
                             'tho_edit_id' => $item->tho_edit_id,
+                            'tho_chup_freelancer' => $item->tho_chup_freelancer ?? '',
+                            'tho_make_freelancer' => $item->tho_make_freelancer ?? '',
+                            'tho_edit_freelancer' => $item->tho_edit_freelancer ?? '',
                             'ghi_chu_sale' => $item->ghi_chu_sale ?? '',
                         ];
                         /** Một lần htmlspecialchars cho attribute; KHÔNG dùng {{ }} vì Blade sẽ escape thêm → JSON.parse lỗi. */
@@ -652,6 +655,9 @@
                             'tho_chup_id' => $item->tho_chup_id,
                             'tho_make_id' => $item->tho_make_id,
                             'tho_edit_id' => $item->tho_edit_id,
+                            'tho_chup_freelancer' => $item->tho_chup_freelancer ?? '',
+                            'tho_make_freelancer' => $item->tho_make_freelancer ?? '',
+                            'tho_edit_freelancer' => $item->tho_edit_freelancer ?? '',
                             'ghi_chu_sale' => $item->ghi_chu_sale ?? '',
                         ];
                         $dieuPhoiPayloadAttr = htmlspecialchars(
@@ -950,27 +956,81 @@
                                    autocomplete="off">
                         </div>
                         <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label" for="dpc_tho_chup_id">Người chụp</label>
-                            <select id="dpc_tho_chup_id" name="tho_chup_id" class="select2-admin form-select" data-placeholder="Chọn người chụp" style="width: 100%;" disabled>
-                                <option value="">—</option>
-                            </select>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                <label class="form-label mb-0" for="dpc_tho_chup_id">Người chụp</label>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input dpc-nv-ngoai-check" type="checkbox" id="dpc_nv_ngoai_chup" data-dpc-role="chup">
+                                    <label class="form-check-label small" for="dpc_nv_ngoai_chup">Nv ngoài</label>
+                                </div>
+                            </div>
+                            <div class="dpc-staff-field" data-dpc-role="chup">
+                                <div class="dpc-staff-select-wrap">
+                                    <select id="dpc_tho_chup_id" name="tho_chup_id" class="select2-admin form-select" data-placeholder="Chọn người chụp" style="width: 100%;" disabled>
+                                        <option value="">—</option>
+                                    </select>
+                                </div>
+                                <input type="text"
+                                       class="form-control d-none"
+                                       id="dpc_tho_chup_freelancer"
+                                       name="tho_chup_freelancer"
+                                       value=""
+                                       placeholder="Nhập tên nv ngoài"
+                                       disabled
+                                       autocomplete="off">
+                            </div>
                             {{-- <div class="form-text" id="dpc_tho_chup_hint">Chọn ngày chụp chính thức để phân nhân sự.</div> --}}
                         </div>
                         <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label" for="dpc_tho_make_id">Người make</label>
-                            <select id="dpc_tho_make_id" name="tho_make_id" class="select2-admin form-select" data-placeholder="Chọn người make" style="width: 100%;" disabled>
-                                <option value="">—</option>
-                            </select>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                <label class="form-label mb-0" for="dpc_tho_make_id">Người make</label>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input dpc-nv-ngoai-check" type="checkbox" id="dpc_nv_ngoai_make" data-dpc-role="make">
+                                    <label class="form-check-label small" for="dpc_nv_ngoai_make">Nv ngoài</label>
+                                </div>
+                            </div>
+                            <div class="dpc-staff-field" data-dpc-role="make">
+                                <div class="dpc-staff-select-wrap">
+                                    <select id="dpc_tho_make_id" name="tho_make_id" class="select2-admin form-select" data-placeholder="Chọn người make" style="width: 100%;" disabled>
+                                        <option value="">—</option>
+                                    </select>
+                                </div>
+                                <input type="text"
+                                       class="form-control d-none"
+                                       id="dpc_tho_make_freelancer"
+                                       name="tho_make_freelancer"
+                                       value=""
+                                       placeholder="Nhập tên nv ngoài"
+                                       disabled
+                                       autocomplete="off">
+                            </div>
                             {{-- <div class="form-text" id="dpc_tho_make_hint">Chọn ngày chụp chính thức để phân nhân sự.</div> --}}
                         </div>
                         <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label" for="dpc_tho_edit_id">Người edit</label>
-                            <select id="dpc_tho_edit_id" name="tho_edit_id" class="select2-admin form-select" data-placeholder="Chọn người edit" style="width: 100%;">
-                                <option value="">—</option>
-                                @foreach($danhSachNhanVienEdit ?? [] as $nv)
-                                <option value="{{ $nv->id }}">{{ $nv->user?->name ?? 'Nhân viên #' . $nv->id }}</option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                <label class="form-label mb-0" for="dpc_tho_edit_id">Người edit</label>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input dpc-nv-ngoai-check" type="checkbox" id="dpc_nv_ngoai_edit" data-dpc-role="edit">
+                                    <label class="form-check-label small" for="dpc_nv_ngoai_edit">Nv ngoài</label>
+                                </div>
+                            </div>
+                            <div class="dpc-staff-field" data-dpc-role="edit">
+                                <div class="dpc-staff-select-wrap">
+                                    <select id="dpc_tho_edit_id" name="tho_edit_id" class="select2-admin form-select" data-placeholder="Chọn người edit" style="width: 100%;">
+                                        <option value="">—</option>
+                                        @foreach($danhSachNhanVienEdit ?? [] as $nv)
+                                        <option value="{{ $nv->id }}">{{ $nv->user?->name ?? 'Nhân viên #' . $nv->id }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <input type="text"
+                                       class="form-control d-none"
+                                       id="dpc_tho_edit_freelancer"
+                                       name="tho_edit_freelancer"
+                                       value=""
+                                       placeholder="Nhập tên nv ngoài"
+                                       disabled
+                                       autocomplete="off">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="dpc_ghi_chu_sale">Ghi chú (sale)</label>
@@ -1337,6 +1397,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     dpcLog('1 DOMContentLoaded: khởi tạo module điều phối modal');
 
+    $('.dpc-nv-ngoai-check').on('change', function () {
+        var role = this.getAttribute('data-dpc-role');
+        if (!role) return;
+        var isFreelancer = this.checked;
+        var currentFreelancer = dpcStaffFreelancerInput(role).val();
+        dpcSetNvNgoaiMode(role, isFreelancer, isFreelancer ? currentFreelancer : '');
+        if (role === 'chup' || role === 'make') {
+            var nChup = document.getElementById('dpc_ngay_chup_thuc_te');
+            var ymd = (nChup && nChup.value ? nChup.value : '').trim();
+            dpcSetChupMakeDisabled(!ymd || !dpcHopId);
+        } else if (!isFreelancer) {
+            dpcStaffSelect(role).prop('disabled', false);
+        }
+    });
+
     var DPC_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
     var DPC_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
     var DPC_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
@@ -1373,11 +1448,59 @@ document.addEventListener('DOMContentLoaded', function () {
         $sel.select2(opts);
     }
 
+    function dpcIsNvNgoai(role) {
+        var $cb = $('#dpc_nv_ngoai_' + role);
+        return $cb.length && $cb.prop('checked');
+    }
+
+    function dpcStaffSelect(role) {
+        if (role === 'chup') return $('#dpc_tho_chup_id');
+        if (role === 'make') return $('#dpc_tho_make_id');
+        return $('#dpc_tho_edit_id');
+    }
+
+    function dpcStaffFreelancerInput(role) {
+        if (role === 'chup') return $('#dpc_tho_chup_freelancer');
+        if (role === 'make') return $('#dpc_tho_make_freelancer');
+        return $('#dpc_tho_edit_freelancer');
+    }
+
+    function dpcStaffSelectWrap(role) {
+        return dpcStaffSelect(role).closest('.dpc-staff-select-wrap');
+    }
+
+    function dpcSetNvNgoaiMode(role, isFreelancer, freelancerValue) {
+        var $cb = $('#dpc_nv_ngoai_' + role);
+        var $sel = dpcStaffSelect(role);
+        var $wrap = dpcStaffSelectWrap(role);
+        var $inp = dpcStaffFreelancerInput(role);
+        if (!$cb.length || !$sel.length || !$wrap.length || !$inp.length) return;
+
+        $cb.prop('checked', !!isFreelancer);
+
+        if (isFreelancer) {
+            $wrap.addClass('d-none');
+            $sel.prop('disabled', true).val('').trigger('change');
+            $inp.removeClass('d-none').prop('disabled', false).val(freelancerValue != null ? String(freelancerValue) : '');
+        } else {
+            $wrap.removeClass('d-none');
+            $inp.addClass('d-none').prop('disabled', true).val('');
+            if (role === 'edit') {
+                $sel.prop('disabled', false);
+            }
+        }
+    }
+
+    function dpcResetNvNgoaiFields() {
+        ['chup', 'make', 'edit'].forEach(function (role) {
+            dpcSetNvNgoaiMode(role, false, '');
+        });
+    }
+
     function dpcSetChupMakeDisabled(disabled) {
-        ['#dpc_tho_chup_id', '#dpc_tho_make_id'].forEach(function (sel) {
-            var $el = $(sel);
-            if (!$el.length) return;
-            $el.prop('disabled', disabled);
+        ['chup', 'make'].forEach(function (role) {
+            if (dpcIsNvNgoai(role)) return;
+            dpcStaffSelect(role).prop('disabled', disabled);
         });
         var hint = 'Chọn ngày chụp chính thức để phân nhân sự.';
         var busyHint = 'Nhân viên đã có lịch cùng ngày vẫn chọn được (có cờ "Bận").';
@@ -1405,8 +1528,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function dpcRebuildChupMake(chupItems, makeItems, wantChup, wantMake) {
-        dpcRebuildSelect($('#dpc_tho_chup_id'), chupItems, 'Chọn người chụp', wantChup);
-        dpcRebuildSelect($('#dpc_tho_make_id'), makeItems, 'Chọn người make', wantMake);
+        if (!dpcIsNvNgoai('chup')) {
+            dpcRebuildSelect($('#dpc_tho_chup_id'), chupItems, 'Chọn người chụp', wantChup);
+        }
+        if (!dpcIsNvNgoai('make')) {
+            dpcRebuildSelect($('#dpc_tho_make_id'), makeItems, 'Chọn người make', wantMake);
+        }
     }
 
     function dpcFetchNhanVienTheoNgayVaPhongBan(ymd, maPhongBan) {
@@ -1584,9 +1711,18 @@ document.addEventListener('DOMContentLoaded', function () {
             var nChup = document.getElementById('dpc_ngay_chup_thuc_te');
             var ymd = (nChup && nChup.value ? nChup.value : '').trim();
             dpcLog('8g Sau setFp ngày chụp: value input', { ymd: ymd, nChupExists: !!nChup });
-            dpcSyncChupMakeTheoNgay(ymd, p.tho_chup_id, p.tho_make_id);
 
-            $('#dpc_tho_edit_id').val(p.tho_edit_id != null && p.tho_edit_id !== '' ? String(p.tho_edit_id) : '').trigger('change');
+            dpcSetNvNgoaiMode('chup', !!(p.tho_chup_freelancer && String(p.tho_chup_freelancer).trim()), p.tho_chup_freelancer || '');
+            dpcSetNvNgoaiMode('make', !!(p.tho_make_freelancer && String(p.tho_make_freelancer).trim()), p.tho_make_freelancer || '');
+            dpcSetNvNgoaiMode('edit', !!(p.tho_edit_freelancer && String(p.tho_edit_freelancer).trim()), p.tho_edit_freelancer || '');
+
+            var wantChup = dpcIsNvNgoai('chup') ? '' : p.tho_chup_id;
+            var wantMake = dpcIsNvNgoai('make') ? '' : p.tho_make_id;
+            dpcSyncChupMakeTheoNgay(ymd, wantChup, wantMake);
+
+            if (!dpcIsNvNgoai('edit')) {
+                $('#dpc_tho_edit_id').val(p.tho_edit_id != null && p.tho_edit_id !== '' ? String(p.tho_edit_id) : '').trigger('change');
+            }
             var gc = document.getElementById('dpc_ghi_chu_sale');
             if (gc) gc.value = p.ghi_chu_sale != null ? String(p.ghi_chu_sale) : '';
             dpcLog('8h shown.bs.modal: xong một vòng');
@@ -1595,6 +1731,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modalDieuPhoi.addEventListener('hidden.bs.modal', function () {
             dpcLog('9 hidden.bs.modal: reset dpcHopId');
             dpcHopId = null;
+            dpcResetNvNgoaiFields();
         });
     } else {
         console.warn('[DPC] 2 Không có #modalDieuPhoiHopDongCuoi trong DOM — không gắn điều phối');
