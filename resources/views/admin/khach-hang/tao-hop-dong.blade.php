@@ -71,6 +71,7 @@
             data-save-step3-url="{{ route('admin.khach-hang.tao-hop-dong.cap-nhat-buoc-3', $hopDongCuoi) }}"
             data-after-submit-redirect="{{ route('admin.khach-hang.danh-sach-hop-dong-cuoi') }}"
             @if($laManChinhSuaHopDong ?? false) data-la-chinh-sua="1" @endif
+            @if($gioiHanChinhSuaHopDong ?? false) data-gioi-han-chinh-sua="1" @endif
             data-wizard-step2-restore="{{ isset($wizardStep2Restore) && $wizardStep2Restore !== null ? e(json_encode($wizardStep2Restore, JSON_UNESCAPED_UNICODE)) : '' }}"
             data-hop-dong-cuoi='@json($hopDongCuoiData ?? [])'>
             @csrf
@@ -89,7 +90,7 @@
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_loai_hop_dong">Loại hợp đồng</label>
-                        <select class="select2-admin form-select" id="wizard_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng" data-wizard-step1-required>
+                        <select class="select2-admin form-select{{ ($gioiHanChinhSuaHopDong ?? false) ? ' bg-light' : '' }}" id="wizard_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng" data-wizard-step1-required @disabled($gioiHanChinhSuaHopDong ?? false)>
                             <option value="">-- Chọn loại --</option>
                             @foreach (\App\Models\HopDongCuoi::LOAI_HOP_DONG as $value => $label)
                                 <option value="{{ $value }}" @selected(old('loai_hop_dong', $hopDongCuoi->loai_hop_dong) === $value)>{{ $label }}</option>
@@ -162,6 +163,7 @@
                 <div id="wizard-step2-errors" class="alert alert-danger d-none mb-3" role="alert"></div>
                 <p class="text-muted small mb-4">Chọn hình thức lên dịch vụ phù hợp cho hợp đồng.</p>
 
+                <fieldset class="border-0 p-0 m-0" @disabled($gioiHanChinhSuaHopDong ?? false)>
                 <div class="nav-align-top">
                     <ul class="nav nav-pills mb-3 nav-fill wizard-service-pills" style="overflow: scroll;" role="tablist">
                         <li class="nav-item">
@@ -542,6 +544,10 @@
                         <input type="hidden" id="wizard_tong_tien_dich_vu" value="{{ (int) round((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0)) }}">
                         <input type="text" class="form-control text-end" id="wizard_tong_tien_dich_vu_hien_thi" value="{{ number_format((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0), 0, ',', '.') }}" inputmode="numeric" autocomplete="off" placeholder="0">
                     </div>
+                </div>
+                </fieldset>
+
+                <div class="row g-3 mt-1">
                     <div class="col-12">
                         <label class="form-label" for="wizard_ghi_chu_sale_2">Ghi chú (sale)</label>
                         <textarea class="form-control" id="wizard_ghi_chu_sale_2" rows="3" placeholder="Ghi chú nội bộ cho sale…">{{ old('ghi_chu_sale', $hopDongCuoi->ghi_chu_sale) }}</textarea>
@@ -691,6 +697,7 @@
                     </div>
                 </div>
 
+                <fieldset class="border-0 p-0 m-0" @disabled($gioiHanChinhSuaHopDong ?? false)>
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-sm-6 col-xl-3">
                         <label class="form-label" for="wizard_tong_tien_hien_thi">Tổng tiền (VNĐ)</label>
@@ -747,6 +754,7 @@
                         <input type="text" readonly class="form-control" id="wizard_ngay_ky_hop_dong" name="ngay_ky_hop_dong" value="{{ old('ngay_ky_hop_dong', optional($hopDongCuoi->ngay_ky_hop_dong)->format('Y-m-d') ?? now()->format('Y-m-d')) }}">
                     </div>
                 </div>
+                </fieldset>
 
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="wizard_dong_y" name="dong_y" value="1">
@@ -1385,6 +1393,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var panel2 = document.querySelector('[data-wizard-panel="2"]');
     var panel3 = document.querySelector('[data-wizard-panel="3"]');
     var formWizard = document.getElementById('formTaoHopDongWizard');
+    var gioiHanChinhSua = !!(formWizard && formWizard.getAttribute('data-gioi-han-chinh-sua') === '1');
     var chkDongY = document.getElementById('wizard_dong_y');
     var maGiamGiaInput = document.getElementById('wizard_ma_giam_gia');
     var btnKiemTraMaGiamGia = document.getElementById('wizard_btn_kiem_tra_ma_giam_gia');
@@ -3114,6 +3123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function isStep2Complete() {
+        if (gioiHanChinhSua) return true;
         if (!panel2) return false;
         var activeTarget = getActiveServiceTabTarget();
         if (activeTarget === '#wizard-service-combo') {
@@ -3164,11 +3174,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function appendChinhSuaFlag(fd) {
+        if (formWizard && formWizard.getAttribute('data-la-chinh-sua') === '1') {
+            fd.append('chinh_sua', '1');
+        }
+    }
+
     function buildStep1SaveFormData() {
         var fd = new FormData();
         var token = formWizard.querySelector('input[name="_token"]');
         if (token) fd.append('_token', token.value);
         fd.append('_method', 'PUT');
+        appendChinhSuaFlag(fd);
         if (!panel1) return fd;
         panel1.querySelectorAll('[name]').forEach(function(el) {
             if (!el.name || el.disabled) return;
@@ -3195,6 +3212,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var token = formWizard.querySelector('input[name="_token"]');
         if (token) fd.append('_token', token.value);
         fd.append('_method', 'PUT');
+        appendChinhSuaFlag(fd);
+
+        if (gioiHanChinhSua) {
+            var ghiChuSaleLimited = document.getElementById('wizard_ghi_chu_sale_2');
+            if (ghiChuSaleLimited) fd.append('ghi_chu_sale', ghiChuSaleLimited.value);
+            return fd;
+        }
+
         fd.append('loai_dich_vu', getLoaiDichVuFromActiveTab());
 
         var target = getActiveServiceTabTarget();
@@ -3234,9 +3259,26 @@ document.addEventListener('DOMContentLoaded', function() {
         var token = formWizard.querySelector('input[name="_token"]');
         if (token) fd.append('_token', token.value);
         fd.append('_method', 'PUT');
+        appendChinhSuaFlag(fd);
         if (formWizard.getAttribute('data-la-chinh-sua') === '1') {
             fd.append('chinh_sua_hoan_tat', '1');
         }
+
+        if (gioiHanChinhSua) {
+            var conceptLimited = document.getElementById('wizard_concept');
+            if (conceptLimited) fd.append('concept_id', getSelectFieldValue(conceptLimited) || '');
+            var yeuCauLimited = document.getElementById('wizard_yeu_cau_dac_biet');
+            if (yeuCauLimited) fd.append('yeu_cau_dac_biet', yeuCauLimited.value);
+            var hiddenWrapLimited = document.getElementById('wizard_trang_phuc_hidden_wrap');
+            if (hiddenWrapLimited) {
+                hiddenWrapLimited.querySelectorAll('input[name="trang_phuc[]"]').forEach(function(el) {
+                    fd.append(el.name, el.value);
+                });
+            }
+            if (chkDongY && chkDongY.checked) fd.append('dong_y', '1');
+            return fd;
+        }
+
         if (!panel3) return fd;
         panel3.querySelectorAll('[name]').forEach(function(el) {
             if (!el.name || el.disabled) return;
@@ -3730,6 +3772,9 @@ document.addEventListener('DOMContentLoaded', function() {
     prefillHopDongInputs();
     applyWizardFieldLabelNumbers();
     var loaiHopDongEl = document.getElementById('wizard_loai_hop_dong');
+    if (gioiHanChinhSua && loaiHopDongEl && window.jQuery && window.jQuery.fn.select2) {
+        window.jQuery(loaiHopDongEl).prop('disabled', true);
+    }
     if (loaiHopDongEl) {
         function onLoaiHopDongChangedForStep2() {
             if (currentStep === 1) {

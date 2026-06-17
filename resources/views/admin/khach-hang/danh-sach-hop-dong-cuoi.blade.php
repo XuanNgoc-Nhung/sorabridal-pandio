@@ -917,6 +917,8 @@
 </div>
 @endsection
 
+@include('admin.components.admin-toast')
+
 @push('modals')
 <div class="modal fade" id="modalDieuPhoiHopDongCuoi" tabindex="-1" aria-labelledby="modalDieuPhoiHopDongCuoiLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
@@ -1419,23 +1421,14 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     (function () {
-        function thongBaoKhongDuQuyen(msg) {
-            var message = msg || 'Bạn không có đủ quyền thao tác';
-            if (typeof Swal !== 'undefined' && Swal.fire) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Không đủ quyền',
-                    text: message,
-                    confirmButtonText: 'Đã hiểu'
-                });
-                return;
-            }
-            window.alert(message);
-        }
-
         document.querySelectorAll('.btn-khong-du-quyen-thao-tac').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                thongBaoKhongDuQuyen(this.getAttribute('data-khong-du-quyen-message'));
+                var msg = this.getAttribute('data-khong-du-quyen-message') || 'Bạn không có đủ quyền thao tác';
+                if (typeof window.showAdminToast === 'function') {
+                    window.showAdminToast(msg, 'error', { title: 'Không đủ quyền' });
+                } else {
+                    window.alert(msg);
+                }
             });
         });
     })();

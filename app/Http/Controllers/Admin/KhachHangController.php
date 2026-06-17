@@ -496,6 +496,9 @@ class KhachHangController extends Controller
             ->orderBy('id')
             ->get();
 
+        $coQuyenDieuChinhHopDongCuoi = $this->coQuyenDieuChinhHopDongCuoi();
+        $gioiHanChinhSuaHopDong = $laManChinhSuaHopDong && ! $coQuyenDieuChinhHopDongCuoi;
+
         return view('admin.khach-hang.tao-hop-dong', compact(
             'hopDongCuoi',
             'hopDongCuoiData',
@@ -506,7 +509,9 @@ class KhachHangController extends Controller
             'wizardTrangPhucChupCatalog',
             'wizardTrangPhucCuoiCatalog',
             'danhSachNhanVien',
-            'laManChinhSuaHopDong'
+            'laManChinhSuaHopDong',
+            'coQuyenDieuChinhHopDongCuoi',
+            'gioiHanChinhSuaHopDong'
         ));
     }
 
@@ -522,6 +527,8 @@ class KhachHangController extends Controller
      */
     public function capNhatTaoHopDongBuoc1(Request $request, HopDongCuoi $hopDongCuoi)
     {
+        $gioiHanChinhSua = $this->gioiHanChinhSuaHopDongCuoi($request);
+
         $merge = $request->all();
         $loaiHopDong = trim((string) ($merge['loai_hop_dong'] ?? ''));
         $merge['loai_hop_dong'] = $loaiHopDong !== '' ? $loaiHopDong : null;
@@ -543,7 +550,7 @@ class KhachHangController extends Controller
             'email_sdt_chu_re' => 'nullable|string|max:500',
             'ngay_chup_du_kien' => 'nullable|date',
             'ngay_cuoi_du_kien' => 'nullable|date',
-            'loai_hop_dong' => 'required|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
+            'loai_hop_dong' => ($gioiHanChinhSua ? 'nullable' : 'required').'|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
             'kenh_tiep_can' => 'nullable|string|max:100',
             'thanh_vien_nhan_vien_ids' => 'nullable|array',
             'thanh_vien_nhan_vien_ids.*' => 'integer|exists:nhan_vien,id',
@@ -560,6 +567,10 @@ class KhachHangController extends Controller
             'thanh_vien_nhan_vien_ids' => 'thành viên sale',
             'ghi_chu_sale' => 'ghi chú (sale)',
         ]);
+
+        if ($gioiHanChinhSua) {
+            unset($validated['loai_hop_dong']);
+        }
 
         $thanhVienIds = array_values(array_unique(array_map(
             static fn ($id) => (int) $id,
@@ -596,6 +607,29 @@ class KhachHangController extends Controller
      */
     public function capNhatTaoHopDongBuoc2(Request $request, HopDongCuoi $hopDongCuoi)
     {
+        if ($this->gioiHanChinhSuaHopDongCuoi($request)) {
+            $validated = $request->validate([
+                'ghi_chu_sale' => 'nullable|string',
+            ], [], [
+                'ghi_chu_sale' => 'ghi chú (sale)',
+            ]);
+
+            $hopDongCuoi->forceFill([
+                'ghi_chu_sale' => $validated['ghi_chu_sale'] ?? null,
+            ])->save();
+
+            $hopDongCuoi->refresh();
+            $hopDongCuoi->load(['hopDongCuoiNhomDichVu', 'hopDongCuoiDichVuLe']);
+
+            return response()->json([
+                'message' => 'Đã lưu ghi chú (sale).',
+                'tong_tien' => (float) $hopDongCuoi->tong_tien,
+                'loai_dich_vu' => $hopDongCuoi->loai_dich_vu,
+                'nhom_dich_vu_id' => (int) $hopDongCuoi->nhom_dich_vu_id,
+                'wizard_step2' => $this->buildWizardStep2RestorePayload($hopDongCuoi),
+            ]);
+        }
+
         $loai = $request->input('loai_dich_vu');
 
         $rules = [
@@ -759,6 +793,8 @@ class KhachHangController extends Controller
      */
     public function capNhatTaoHopDongBuoc3(Request $request, HopDongCuoi $hopDongCuoi)
     {
+        $gioiHanChinhSua = $this->gioiHanChinhSuaHopDongCuoi($request);
+
         $merge = $request->all();
         $cid = $merge['concept_id'] ?? null;
         if ($cid === '' || $cid === null) {
@@ -794,33 +830,49 @@ class KhachHangController extends Controller
         }
         $request->merge($merge);
 
-        $validated = $request->validate([
-            'concept_id' => 'nullable|integer|exists:concept,id',
-            'trang_phuc' => 'nullable|array',
-            'trang_phuc.*' => 'integer|exists:trang_phuc,id',
-            'tong_tien' => 'required|numeric|min:0',
-            'chiet_khau' => 'nullable|numeric|min:0',
-            'tien_coc' => 'nullable|numeric|min:0',
-            'hinh_thuc_coc' => 'required|in:'.HopDongCuoi::HINH_THUC_COC_TAI_CUA_HANG.','.HopDongCuoi::HINH_THUC_COC_ONLINE,
-            'yeu_cau_dac_biet' => 'nullable|string',
-            'han_thanh_toan_lan2' => 'nullable|date',
-            'han_thanh_toan_lan3' => 'nullable|date',
-            'ngay_ky_hop_dong' => 'nullable|date',
-            'dong_y' => 'accepted',
-            'chinh_sua_hoan_tat' => 'nullable|boolean',
-        ], [], [
-            'concept_id' => 'concept',
-            'trang_phuc' => 'trang phục',
-            'tong_tien' => 'tổng tiền',
-            'chiet_khau' => 'chiết khấu',
-            'tien_coc' => 'tiền cọc',
-            'hinh_thuc_coc' => 'hình thức cọc',
-            'yeu_cau_dac_biet' => 'yêu cầu đặc biệt',
-            'han_thanh_toan_lan2' => 'hạn thanh toán lần 2',
-            'han_thanh_toan_lan3' => 'hạn thanh toán lần 3',
-            'ngay_ky_hop_dong' => 'ngày ký hợp đồng',
-            'dong_y' => 'xác nhận thông tin',
-        ]);
+        $validated = $request->validate(
+            $gioiHanChinhSua ? [
+                'concept_id' => 'nullable|integer|exists:concept,id',
+                'trang_phuc' => 'nullable|array',
+                'trang_phuc.*' => 'integer|exists:trang_phuc,id',
+                'yeu_cau_dac_biet' => 'nullable|string',
+                'dong_y' => 'accepted',
+                'chinh_sua_hoan_tat' => 'nullable|boolean',
+            ] : [
+                'concept_id' => 'nullable|integer|exists:concept,id',
+                'trang_phuc' => 'nullable|array',
+                'trang_phuc.*' => 'integer|exists:trang_phuc,id',
+                'tong_tien' => 'required|numeric|min:0',
+                'chiet_khau' => 'nullable|numeric|min:0',
+                'tien_coc' => 'nullable|numeric|min:0',
+                'hinh_thuc_coc' => 'required|in:'.HopDongCuoi::HINH_THUC_COC_TAI_CUA_HANG.','.HopDongCuoi::HINH_THUC_COC_ONLINE,
+                'yeu_cau_dac_biet' => 'nullable|string',
+                'han_thanh_toan_lan2' => 'nullable|date',
+                'han_thanh_toan_lan3' => 'nullable|date',
+                'ngay_ky_hop_dong' => 'nullable|date',
+                'dong_y' => 'accepted',
+                'chinh_sua_hoan_tat' => 'nullable|boolean',
+            ],
+            [],
+            $gioiHanChinhSua ? [
+                'concept_id' => 'concept',
+                'trang_phuc' => 'trang phục',
+                'yeu_cau_dac_biet' => 'yêu cầu đặc biệt',
+                'dong_y' => 'xác nhận thông tin',
+            ] : [
+                'concept_id' => 'concept',
+                'trang_phuc' => 'trang phục',
+                'tong_tien' => 'tổng tiền',
+                'chiet_khau' => 'chiết khấu',
+                'tien_coc' => 'tiền cọc',
+                'hinh_thuc_coc' => 'hình thức cọc',
+                'yeu_cau_dac_biet' => 'yêu cầu đặc biệt',
+                'han_thanh_toan_lan2' => 'hạn thanh toán lần 2',
+                'han_thanh_toan_lan3' => 'hạn thanh toán lần 3',
+                'ngay_ky_hop_dong' => 'ngày ký hợp đồng',
+                'dong_y' => 'xác nhận thông tin',
+            ]
+        );
 
         $tpIdsValidated = array_values(array_unique(array_map('intval', $validated['trang_phuc'] ?? [])));
         if ($tpIdsValidated !== []) {
@@ -835,7 +887,10 @@ class KhachHangController extends Controller
             }
         }
 
-        $payload = [
+        $payload = $gioiHanChinhSua ? [
+            'concept_id' => $validated['concept_id'] ?? null,
+            'yeu_cau_dac_biet' => $validated['yeu_cau_dac_biet'] ?? null,
+        ] : [
             'concept_id' => $validated['concept_id'] ?? null,
             'tong_tien' => $validated['tong_tien'],
             'chiet_khau' => $validated['chiet_khau'] ?? 0,
@@ -1147,5 +1202,21 @@ class KhachHangController extends Controller
                 ->values()
                 ->all(),
         ];
+    }
+
+    private function coQuyenDieuChinhHopDongCuoi(?\Illuminate\Contracts\Auth\Authenticatable $user = null): bool
+    {
+        $user = $user ?? request()->user();
+
+        return (bool) ($user?->vaiTro?->dieu_chinh_hop_dong_cuoi ?? false);
+    }
+
+    private function gioiHanChinhSuaHopDongCuoi(Request $request): bool
+    {
+        if (! $request->boolean('chinh_sua')) {
+            return false;
+        }
+
+        return ! $this->coQuyenDieuChinhHopDongCuoi($request->user());
     }
 }
