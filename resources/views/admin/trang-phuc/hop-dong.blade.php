@@ -356,6 +356,8 @@
                                         'id' => (int) $sp->id,
                                         'ten' => (string) ($sp->ten_san_pham ?? ''),
                                         'ma' => (string) ($sp->ma_san_pham ?? ''),
+                                        'loai' => \App\Support\LoaiTrangPhuc::normalize($sp->loai),
+                                        'loai_label' => \App\Support\LoaiTrangPhuc::label($sp->loai),
                                         'hinh_anh_url' => $hinhPath ? ('/storage/' . ltrim($hinhPath, '/')) : '',
                                         'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
                                         'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),
@@ -380,9 +382,10 @@
                                     <table class="table table-sm mb-0 align-middle">
                                         <thead>
                                             <tr>
-                                                <th style="width: 84px;">Ảnh</th>
-                                                <th>Sản phẩm</th>
-                                                <th style="width: 140px;">Mã</th>
+                                                <th style="width: 56px;">Ảnh</th>
+                                                <th>Tên</th>
+                                                <th style="width: 140px;">Loại</th>
+                                                <th style="width: 120px;">Mã</th>
                                                 <th style="width: 70px;" class="text-end">Xóa</th>
                                             </tr>
                                         </thead>
@@ -493,8 +496,8 @@
                                    id="sua_tim_san_pham"
                                    autocomplete="off"
                                    placeholder="Nhập tên hoặc mã sản phẩm để lọc…">
-                            <div class="them-sp-ket-qua-scroll border rounded p-2 bg-body-secondary mt-2" id="sua_sp_ket_qua_scroll">
-                                <div class="row g-2" id="sua_sp_ket_qua"></div>
+                            <div class="them-sp-ket-qua-scroll border rounded p-3 mt-2" id="sua_sp_ket_qua_scroll">
+                                <div class="row g-3" id="sua_sp_ket_qua"></div>
                                 <div class="text-center text-muted small py-3 d-none" id="sua_sp_khong_co">Không có sản phẩm phù hợp.</div>
                             </div>
                             <div class="mt-2 d-none" id="sua_sp_da_chon_wrap">
@@ -503,9 +506,10 @@
                                     <table class="table table-sm mb-0 align-middle">
                                         <thead>
                                             <tr>
-                                                <th style="width: 84px;">Ảnh</th>
-                                                <th>Sản phẩm</th>
-                                                <th style="width: 140px;">Mã</th>
+                                                <th style="width: 56px;">Ảnh</th>
+                                                <th>Tên</th>
+                                                <th style="width: 140px;">Loại</th>
+                                                <th style="width: 120px;">Mã</th>
                                                 <th style="width: 70px;" class="text-end">Xóa</th>
                                             </tr>
                                         </thead>
@@ -753,75 +757,160 @@
 #modalCapNhatTrangThaiHopDong .tt-modal-trang-thai-row .select2-container {
     width: 100% !important;
 }
-.them-sp-ket-qua-scroll {
+#modalThemHopDong .them-sp-ket-qua-scroll,
+#modalSuaHopDong .them-sp-ket-qua-scroll {
     max-height: 320px;
     overflow-y: auto;
-}
-#modalThemHopDong #them_sp_ket_qua_scroll {
     background-color: #fffafb;
 }
-#modalThemHopDong #them_sp_ket_qua {
+#modalThemHopDong .them-sp-ket-qua-scroll .row,
+#modalSuaHopDong .them-sp-ket-qua-scroll .row {
     --bs-gutter-y: 1rem;
     --bs-gutter-x: 0.75rem;
 }
-.them-sp-card {
+#modalThemHopDong .them-sp-card,
+#modalSuaHopDong .them-sp-card {
     position: relative;
     cursor: pointer;
     padding-bottom: 0.35rem !important;
-    border: 1px solid var(--bs-border-color, #dee2e6);
+    border: 1px solid rgba(233, 30, 99, 0.12);
     border-radius: 0.375rem;
+    background-color: #fff5f8;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.them-sp-card__layout {
+#modalThemHopDong .them-sp-card:hover,
+#modalSuaHopDong .them-sp-card:hover {
+    border-color: var(--bs-primary, #696cff);
+    box-shadow: 0 0.125rem 0.25rem rgba(233, 30, 99, 0.08);
+    background-color: #ffecf2;
+}
+#modalThemHopDong .them-sp-card.is-selected,
+#modalSuaHopDong .them-sp-card.is-selected {
+    border-color: var(--bs-primary, #696cff);
+    border-width: 2px;
+    background-color: #ffe4ef;
+}
+#modalThemHopDong .them-sp-card .them-sp-check,
+#modalSuaHopDong .them-sp-card .them-sp-check {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.35;
+}
+#modalThemHopDong .them-sp-card.is-selected .them-sp-check,
+#modalSuaHopDong .them-sp-card.is-selected .them-sp-check {
+    opacity: 1;
+    color: var(--bs-primary, #696cff);
+}
+#modalThemHopDong .them-sp-card__layout,
+#modalSuaHopDong .them-sp-card__layout {
     display: flex;
     flex-direction: row;
-    align-items: stretch;
+    align-items: center;
     gap: 0.5rem;
     min-width: 0;
 }
-.them-sp-card__details {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+#modalThemHopDong .them-sp-card__details,
+#modalSuaHopDong .them-sp-card__details {
     flex: 1 1 auto;
     min-width: 0;
 }
-.them-sp-card__body {
+#modalThemHopDong .them-sp-card__body,
+#modalSuaHopDong .them-sp-card__body {
     flex: 1 1 auto;
     min-width: 0;
 }
-.them-sp-card__actions {
+#modalThemHopDong .them-sp-card__actions,
+#modalSuaHopDong .them-sp-card__actions {
     position: absolute;
     right: 8px;
     bottom: 8px;
     left: auto;
     top: auto;
     z-index: 2;
-    margin: 0;
-    padding: 0;
 }
-.them-sp-btn-lich {
+#modalThemHopDong .them-sp-btn-lich,
+#modalSuaHopDong .them-sp-btn-lich {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    min-height: 1.75rem;
-    padding: 0.2rem 0.45rem;
-    line-height: 1.2;
-    font-size: 0.6875rem;
-    white-space: nowrap;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--bs-primary, #696cff);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
 }
-.them-sp-btn-lich:hover,
-.them-sp-btn-lich:focus {
+#modalThemHopDong .them-sp-btn-lich:hover,
+#modalThemHopDong .them-sp-btn-lich:focus-visible,
+#modalSuaHopDong .them-sp-btn-lich:hover,
+#modalSuaHopDong .them-sp-btn-lich:focus-visible {
+    opacity: 1;
+    color: var(--bs-primary, #696cff);
+}
+#modalThemHopDong .them-sp-su-dung-badge,
+#modalSuaHopDong .them-sp-su-dung-badge {
+    position: absolute;
+    z-index: 2;
+    color: var(--bs-success, #71dd37);
+    font-size: 0.875rem;
+    line-height: 1;
+    text-shadow: 0 0 2px #fff, 0 0 4px #fff;
+    pointer-events: none;
+}
+#modalThemHopDong .them-sp-card > .them-sp-su-dung-badge,
+#modalSuaHopDong .them-sp-card > .them-sp-su-dung-badge {
+    top: 8px;
+    right: 8px;
+    left: auto;
+}
+#modalThemHopDong .them-sp-thumb-wrap .them-sp-su-dung-badge,
+#modalSuaHopDong .them-sp-thumb-wrap .them-sp-su-dung-badge {
+    top: 2px;
+    left: 2px;
+    z-index: 1;
+}
+#modalThemHopDong .them-sp-thumb-wrap,
+#modalSuaHopDong .them-sp-thumb-wrap {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+#modalThemHopDong .them-sp-thumb,
+#modalSuaHopDong .them-sp-thumb {
+    width: 72px;
+    flex: 0 0 72px;
+}
+#modalThemHopDong .them-sp-thumb-img,
+#modalSuaHopDong .them-sp-thumb-img {
+    width: 72px;
+    height: 96px;
+    object-fit: cover;
+    display: block;
+}
+#modalThemHopDong .them-sp-thumb-placeholder,
+#modalSuaHopDong .them-sp-thumb-placeholder {
+    width: 72px;
+    height: 50px;
+    font-size: 1.35rem;
     background-color: #fff;
 }
-.them-sp-btn-lich__label {
-    display: none;
+#modalThemHopDong .hop-dong-sp-da-chon-thumb-img,
+#modalSuaHopDong .hop-dong-sp-da-chon-thumb-img {
+    width: 44px;
+    height: 58px;
+    object-fit: cover;
+    display: block;
+}
+#modalThemHopDong .hop-dong-sp-da-chon-thumb-placeholder,
+#modalSuaHopDong .hop-dong-sp-da-chon-thumb-placeholder {
+    width: 44px;
+    height: 58px;
+    font-size: 0.95rem;
 }
 /* Modal lịch sử sử dụng SP: làm mờ & tối nền phía sau để nổi bật dialog */
 body.modal-hop-dong-ktsp-open .modal-backdrop:last-of-type {
@@ -840,51 +929,6 @@ body.modal-hop-dong-ktsp-open .modal-backdrop:last-of-type {
 #modalHopDongKiemTraSp .list-group-item .hd-ktsp-list-info {
     padding: 12px;
 }
-#modalThemHopDong #them_sp_ket_qua .them-sp-card {
-    background-color: #fff5f8;
-    border-color: rgba(233, 30, 99, 0.12);
-    margin-bottom: 0.125rem;
-}
-.them-sp-card:hover {
-    border-color: var(--bs-primary, #696cff);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
-}
-#modalThemHopDong #them_sp_ket_qua .them-sp-card:hover {
-    box-shadow: 0 0.125rem 0.25rem rgba(233, 30, 99, 0.08);
-    background-color: #ffecf2;
-}
-.them-sp-card.is-selected {
-    border-color: var(--bs-primary, #696cff);
-    border-width: 2px;
-    background-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.08);
-}
-#modalThemHopDong #them_sp_ket_qua .them-sp-card.is-selected {
-    background-color: #ffe4ef;
-}
-.them-sp-card .them-sp-check {
-    opacity: 0.35;
-}
-.them-sp-card.is-selected .them-sp-check {
-    opacity: 1;
-    color: var(--bs-primary, #696cff);
-}
-.them-sp-thumb {
-    width: 72px;
-    flex: 0 0 72px;
-}
-.them-sp-thumb-img {
-    width: 72px;
-    height: 96px;
-    object-fit: cover;
-    display: block;
-}
-.them-sp-thumb-placeholder {
-    width: 72px;
-    height: 96px;
-    font-size: 1.35rem;
-    background-color: #fff;
-}
-
 /* Responsive modal thêm / sửa hợp đồng (mobile) */
 @media (max-width: 576px) {
     #modalThemHopDong .modal-dialog.modal-hop-dong,
@@ -969,12 +1013,7 @@ body.modal-hop-dong-ktsp-open .modal-backdrop:last-of-type {
     }
     #modalThemHopDong .them-sp-btn-lich,
     #modalSuaHopDong .them-sp-btn-lich {
-        font-size: 0.75rem;
-        padding: 0.3rem 0.55rem;
-    }
-    #modalThemHopDong .them-sp-btn-lich__label,
-    #modalSuaHopDong .them-sp-btn-lich__label {
-        display: inline;
+        font-size: 1rem;
     }
 
 }
@@ -1309,6 +1348,96 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isNaN(n)) return '—';
         return n.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' đ';
     }
+    function hopDongSpLoaiLabel(p) {
+        if (p && p.loai_label) return String(p.loai_label);
+        if (p && p.loai === 'chup') return 'Trang phục chụp';
+        if (p && p.loai === 'cuoi') return 'Trang phục cưới';
+        return '—';
+    }
+    function hopDongSpCoSuDung(p) {
+        if (!p) return false;
+        if (p.sdDates && p.sdDates.length) return true;
+        return !!p.coLichSuSuDung;
+    }
+    function hopDongSpSuDungBadgeTitle(p) {
+        if (p && p.sdDates && p.sdDates.length) {
+            return 'Đang/đã có lịch sử dụng: ' + p.sdDates.join(', ');
+        }
+        return 'Đã có lịch sử sử dụng';
+    }
+    function hopDongSpAppendSuDungBadge(wrap, p) {
+        if (!wrap || !hopDongSpCoSuDung(p)) return;
+        var badge = document.createElement('span');
+        badge.className = 'them-sp-su-dung-badge';
+        badge.title = hopDongSpSuDungBadgeTitle(p);
+        badge.setAttribute('aria-label', badge.title);
+        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        wrap.appendChild(badge);
+    }
+    function hopDongSpAppendSdDatesBadge(card, p) {
+        if (!card || !p || !p.sdDates || !p.sdDates.length) return;
+        card.title = 'Sản phẩm có lịch sử sử dụng';
+        card.setAttribute('aria-label', card.title);
+        var badge = document.createElement('span');
+        badge.className = 'them-sp-su-dung-badge';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        card.appendChild(badge);
+    }
+    function hopDongSpRenderSelectedRow(p, id, removeAttr) {
+        var tr = document.createElement('tr');
+        var ten = p && p.ten ? String(p.ten) : ('#' + id);
+
+        var tdImg = document.createElement('td');
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'them-sp-thumb-wrap';
+        if (p && p.hinh_anh_url) {
+            var img = document.createElement('img');
+            img.src = themSpToRelativeUrl(p.hinh_anh_url);
+            img.alt = ten;
+            img.title = ten;
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.className = 'hop-dong-sp-da-chon-thumb-img rounded border bg-body';
+            thumbWrap.appendChild(img);
+        } else {
+            var ph = document.createElement('div');
+            ph.className = 'hop-dong-sp-da-chon-thumb-placeholder rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
+            ph.title = ten;
+            ph.innerHTML = '<i class="fa-regular fa-image"></i>';
+            thumbWrap.appendChild(ph);
+        }
+        hopDongSpAppendSuDungBadge(thumbWrap, p);
+        tdImg.appendChild(thumbWrap);
+
+        var tdTen = document.createElement('td');
+        tdTen.className = 'text-break';
+        tdTen.textContent = ten;
+
+        var tdLoai = document.createElement('td');
+        tdLoai.className = 'text-muted small';
+        tdLoai.textContent = hopDongSpLoaiLabel(p);
+
+        var tdMa = document.createElement('td');
+        tdMa.className = 'text-muted small';
+        tdMa.textContent = p && p.ma ? String(p.ma) : '—';
+
+        var tdAct = document.createElement('td');
+        tdAct.className = 'text-end';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-outline-danger';
+        btn.setAttribute(removeAttr, String(id));
+        btn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
+        btn.title = 'Bỏ chọn';
+        tdAct.appendChild(btn);
+
+        tr.appendChild(tdImg);
+        tr.appendChild(tdTen);
+        tr.appendChild(tdLoai);
+        tr.appendChild(tdMa);
+        tr.appendChild(tdAct);
+        return tr;
+    }
     function hopDongSpCreateProductCard(p, opts) {
         opts = opts || {};
         var pid = parseInt(p && p.id != null ? p.id : '', 10);
@@ -1324,8 +1453,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var layout = document.createElement('div');
         layout.className = 'them-sp-card__layout';
 
+        var chk = document.createElement('div');
+        chk.className = 'them-sp-check flex-shrink-0';
+        chk.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        layout.appendChild(chk);
+
         var thumbWrap = document.createElement('div');
-        thumbWrap.className = 'them-sp-thumb flex-shrink-0';
+        thumbWrap.className = 'them-sp-thumb them-sp-thumb-wrap flex-shrink-0';
         var hinhUrl = p.hinh_anh_url;
         if (hinhUrl) {
             var imgEl = document.createElement('img');
@@ -1346,9 +1480,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var details = document.createElement('div');
         details.className = 'them-sp-card__details';
-        var chk = document.createElement('div');
-        chk.className = 'them-sp-check flex-shrink-0 pt-1';
-        chk.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
         var body = document.createElement('div');
         body.className = 'them-sp-card__body';
         var t1 = document.createElement('div');
@@ -1363,22 +1494,16 @@ document.addEventListener('DOMContentLoaded', function() {
         body.appendChild(t1);
         body.appendChild(t2);
         body.appendChild(t3);
-        if (p.sdDates && p.sdDates.length) {
-            var tw = document.createElement('div');
-            tw.className = 'small text-warning text-break';
-            tw.textContent = 'SD: ' + p.sdDates.join(', ');
-            body.appendChild(tw);
-        }
-        details.appendChild(chk);
         details.appendChild(body);
         layout.appendChild(details);
         card.appendChild(layout);
+        hopDongSpAppendSdDatesBadge(card, p);
 
         var actions = document.createElement('div');
         actions.className = 'them-sp-card__actions';
         var btnLich = document.createElement('button');
         btnLich.type = 'button';
-        btnLich.className = 'btn btn-sm btn-outline-primary them-sp-btn-lich';
+        btnLich.className = 'them-sp-btn-lich';
         btnLich.setAttribute('data-ten', p.ten || '');
         btnLich.setAttribute('data-ma', p.ma || '');
         btnLich.setAttribute('data-url', p.kiem_tra_url || '');
@@ -1410,58 +1535,7 @@ document.addEventListener('DOMContentLoaded', function() {
         themDaChonWrap.classList.remove('d-none');
         themSpSelected.forEach(function (id) {
             var p = themSpById[id];
-            var tr = document.createElement('tr');
-
-            var tdImg = document.createElement('td');
-            if (p && p.hinh_anh_url) {
-                var img = document.createElement('img');
-                img.src = themSpToRelativeUrl(p.hinh_anh_url);
-                img.alt = '';
-                img.loading = 'lazy';
-                img.decoding = 'async';
-                img.className = 'rounded border bg-body';
-                img.style.width = '72px';
-                img.style.height = '96px';
-                img.style.objectFit = 'cover';
-                tdImg.appendChild(img);
-            } else {
-                var ph = document.createElement('div');
-                ph.className = 'rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
-                ph.style.width = '72px';
-                ph.style.height = '96px';
-                ph.innerHTML = '<i class="fa-regular fa-image"></i>';
-                tdImg.appendChild(ph);
-            }
-
-            var tdTen = document.createElement('td');
-            tdTen.className = 'text-break';
-            var ten = p && p.ten ? String(p.ten) : ('#' + id);
-            var ma = p && p.ma ? String(p.ma) : '—';
-            tdTen.innerHTML =
-                '<div class="fw-semibold text-break">' + ten.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                (p && p.sdDates && p.sdDates.length
-                    ? '<div class="small text-warning text-break">SD: ' + p.sdDates.join(', ').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'
-                    : '');
-
-            var tdMa = document.createElement('td');
-            tdMa.className = 'text-muted';
-            tdMa.textContent = ma;
-
-            var tdAct = document.createElement('td');
-            tdAct.className = 'text-end';
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-sm btn-outline-danger';
-            btn.setAttribute('data-sp-remove', String(id));
-            btn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
-            btn.title = 'Bỏ chọn';
-            tdAct.appendChild(btn);
-
-            tr.appendChild(tdImg);
-            tr.appendChild(tdTen);
-            tr.appendChild(tdMa);
-            tr.appendChild(tdAct);
-            themDaChon.appendChild(tr);
+            themDaChon.appendChild(hopDongSpRenderSelectedRow(p, id, 'data-sp-remove'));
         });
     }
     function themSpRenderCards() {
@@ -1728,57 +1802,7 @@ document.addEventListener('DOMContentLoaded', function() {
         suaDaChonWrap.classList.remove('d-none');
         suaSpSelected.forEach(function (id) {
             var p = themSpById[id];
-            var tr = document.createElement('tr');
-
-            var tdImg = document.createElement('td');
-            if (p && p.hinh_anh_url) {
-                var img = document.createElement('img');
-                img.src = themSpToRelativeUrl(p.hinh_anh_url);
-                img.alt = '';
-                img.loading = 'lazy';
-                img.decoding = 'async';
-                img.className = 'rounded border bg-body';
-                img.style.width = '72px';
-                img.style.height = '96px';
-                img.style.objectFit = 'cover';
-                tdImg.appendChild(img);
-            } else {
-                var ph = document.createElement('div');
-                ph.className = 'rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
-                ph.style.width = '72px';
-                ph.style.height = '96px';
-                ph.innerHTML = '<i class="fa-regular fa-image"></i>';
-                tdImg.appendChild(ph);
-            }
-
-            var tdTen = document.createElement('td');
-            tdTen.className = 'text-break';
-            var ten = p && p.ten ? String(p.ten) : ('#' + id);
-            tdTen.innerHTML =
-                '<div class="fw-semibold text-break">' + ten.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                (p && p.sdDates && p.sdDates.length
-                    ? '<div class="small text-warning text-break">SD: ' + p.sdDates.join(', ').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'
-                    : '');
-
-            var tdMa = document.createElement('td');
-            tdMa.className = 'text-muted';
-            tdMa.textContent = p && p.ma ? String(p.ma) : '—';
-
-            var tdAct = document.createElement('td');
-            tdAct.className = 'text-end';
-            var btnRm = document.createElement('button');
-            btnRm.type = 'button';
-            btnRm.className = 'btn btn-sm btn-outline-danger';
-            btnRm.setAttribute('data-sua-sp-remove', String(id));
-            btnRm.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
-            btnRm.title = 'Bỏ chọn';
-            tdAct.appendChild(btnRm);
-
-            tr.appendChild(tdImg);
-            tr.appendChild(tdTen);
-            tr.appendChild(tdMa);
-            tr.appendChild(tdAct);
-            suaDaChon.appendChild(tr);
+            suaDaChon.appendChild(hopDongSpRenderSelectedRow(p, id, 'data-sua-sp-remove'));
         });
     }
     function suaSpRenderCards() {
