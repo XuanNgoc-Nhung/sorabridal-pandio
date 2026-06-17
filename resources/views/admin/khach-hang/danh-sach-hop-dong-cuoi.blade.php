@@ -54,6 +54,25 @@
         min-height: 0;
         overflow-y: auto;
     }
+    .dpc-action-col .btn-icon .dpc-action-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+    .dpc-action-col .btn-icon .dpc-action-icon:not([class*="-fill"]) {
+        -webkit-text-stroke: 0.35px currentColor;
+    }
+    .dpc-action-col .btn-dpc-edit,
+    .dpc-action-col .btn-dpc-edit .dpc-action-icon {
+        color: var(--bs-primary, #696cff);
+        opacity: 1;
+    }
+    .dpc-action-col .btn-dpc-edit:hover,
+    .dpc-action-col .btn-dpc-edit:focus,
+    .dpc-action-col .btn-dpc-edit:hover .dpc-action-icon,
+    .dpc-action-col .btn-dpc-edit:focus .dpc-action-icon {
+        color: var(--bs-primary, #696cff);
+        opacity: 0.88;
+    }
 </style>
 @endpush
 
@@ -429,57 +448,80 @@
                                 <span>{{ $tienGonMega($tongTien) }}</span>
                             </div>
                         </td>
-                        <td class="text-center text-nowrap">
+                        <td class="text-center text-nowrap dpc-action-col">
                             <div class="d-inline-flex align-items-center justify-content-center gap-1">
                                 @if(($item->trang_thai_hop_dong ?? '') !== 'da_huy')
-                                    <button type="button"
-                                            class="btn btn-sm btn-icon btn-text-success"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalThanhToanHopDongCuoi"
-                                            data-hop-id="{{ $item->id }}"
-                                            title="Thanh toán"
-                                            aria-label="Thanh toán">
-                                        <i class="bi bi-cash-coin fs-5" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-icon btn-text-warning"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalDieuPhoiHopDongCuoi"
-                                            data-payload="{!! $dieuPhoiPayloadAttr !!}"
-                                            title="Điều phối công việc"
-                                            aria-label="Điều phối công việc">
-                                        <i class="bi bi-sliders2 fs-5" aria-hidden="true"></i>
-                                    </button>
+                                    <span class="d-inline-flex"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Thanh toán">
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalThanhToanHopDongCuoi"
+                                                data-hop-id="{{ $item->id }}"
+                                                aria-label="Thanh toán">
+                                            <i class="bi bi-cash-coin dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </span>
+                                    <span class="d-inline-flex"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Điều phối công việc">
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-warning"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalDieuPhoiHopDongCuoi"
+                                                data-payload="{!! $dieuPhoiPayloadAttr !!}"
+                                                aria-label="Điều phối công việc">
+                                            <i class="bi bi-sliders2 dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </span>
                                     <a href="{{ route('admin.khach-hang.chinh-sua-hop-dong-cuoi', $item) }}"
-                                       class="btn btn-sm btn-icon btn-text-primary"
+                                       class="btn btn-sm btn-icon btn-text-primary btn-dpc-edit"
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="top"
                                        title="Chỉnh sửa hợp đồng"
                                        aria-label="Chỉnh sửa hợp đồng">
-                                        <i class="bi bi-pencil-square fs-5" aria-hidden="true"></i>
+                                        <i class="bi bi-pencil-square dpc-action-icon" aria-hidden="true"></i>
                                     </a>
                                 @else
-                                    <button type="button"
-                                            class="btn btn-sm btn-icon btn-text-secondary"
-                                            disabled
-                                            title="Hợp đồng đã huỷ"
-                                            aria-label="Hợp đồng đã huỷ">
-                                        <i class="bi bi-cash-coin fs-5" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-icon btn-text-secondary"
-                                            disabled
-                                            title="Hợp đồng đã huỷ"
-                                            aria-label="Hợp đồng đã huỷ">
-                                        <i class="bi bi-sliders2 fs-5" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-icon btn-text-secondary"
-                                            disabled
-                                            title="Hợp đồng đã huỷ"
-                                            aria-label="Hợp đồng đã huỷ">
-                                        <i class="bi bi-pencil-square fs-5" aria-hidden="true"></i>
-                                    </button>
+                                    <span class="d-inline-flex"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Hợp đồng đã huỷ">
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-secondary pe-none"
+                                                disabled
+                                                tabindex="-1"
+                                                aria-label="Hợp đồng đã huỷ">
+                                            <i class="bi bi-cash-coin dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </span>
+                                    <span class="d-inline-flex"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Hợp đồng đã huỷ">
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-secondary pe-none"
+                                                disabled
+                                                tabindex="-1"
+                                                aria-label="Hợp đồng đã huỷ">
+                                            <i class="bi bi-sliders2 dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </span>
+                                    <span class="d-inline-flex"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          title="Hợp đồng đã huỷ">
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-secondary pe-none"
+                                                disabled
+                                                tabindex="-1"
+                                                aria-label="Hợp đồng đã huỷ">
+                                            <i class="bi bi-pencil-square dpc-action-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </span>
                                 @endif
                                 @if(($item->trang_thai_hop_dong ?? '') !== 'da_huy')
                                 <form id="form-huy-hdc-{{ $item->id }}"
@@ -491,20 +533,27 @@
                                 </form>
                                 <button type="button"
                                         class="btn btn-sm btn-icon btn-text-danger btn-huy-hop-dong-cuoi"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
                                         data-form-id="form-huy-hdc-{{ $item->id }}"
                                         data-ma="{{ e($item->ma_hop_dong ?? '') }}"
                                         title="Huỷ hợp đồng"
                                         aria-label="Huỷ hợp đồng">
-                                    <i class="bi bi-x-circle fs-5" aria-hidden="true"></i>
+                                    <i class="bi bi-x-circle-fill dpc-action-icon" aria-hidden="true"></i>
                                 </button>
                                 @else
-                                <button type="button"
-                                        class="btn btn-sm btn-icon btn-text-secondary"
-                                        disabled
-                                        title="Hợp đồng đã huỷ"
-                                        aria-label="Hợp đồng đã huỷ">
-                                    <i class="bi bi-x-circle fs-5" aria-hidden="true"></i>
-                                </button>
+                                <span class="d-inline-flex"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="Hợp đồng đã huỷ">
+                                    <button type="button"
+                                            class="btn btn-sm btn-icon btn-text-secondary pe-none"
+                                            disabled
+                                            tabindex="-1"
+                                            aria-label="Hợp đồng đã huỷ">
+                                        <i class="bi bi-x-circle-fill dpc-action-icon" aria-hidden="true"></i>
+                                    </button>
+                                </span>
                                 @endif
                             </div>
                         </td>

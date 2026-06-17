@@ -669,7 +669,7 @@
                                             <th>Tên</th>
                                             <th>Loại</th>
                                             <th>Mã</th>
-                                            <th style="width: 70px;" class="text-end">Xóa</th>
+                                            <th style="width: 70px;" class="text-center">Xóa</th>
                                         </tr>
                                     </thead>
                                     <tbody id="wizard_tp_da_chon"></tbody>
@@ -1309,6 +1309,17 @@
     height: 58px;
     font-size: 0.95rem;
 }
+.tao-hop-dong-wizard .wizard-tp-remove-icon {
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+}
+.tao-hop-dong-wizard .wizard-tp-remove-icon:hover,
+.tao-hop-dong-wizard .wizard-tp-remove-icon:focus {
+    opacity: 1;
+}
 body.modal-wizard-ktsp-open .modal-backdrop:last-of-type {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -1723,14 +1734,15 @@ document.addEventListener('DOMContentLoaded', function() {
             tdMa.textContent = p && p.ma ? String(p.ma) : '—';
 
             var tdAct = document.createElement('td');
-            tdAct.className = 'text-end';
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-sm btn-outline-danger';
-            btn.setAttribute('data-sp-remove', String(id));
-            btn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
-            btn.title = 'Bỏ chọn';
-            tdAct.appendChild(btn);
+            tdAct.className = 'text-center';
+            var removeIcon = document.createElement('i');
+            removeIcon.className = 'fa-solid fa-trash wizard-tp-remove-icon text-danger';
+            removeIcon.setAttribute('data-sp-remove', String(id));
+            removeIcon.setAttribute('role', 'button');
+            removeIcon.setAttribute('tabindex', '0');
+            removeIcon.title = 'Bỏ chọn';
+            removeIcon.setAttribute('aria-label', 'Bỏ chọn');
+            tdAct.appendChild(removeIcon);
 
             tr.appendChild(tdImg);
             tr.appendChild(tdTen);
@@ -1927,10 +1939,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (wizardTpState.daChon) {
             wizardTpState.daChon.addEventListener('click', function(ev) {
-                var btn = ev.target.closest('[data-sp-remove]');
-                if (!btn || !wizardTpState.daChon.contains(btn)) return;
+                var removeEl = ev.target.closest('[data-sp-remove]');
+                if (!removeEl || !wizardTpState.daChon.contains(removeEl)) return;
                 ev.preventDefault();
-                wizardTpToggle(btn.getAttribute('data-sp-remove'));
+                wizardTpToggle(removeEl.getAttribute('data-sp-remove'));
+            });
+            wizardTpState.daChon.addEventListener('keydown', function(ev) {
+                if (ev.key !== 'Enter' && ev.key !== ' ') return;
+                var removeEl = ev.target.closest('[data-sp-remove]');
+                if (!removeEl || !wizardTpState.daChon.contains(removeEl)) return;
+                ev.preventDefault();
+                wizardTpToggle(removeEl.getAttribute('data-sp-remove'));
             });
         }
 
