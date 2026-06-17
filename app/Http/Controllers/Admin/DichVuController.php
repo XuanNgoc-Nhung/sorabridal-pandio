@@ -68,7 +68,6 @@ class DichVuController extends Controller
             'ten_dich_vu' => 'required|string|max:255',
             'ma_dich_vu' => ['required', 'string', 'max:50', Rule::unique('dich_vu_le', 'ma_dich_vu')],
             'mo_ta' => 'nullable|string',
-            'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
             'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
@@ -83,8 +82,6 @@ class DichVuController extends Controller
             'ma_dich_vu.max' => 'Mã dịch vụ không được quá 50 ký tự.',
             'ma_dich_vu.unique' => 'Mã dịch vụ đã tồn tại, vui lòng chọn mã khác.',
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
-            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
-            'trang_thai.in' => 'Trạng thái không hợp lệ.',
             'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
             'gia_dich_vu.required' => 'Vui lòng nhập giá dịch vụ.',
             'gia_dich_vu.numeric' => 'Giá dịch vụ phải là số.',
@@ -101,7 +98,7 @@ class DichVuController extends Controller
             'ten_dich_vu' => $request->input('ten_dich_vu'),
             'ma_dich_vu' => $request->input('ma_dich_vu'),
             'mo_ta' => $request->input('mo_ta'),
-            'trang_thai' => (int) $request->input('trang_thai', DichVuLe::TRANG_THAI_HIEN_THI),
+            'trang_thai' => DichVuLe::TRANG_THAI_HIEN_THI,
             'ghi_chu' => $request->input('ghi_chu'),
             'gia_dich_vu' => $request->input('gia_dich_vu'),
             'loai' => $request->input('loai'),
@@ -118,7 +115,6 @@ class DichVuController extends Controller
             'ten_dich_vu' => 'required|string|max:255',
             'ma_dich_vu' => ['required', 'string', 'max:50', Rule::unique('dich_vu_le', 'ma_dich_vu')->ignore($dichVu->id)],
             'mo_ta' => 'nullable|string',
-            'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
             'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
@@ -133,8 +129,6 @@ class DichVuController extends Controller
             'ma_dich_vu.max' => 'Mã dịch vụ không được quá 50 ký tự.',
             'ma_dich_vu.unique' => 'Mã dịch vụ đã tồn tại, vui lòng chọn mã khác.',
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
-            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
-            'trang_thai.in' => 'Trạng thái không hợp lệ.',
             'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
             'gia_dich_vu.required' => 'Vui lòng nhập giá dịch vụ.',
             'gia_dich_vu.numeric' => 'Giá dịch vụ phải là số.',
@@ -151,7 +145,6 @@ class DichVuController extends Controller
             'ten_dich_vu' => $request->input('ten_dich_vu'),
             'ma_dich_vu' => $request->input('ma_dich_vu'),
             'mo_ta' => $request->input('mo_ta'),
-            'trang_thai' => (int) $request->input('trang_thai', DichVuLe::TRANG_THAI_HIEN_THI),
             'ghi_chu' => $request->input('ghi_chu'),
             'gia_dich_vu' => $request->input('gia_dich_vu'),
             'loai' => $request->input('loai'),
@@ -159,6 +152,27 @@ class DichVuController extends Controller
         ]);
 
         return redirect()->route('admin.dich-vu.dich-vu-le')->with('success', 'Đã cập nhật dịch vụ lẻ thành công.');
+    }
+
+    public function updateDichVuLeTrangThai(Request $request, DichVuLe $dichVu): JsonResponse
+    {
+        $validated = $request->validate([
+            'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
+            'trang_thai.in' => 'Trạng thái không hợp lệ.',
+        ]);
+
+        $dichVu->update([
+            'trang_thai' => (int) $validated['trang_thai'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => $dichVu->trang_thai,
+            'message' => 'Đã cập nhật trạng thái dịch vụ lẻ.',
+        ]);
     }
 
     public function destroy(DichVuLe $dichVu)
@@ -249,7 +263,6 @@ class DichVuController extends Controller
             'the' => 'nullable|string',
             'ghi_chu' => 'nullable|string',
             'mo_ta' => 'nullable|string',
-            'trang_thai' => 'nullable|integer|in:0,1',
             'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'dich_vu_le_ids' => 'nullable|array',
             'dich_vu_le_ids.*' => 'integer|exists:dich_vu_le,id',
@@ -264,8 +277,6 @@ class DichVuController extends Controller
             'the.string' => 'Thẻ phải là chuỗi ký tự.',
             'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
-            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
-            'trang_thai.in' => 'Trạng thái không hợp lệ.',
             'loai.required' => 'Vui lòng chọn loại dịch vụ.',
             'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'dich_vu_le_ids.array' => 'Danh sách dịch vụ lẻ không hợp lệ.',
@@ -299,7 +310,7 @@ class DichVuController extends Controller
             'the' => $request->input('the'),
             'ghi_chu' => $request->input('ghi_chu'),
             'mo_ta' => $request->input('mo_ta'),
-            'trang_thai' => (int) $request->input('trang_thai', NhomDichVu::TRANG_THAI_HIEN_THI),
+            'trang_thai' => NhomDichVu::TRANG_THAI_HIEN_THI,
             'nguoi_tao_id' => $request->user()?->id,
         ]);
 
@@ -319,7 +330,6 @@ class DichVuController extends Controller
             'the' => 'nullable|string',
             'ghi_chu' => 'nullable|string',
             'mo_ta' => 'nullable|string',
-            'trang_thai' => 'nullable|integer|in:0,1',
             'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'dich_vu_le_ids' => 'nullable|array',
             'dich_vu_le_ids.*' => 'integer|exists:dich_vu_le,id',
@@ -334,8 +344,6 @@ class DichVuController extends Controller
             'the.string' => 'Thẻ phải là chuỗi ký tự.',
             'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
-            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
-            'trang_thai.in' => 'Trạng thái không hợp lệ.',
             'loai.required' => 'Vui lòng chọn loại dịch vụ.',
             'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'dich_vu_le_ids.array' => 'Danh sách dịch vụ lẻ không hợp lệ.',
@@ -369,12 +377,32 @@ class DichVuController extends Controller
             'the' => $request->input('the'),
             'ghi_chu' => $request->input('ghi_chu'),
             'mo_ta' => $request->input('mo_ta'),
-            'trang_thai' => (int) $request->input('trang_thai', NhomDichVu::TRANG_THAI_HIEN_THI),
         ]);
 
         $nhomDichVu->dichVuLe()->sync(collect($ids)->mapWithKeys(fn ($id) => [$id => ['so_luong' => 1]])->all());
 
         return redirect()->route('admin.dich-vu.nhom-dich-vu')->with('success', 'Đã cập nhật nhóm dịch vụ thành công.');
+    }
+
+    public function updateNhomDichVuTrangThai(Request $request, NhomDichVu $nhomDichVu): JsonResponse
+    {
+        $validated = $request->validate([
+            'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
+            'trang_thai.in' => 'Trạng thái không hợp lệ.',
+        ]);
+
+        $nhomDichVu->update([
+            'trang_thai' => (int) $validated['trang_thai'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => $nhomDichVu->trang_thai,
+            'message' => 'Đã cập nhật trạng thái nhóm dịch vụ.',
+        ]);
     }
 
     public function destroyNhomDichVu(NhomDichVu $nhomDichVu)

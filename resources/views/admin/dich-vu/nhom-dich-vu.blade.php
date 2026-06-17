@@ -126,7 +126,7 @@
                         <th class="text-end" style="width: 120px;">Giá gốc</th>
                         <th>Ghi chú</th>
                         <th>Mô tả</th>
-                        <th class="text-center" style="width: 100px;">Trạng thái</th>
+                        <th class="text-center" style="width: 120px;">Hiển thị</th>
                         <th>Người tạo</th>
                         <th>Thẻ</th>
                         <th class="text-center" style="width: 100px;">Thao tác</th>
@@ -135,10 +135,9 @@
                 <tbody class="table-border-bottom-0">
                     @forelse($danhSach ?? [] as $index => $item)
                     @php
-                        $trangThaiLabel = \App\Models\NhomDichVu::TRANG_THAI_LABELS[(int)($item->trang_thai ?? 0)] ?? '—';
-                        $trangThaiBadge = ($item->trang_thai ?? 0) == \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI ? 'bg-label-success' : 'bg-label-secondary';
                         $dsDichVu = $item->dichVuLe->pluck('ten_dich_vu')->filter()->values();
                         $loaiLabel = \App\Support\LoaiCuoiPhongSu::label($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI);
+                        $dangHienThi = ($item->trang_thai ?? 0) == \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI;
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -159,7 +158,16 @@
                         <td>{{ \Illuminate\Support\Str::limit($item->ghi_chu ?? '—', 40) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->mo_ta ?? '—', 50) }}</td>
                         <td class="text-center">
-                            <span class="badge {{ $trangThaiBadge }}">{{ $trangThaiLabel }}</span>
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input type="checkbox"
+                                       class="form-check-input switch-trang-thai-nhom-dich-vu"
+                                       role="switch"
+                                       id="switch-trang-thai-nhom-dich-vu-{{ $item->id }}"
+                                       data-url="{{ route('admin.dich-vu.update-nhom-dich-vu-trang-thai', $item) }}"
+                                       @checked($dangHienThi)
+                                       title="{{ $dangHienThi ? 'Hiển thị' : 'Ẩn' }}">
+                                       {{-- <label class="form-check-label" for="switch-trang-thai-nhom-dich-vu-{{ $item->id }}">Hiển thị</label> --}}
+                            </div>
                         </td>
                         <td>{{ $item->nguoiTao?->name ?? '—' }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->the ?? '—', 50) }}</td>
@@ -180,7 +188,6 @@
                                        data-the="{{ e($item->the ?? '') }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-mo-ta="{{ e($item->mo_ta ?? '') }}"
-                                       data-trang-thai="{{ (int)($item->trang_thai ?? 0) }}"
                                        data-loai="{{ e($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                        data-dich-vu-le-ids="{{ $item->dichVuLe->pluck('id')->implode(',') }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
@@ -252,13 +259,6 @@
                                 @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
                                     <option value="{{ $value }}" @selected(old('loai') === $value)>{{ $label }}</option>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="them_trang_thai">Trạng thái</label>
-                            <select class="select2-admin form-select" id="them_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
-                                <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}" {{ old('trang_thai', \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI) == \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI ? 'selected' : '' }}>Hiển thị</option>
-                                <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_AN }}" {{ old('trang_thai') == \App\Models\NhomDichVu::TRANG_THAI_AN ? 'selected' : '' }}>Ẩn</option>
                             </select>
                         </div>
                         <div class="col-12">
@@ -340,13 +340,6 @@
                                 @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="sua_trang_thai">Trạng thái</label>
-                            <select class="select2-admin form-select" id="sua_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
-                                <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}">Hiển thị</option>
-                                <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_AN }}">Ẩn</option>
                             </select>
                         </div>
                         <div class="col-12">
@@ -443,7 +436,53 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 
     var DICH_VU_LE_THEO_LOAI_URL = @json(route('admin.dich-vu.list-dich-vu-le-theo-loai'));
+    var CSRF_TOKEN = @json(csrf_token());
+    var TRANG_THAI_HIEN_THI = {{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }};
     var oldDichVuLeIds = @json(array_map('intval', old('dich_vu_le_ids', [])));
+
+    function capNhatTrangThaiNhomDichVu(switchEl) {
+        if (!switchEl) return;
+
+        var url = switchEl.getAttribute('data-url');
+        if (!url) return;
+
+        var trangThai = switchEl.checked ? TRANG_THAI_HIEN_THI : 0;
+        var trangThaiCu = switchEl.checked ? 0 : TRANG_THAI_HIEN_THI;
+
+        switchEl.disabled = true;
+
+        fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ trang_thai: trangThai })
+        })
+            .then(function(res) {
+                if (!res.ok) throw new Error('update_failed');
+                return res.json();
+            })
+            .then(function(json) {
+                if (!json || !json.success) throw new Error('update_failed');
+                switchEl.title = switchEl.checked ? 'Hiển thị' : 'Ẩn';
+            })
+            .catch(function() {
+                switchEl.checked = trangThaiCu === TRANG_THAI_HIEN_THI;
+                alert('Không thể cập nhật trạng thái. Vui lòng thử lại.');
+            })
+            .finally(function() {
+                switchEl.disabled = false;
+            });
+    }
+
+    document.querySelectorAll('.switch-trang-thai-nhom-dich-vu').forEach(function(switchEl) {
+        switchEl.addEventListener('change', function() {
+            capNhatTrangThaiNhomDichVu(this);
+        });
+    });
 
     function formatTien(num) {
         return Number(num).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
@@ -663,7 +702,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_ma_nhom').value = btn.getAttribute('data-ma') || '';
             document.getElementById('sua_gia_tien').value = btn.getAttribute('data-gia-tien') || '';
             document.getElementById('sua_the').value = btn.getAttribute('data-the') || '';
-            document.getElementById('sua_trang_thai').value = btn.getAttribute('data-trang-thai') || '{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_mo_ta').value = btn.getAttribute('data-mo-ta') || '';
             var loai = btn.getAttribute('data-loai') || '';
