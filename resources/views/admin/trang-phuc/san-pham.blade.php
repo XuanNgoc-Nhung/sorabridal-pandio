@@ -46,10 +46,10 @@
                     @enderror
                 </div>
                 <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label" for="filter_loai">Loại</label>
+                    <label class="form-label" for="filter_loai">Loại trang phục</label>
                     <select class="select2-admin form-select" id="filter_loai" name="loai" data-placeholder="Tất cả">
                         <option value="">-- Tất cả --</option>
-                        @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
+                        @foreach(\App\Support\LoaiTrangPhuc::LABELS as $value => $label)
                             <option value="{{ $value }}" @selected(request('loai') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -126,7 +126,7 @@
                         <th style="width: 64px;">Ảnh</th>
                         <th style="min-width: 110px;">Mã SP</th>
                         <th style="min-width: 180px;">Tên sản phẩm</th>
-                        <th class="text-center" style="min-width: 90px;">Loại</th>
+                        <th class="text-center" style="min-width: 120px;">Loại trang phục</th>
                         <th style="min-width: 200px;">Mô tả</th>
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
                         <th class="text-center" style="min-width: 100px;">Trạng thái</th>
@@ -143,7 +143,7 @@
                         $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                         $moTaRutGon = filled($item->mo_ta) ? \Illuminate\Support\Str::limit(strip_tags($item->mo_ta), 80) : '—';
                         $ghiChuRutGon = filled($item->ghi_chu) ? \Illuminate\Support\Str::limit($item->ghi_chu, 40) : '—';
-                        $loaiLabel = \App\Support\LoaiCuoiPhongSu::label($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI);
+                        $loaiLabel = \App\Support\LoaiTrangPhuc::label($item->loai ?? \App\Support\LoaiTrangPhuc::CUOI);
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -198,7 +198,7 @@
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                        data-mo-ta="{{ e($item->mo_ta ?? '') }}"
                                        data-trang-thai="{{ e($item->trang_thai ?? 1) }}"
-                                       data-loai="{{ e($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
+                                       data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
@@ -232,7 +232,7 @@
                     $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                     $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                     $moTaRutGon = filled($item->mo_ta) ? \Illuminate\Support\Str::limit(strip_tags($item->mo_ta), 100) : null;
-                    $loaiLabel = \App\Support\LoaiCuoiPhongSu::label($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI);
+                    $loaiLabel = \App\Support\LoaiTrangPhuc::label($item->loai ?? \App\Support\LoaiTrangPhuc::CUOI);
                 @endphp
                 <div class="col">
                     <div class="card h-100 san-pham-card border shadow-sm">
@@ -277,7 +277,7 @@
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                        data-mo-ta="{{ e($item->mo_ta ?? '') }}"
                                        data-trang-thai="{{ e($item->trang_thai ?? 1) }}"
-                                       data-loai="{{ e($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
+                                       data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
@@ -414,10 +414,10 @@
                                     <input type="text" class="form-control" id="them_ma_san_pham" name="ma_san_pham" value="{{ old('ma_san_pham') }}" placeholder="Ví dụ: TP001" required>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                    <label class="form-label" for="them_loai">Loại <span class="text-danger">*</span></label>
+                                    <label class="form-label" for="them_loai">Loại trang phục <span class="text-danger">*</span></label>
                                     <select class="select2-admin form-select" id="them_loai" name="loai" required data-placeholder="Chọn loại">
-                                        @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
-                                            <option value="{{ $value }}" @selected(old('loai', \App\Support\LoaiCuoiPhongSu::CUOI) === $value)>{{ $label }}</option>
+                                        @foreach(\App\Support\LoaiTrangPhuc::LABELS as $value => $label)
+                                            <option value="{{ $value }}" @selected(old('loai', \App\Support\LoaiTrangPhuc::CUOI) === $value)>{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -507,9 +507,9 @@
                                     <input type="text" class="form-control" id="sua_ma_san_pham" name="ma_san_pham" placeholder="Ví dụ: TP001" required>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                    <label class="form-label" for="sua_loai">Loại <span class="text-danger">*</span></label>
+                                    <label class="form-label" for="sua_loai">Loại trang phục <span class="text-danger">*</span></label>
                                     <select class="select2-admin form-select" id="sua_loai" name="loai" required data-placeholder="Chọn loại">
-                                        @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
+                                        @foreach(\App\Support\LoaiTrangPhuc::LABELS as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_ten_san_pham').value = btn.getAttribute('data-ten') || '';
             document.getElementById('sua_ma_san_pham').value = btn.getAttribute('data-ma') || '';
             document.getElementById('sua_mo_ta').value = btn.getAttribute('data-mo-ta') || '';
-            document.getElementById('sua_loai').value = btn.getAttribute('data-loai') || '{{ \App\Support\LoaiCuoiPhongSu::CUOI }}';
+            document.getElementById('sua_loai').value = btn.getAttribute('data-loai') || '{{ \App\Support\LoaiTrangPhuc::CUOI }}';
             document.getElementById('sua_trang_thai').value = btn.getAttribute('data-trang-thai') || '1';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_gia_tri').value = btn.getAttribute('data-gia-tri') || '';

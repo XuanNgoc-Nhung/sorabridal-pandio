@@ -503,6 +503,7 @@ class KhachHangController extends Controller
             'kenh_tiep_can' => 'nullable|string|max:100',
             'thanh_vien_nhan_vien_ids' => 'nullable|array',
             'thanh_vien_nhan_vien_ids.*' => 'integer|exists:nhan_vien,id',
+            'ghi_chu_sale' => 'nullable|string',
         ], [], [
             'ten_co_dau' => 'họ tên cô dâu',
             'ten_chu_re' => 'họ tên chú rể',
@@ -513,6 +514,7 @@ class KhachHangController extends Controller
             'loai_hop_dong' => 'loại hợp đồng',
             'kenh_tiep_can' => 'kênh tiếp cận',
             'thanh_vien_nhan_vien_ids' => 'thành viên sale',
+            'ghi_chu_sale' => 'ghi chú (sale)',
         ]);
 
         $thanhVienIds = array_values(array_unique(array_map(
@@ -575,10 +577,15 @@ class KhachHangController extends Controller
             $rules['dich_vu_nang_cap.*.so_luong'] = 'required|integer|min:1';
         }
 
+        $rules['ghi_chu_sale'] = 'nullable|string';
+        $rules['tong_tien'] = 'nullable|numeric|min:0';
+
         $validated = $request->validate($rules, [], [
             'loai_dich_vu' => 'hình thức dịch vụ',
             'combo_goi' => 'combo',
             'dich_vu_chon' => 'dịch vụ lẻ',
+            'ghi_chu_sale' => 'ghi chú (sale)',
+            'tong_tien' => 'tổng số tiền dịch vụ',
         ]);
 
         if ($validated['loai_dich_vu'] === 'ghep_dich_vu_le') {
@@ -624,9 +631,12 @@ class KhachHangController extends Controller
             }
         }
 
-        $tongTien = $this->tinhTongTienDichVuBuoc2($validated);
+        $tongTien = array_key_exists('tong_tien', $validated) && $validated['tong_tien'] !== null && $validated['tong_tien'] !== ''
+            ? round(max(0, (float) $validated['tong_tien']), 2)
+            : $this->tinhTongTienDichVuBuoc2($validated);
+        $ghiChuSale = $validated['ghi_chu_sale'] ?? null;
 
-        DB::transaction(function () use ($hopDongCuoi, $validated, $tongTien) {
+        DB::transaction(function () use ($hopDongCuoi, $validated, $tongTien, $ghiChuSale) {
             // Ghép lẻ: nhom_dich_vu_id = -1. Có combo (trọn gói hoặc nâng cấp): lưu id nhóm (nhom_dich_vu.id).
             $hopDongCuoi->fill([
                 'loai_dich_vu' => $validated['loai_dich_vu'],
@@ -634,6 +644,7 @@ class KhachHangController extends Controller
                     ? -1
                     : (int) $validated['combo_goi'],
                 'tong_tien' => $tongTien,
+                'ghi_chu_sale' => $ghiChuSale,
             ]);
             $hopDongCuoi->save();
 

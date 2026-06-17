@@ -149,6 +149,10 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label" for="wizard_ghi_chu_sale_1">Ghi chú (sale)</label>
+                        <textarea class="form-control" id="wizard_ghi_chu_sale_1" name="ghi_chu_sale" rows="3" placeholder="Ghi chú nội bộ cho sale…">{{ old('ghi_chu_sale', $hopDongCuoi->ghi_chu_sale) }}</textarea>
+                    </div>
                 </div>
             </div>
 
@@ -533,7 +537,12 @@
                 <div class="row g-3 mt-1">
                     <div class="col-12 col-lg-4">
                         <label class="form-label" for="wizard_tong_tien_dich_vu_hien_thi">Tổng số tiền dịch vụ</label>
-                        <input type="text" readonly class="form-control" id="wizard_tong_tien_dich_vu_hien_thi" value="0đ">
+                        <input type="hidden" id="wizard_tong_tien_dich_vu" value="{{ (int) round((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0)) }}">
+                        <input type="text" class="form-control text-end" id="wizard_tong_tien_dich_vu_hien_thi" value="{{ number_format((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0), 0, ',', '.') }}" inputmode="numeric" autocomplete="off" placeholder="0">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="wizard_ghi_chu_sale_2">Ghi chú (sale)</label>
+                        <textarea class="form-control" id="wizard_ghi_chu_sale_2" rows="3" placeholder="Ghi chú nội bộ cho sale…">{{ old('ghi_chu_sale', $hopDongCuoi->ghi_chu_sale) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -1483,6 +1492,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!data || !data.loai_dich_vu) {
+            updateTongTienDichVu();
             done();
             return;
         }
@@ -1547,7 +1557,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     recalcDichVuLeTotal('wizard-table-dich-vu-le-nang-cap-body', 'wizard-dich-vu-le-nang-cap-total');
                 }
             }
-            updateTongTienDichVu();
+            var savedTong = toNumber(hopData.tong_tien);
+            if (savedTong > 0) {
+                var totalHidden = document.getElementById('wizard_tong_tien_dich_vu');
+                var totalDisplay = document.getElementById('wizard_tong_tien_dich_vu_hien_thi');
+                if (totalHidden) totalHidden.value = String(Math.round(savedTong));
+                if (totalDisplay) totalDisplay.value = formatMoneyInputNumber(savedTong);
+            } else {
+                updateTongTienDichVu();
+            }
             updateNextButtonState();
             done();
         }
@@ -1582,8 +1600,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateTongTienDichVu() {
-        var totalInput = document.getElementById('wizard_tong_tien_dich_vu_hien_thi');
-        if (!totalInput) return;
+        var totalDisplay = document.getElementById('wizard_tong_tien_dich_vu_hien_thi');
+        var totalHidden = document.getElementById('wizard_tong_tien_dich_vu');
+        if (!totalDisplay && !totalHidden) return;
         var activeTarget = getActiveServiceTabTarget();
         var comboPrice = getSelectedComboPrice();
         var dichVuLeTotal = getTotalFromEl('wizard-dich-vu-le-total');
@@ -1598,7 +1617,9 @@ document.addEventListener('DOMContentLoaded', function() {
             tong = comboPrice;
         }
 
-        totalInput.value = formatMoneyVnd(tong);
+        var rounded = Math.max(0, Math.round(tong));
+        if (totalHidden) totalHidden.value = String(rounded);
+        if (totalDisplay) totalDisplay.value = formatMoneyInputNumber(rounded);
         syncStep3PaymentFields();
     }
 
@@ -1615,13 +1636,18 @@ document.addEventListener('DOMContentLoaded', function() {
         var ngayKyEl = document.getElementById('wizard_ngay_ky_hop_dong');
 
         var tongTienDichVu = 0;
-        var activeTarget = getActiveServiceTabTarget();
-        var comboPrice = getSelectedComboPrice();
-        var dichVuLeTotal = getTotalFromEl('wizard-dich-vu-le-total');
-        var dichVuLeNangCapTotal = getTotalFromEl('wizard-dich-vu-le-nang-cap-total');
-        if (activeTarget === '#wizard-service-le') tongTienDichVu = dichVuLeTotal;
-        else if (activeTarget === '#wizard-service-nang-cap') tongTienDichVu = comboPrice + dichVuLeNangCapTotal;
-        else tongTienDichVu = comboPrice;
+        var tongTienDichVuHidden = document.getElementById('wizard_tong_tien_dich_vu');
+        if (tongTienDichVuHidden && String(tongTienDichVuHidden.value || '').trim() !== '') {
+            tongTienDichVu = toNumber(tongTienDichVuHidden.value);
+        } else {
+            var activeTarget = getActiveServiceTabTarget();
+            var comboPrice = getSelectedComboPrice();
+            var dichVuLeTotal = getTotalFromEl('wizard-dich-vu-le-total');
+            var dichVuLeNangCapTotal = getTotalFromEl('wizard-dich-vu-le-nang-cap-total');
+            if (activeTarget === '#wizard-service-le') tongTienDichVu = dichVuLeTotal;
+            else if (activeTarget === '#wizard-service-nang-cap') tongTienDichVu = comboPrice + dichVuLeNangCapTotal;
+            else tongTienDichVu = comboPrice;
+        }
 
         if (tongTienEl) tongTienEl.value = String(Math.max(0, Math.round(tongTienDichVu)));
         if (tongTienDisplayEl) tongTienDisplayEl.value = formatMoneyInputNumber(tongTienDichVu);
@@ -2142,6 +2168,18 @@ document.addEventListener('DOMContentLoaded', function() {
         btnSubmit.title = ok ? '' : 'Vui lòng tick xác nhận';
     }
 
+    function bindGhiChuSaleSync() {
+        var el1 = document.getElementById('wizard_ghi_chu_sale_1');
+        var el2 = document.getElementById('wizard_ghi_chu_sale_2');
+        if (!el1 || !el2) return;
+        el1.addEventListener('input', function() {
+            if (el2.value !== el1.value) el2.value = el1.value;
+        });
+        el2.addEventListener('input', function() {
+            if (el1.value !== el2.value) el1.value = el2.value;
+        });
+    }
+
     function buildStep1SaveFormData() {
         var fd = new FormData();
         var token = formWizard.querySelector('input[name="_token"]');
@@ -2194,6 +2232,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 fd.append('dich_vu_nang_cap[' + idNc + '][so_luong]', qtyNc ? String(qtyNc.value || '1') : '1');
             });
         }
+
+        var ghiChuSale = document.getElementById('wizard_ghi_chu_sale_2') || document.getElementById('wizard_ghi_chu_sale_1');
+        if (ghiChuSale) fd.append('ghi_chu_sale', ghiChuSale.value);
+        var tongTienDv = document.getElementById('wizard_tong_tien_dich_vu');
+        if (tongTienDv) fd.append('tong_tien', tongTienDv.value);
 
         return fd;
     }
@@ -2269,7 +2312,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res.ok) {
                     if (res.body && res.body.tong_tien != null) {
                         var tongInp = document.getElementById('wizard_tong_tien');
-                        if (tongInp) tongInp.value = String(res.body.tong_tien);
+                        var tongDichVuInp = document.getElementById('wizard_tong_tien_dich_vu');
+                        var tongDichVuDisplay = document.getElementById('wizard_tong_tien_dich_vu_hien_thi');
+                        var savedTong = Math.max(0, Math.round(toNumber(res.body.tong_tien)));
+                        if (tongInp) tongInp.value = String(savedTong);
+                        if (tongDichVuInp) tongDichVuInp.value = String(savedTong);
+                        if (tongDichVuDisplay) tongDichVuDisplay.value = formatMoneyInputNumber(savedTong);
                     }
                     if (formWizard && res.body) {
                         if (res.body.wizard_step2) {
@@ -2540,7 +2588,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 applyWizardStep2Restore(function() {
                     refreshWizardPaginators();
                     updateNangCapComboDichVuPanel();
-                    updateTongTienDichVu();
+                    syncStep3PaymentFields();
                     updateNextButtonState();
                 });
             });
@@ -2679,6 +2727,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     bindFormattedMoneyInput('wizard_chiet_khau_hien_thi', 'wizard_chiet_khau');
     bindFormattedMoneyInput('wizard_tien_coc_hien_thi', 'wizard_tien_coc');
+    bindFormattedMoneyInput('wizard_tong_tien_dich_vu_hien_thi', 'wizard_tong_tien_dich_vu');
+
+    bindGhiChuSaleSync();
 
     prefillHopDongInputs();
     applyWizardFieldLabelNumbers();
@@ -2687,7 +2738,20 @@ document.addEventListener('DOMContentLoaded', function() {
     syncDichVuLeCheckedState();
     buildDichVuLeTable('.js-dich-vu-le', 'wizard-table-dich-vu-le-body', 'wizard-dich-vu-le-total', 'Chưa chọn dịch vụ lẻ nào.');
     buildDichVuLeTable('.js-dich-vu-le-nang-cap', 'wizard-table-dich-vu-le-nang-cap-body', 'wizard-dich-vu-le-nang-cap-total', 'Chưa chọn dịch vụ lẻ nâng cấp nào.', 'dich_vu_nang_cap');
-    updateTongTienDichVu();
+    (function initTongTienDichVu() {
+        var hopRaw = formWizard ? (formWizard.getAttribute('data-hop-dong-cuoi') || '{}') : '{}';
+        var hopData = {};
+        try {
+            hopData = JSON.parse(hopRaw) || {};
+        } catch (eHopInit) {
+            hopData = {};
+        }
+        if (toNumber(hopData.tong_tien) > 0) {
+            syncStep3PaymentFields();
+        } else {
+            updateTongTienDichVu();
+        }
+    })();
     syncStep3PaymentFields();
     setStep(1);
 });
