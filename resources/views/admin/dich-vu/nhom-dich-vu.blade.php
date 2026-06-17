@@ -248,8 +248,9 @@
                         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                             <label class="form-label" for="them_loai">Loại dịch vụ <span class="text-danger">*</span></label>
                             <select class="select2-admin form-select" id="them_loai" name="loai" required data-placeholder="Chọn loại">
+                                <option value="" @selected(old('loai') === null || old('loai') === '')>-- Chọn loại --</option>
                                 @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('loai', \App\Support\LoaiCuoiPhongSu::CUOI) === $value)>{{ $label }}</option>
+                                    <option value="{{ $value }}" @selected(old('loai') === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -266,32 +267,10 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Danh sách dịch vụ lẻ</label>
-                            <p class="text-muted small mb-2">Chọn các dịch vụ lẻ thuộc nhóm này (có thể chọn nhiều).</p>
-                            <div class="border rounded p-3 bg-light" style="max-height: 240px; overflow-y: auto;">
-                                @forelse($tatCaDichVuLe ?? [] as $dv)
-                                @php $giaDv = (float)($dv->gia_dich_vu ?? 0); @endphp
-                                <div class="form-check d-flex align-items-center justify-content-between py-1 them-dich-vu-le-row"
-                                     data-loai="{{ e($dv->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}">
-                                    <div class="d-flex align-items-center flex-grow-1">
-                                        <input class="form-check-input me-2 them-dich-vu-le-cb"
-                                               type="checkbox"
-                                               name="dich_vu_le_ids[]"
-                                               value="{{ $dv->id }}"
-                                               id="them_dv_{{ $dv->id }}"
-                                               data-price="{{ $giaDv }}"
-                                               {{ in_array($dv->id, old('dich_vu_le_ids', [])) ? 'checked' : '' }}>
-                                        <label class="form-check-label mb-0" for="them_dv_{{ $dv->id }}">
-                                            {{ $dv->ten_dich_vu ?? $dv->ma_dich_vu ?? 'Dịch vụ #' . $dv->id }}
-                                            @if($dv->ma_dich_vu)
-                                                <span class="text-muted small">({{ $dv->ma_dich_vu }})</span>
-                                            @endif
-                                        </label>
-                                    </div>
-                                    <span class="text-end text-nowrap ms-2 fw-medium">{{ $giaDv > 0 ? number_format($giaDv, 0, ',', '.') . ' đ' : '—' }}</span>
-                                </div>
-                                @empty
-                                <p class="text-muted small mb-0">Chưa có dịch vụ lẻ. Vui lòng thêm dịch vụ lẻ trước.</p>
-                                @endforelse
+                            <p class="text-muted small mb-2">Chọn loại dịch vụ trước, sau đó chọn các dịch vụ lẻ thuộc nhóm này (có thể chọn nhiều).</p>
+                            <div class="border rounded p-3 bg-light" id="them_dich_vu_le_container" style="max-height: 240px; overflow-y: auto;">
+                                <p class="text-muted small mb-0" id="them_dich_vu_le_placeholder">Vui lòng chọn loại dịch vụ để xem danh sách dịch vụ lẻ.</p>
+                                <div id="them_dich_vu_le_list"></div>
                             </div>
                             <div class="mt-2 pt-2 border-top border-light">
                                 <strong>Tổng tiền dịch vụ đã chọn:</strong> <span id="them_tong_tien_dv" class="text-primary fw-semibold">0 đ</span>
@@ -486,8 +465,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 
+    var DICH_VU_LE_THEO_LOAI_URL = @json(route('admin.dich-vu.list-dich-vu-le-theo-loai'));
+    var oldDichVuLeIds = @json(array_map('intval', old('dich_vu_le_ids', [])));
+
     function formatTien(num) {
         return Number(num).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
+    }
+
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     function capNhatTongTienThem() {
@@ -506,6 +496,93 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         var el = document.getElementById('sua_tong_tien_dv');
         if (el) el.textContent = formatTien(total);
+    }
+
+    function renderThemDichVuLeList(items, selectedIds) {
+        var listEl = document.getElementById('them_dich_vu_le_list');
+        var placeholderEl = document.getElementById('them_dich_vu_le_placeholder');
+        if (!listEl) return;
+
+        selectedIds = selectedIds || [];
+        listEl.innerHTML = '';
+
+        if (!Array.isArray(items) || items.length === 0) {
+            if (placeholderEl) {
+                placeholderEl.textContent = 'Chưa có dịch vụ lẻ cho loại này. Vui lòng thêm dịch vụ lẻ trước.';
+                placeholderEl.classList.remove('d-none');
+            }
+            capNhatTongTienThem();
+            return;
+        }
+
+        if (placeholderEl) placeholderEl.classList.add('d-none');
+
+        items.forEach(function(dv) {
+            var giaDv = parseFloat(dv.gia_dich_vu || 0) || 0;
+            var ten = dv.ten_dich_vu || dv.ma_dich_vu || ('Dịch vụ #' + dv.id);
+            var maHtml = dv.ma_dich_vu
+                ? ' <span class="text-muted small">(' + escapeHtml(dv.ma_dich_vu) + ')</span>'
+                : '';
+            var giaText = giaDv > 0 ? formatTien(giaDv) : '—';
+            var checked = selectedIds.indexOf(Number(dv.id)) !== -1 ? ' checked' : '';
+
+            var row = document.createElement('div');
+            row.className = 'form-check d-flex align-items-center justify-content-between py-1 them-dich-vu-le-row';
+            row.setAttribute('data-loai', dv.loai || '');
+            row.innerHTML =
+                '<div class="d-flex align-items-center flex-grow-1">' +
+                    '<input class="form-check-input me-2 them-dich-vu-le-cb" type="checkbox" name="dich_vu_le_ids[]" value="' + dv.id + '" id="them_dv_' + dv.id + '" data-price="' + giaDv + '"' + checked + '>' +
+                    '<label class="form-check-label mb-0" for="them_dv_' + dv.id + '">' + escapeHtml(ten) + maHtml + '</label>' +
+                '</div>' +
+                '<span class="text-end text-nowrap ms-2 fw-medium">' + giaText + '</span>';
+
+            var cb = row.querySelector('.them-dich-vu-le-cb');
+            if (cb) cb.addEventListener('change', capNhatTongTienThem);
+            listEl.appendChild(row);
+        });
+
+        capNhatTongTienThem();
+    }
+
+    function taiThemDichVuLeTheoLoai(loai, selectedIds) {
+        var listEl = document.getElementById('them_dich_vu_le_list');
+        var placeholderEl = document.getElementById('them_dich_vu_le_placeholder');
+        if (!listEl) return;
+
+        if (!loai) {
+            listEl.innerHTML = '';
+            if (placeholderEl) {
+                placeholderEl.textContent = 'Vui lòng chọn loại dịch vụ để xem danh sách dịch vụ lẻ.';
+                placeholderEl.classList.remove('d-none');
+            }
+            capNhatTongTienThem();
+            return;
+        }
+
+        if (placeholderEl) {
+            placeholderEl.textContent = 'Đang tải danh sách dịch vụ lẻ...';
+            placeholderEl.classList.remove('d-none');
+        }
+        listEl.innerHTML = '';
+
+        fetch(DICH_VU_LE_THEO_LOAI_URL + '?' + new URLSearchParams({ loai: loai }), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function(res) {
+                if (!res.ok) throw new Error('fetch_failed');
+                return res.json();
+            })
+            .then(function(json) {
+                renderThemDichVuLeList((json && json.items) ? json.items : [], selectedIds || []);
+            })
+            .catch(function() {
+                listEl.innerHTML = '';
+                if (placeholderEl) {
+                    placeholderEl.textContent = 'Không thể tải danh sách dịch vụ lẻ. Vui lòng thử lại.';
+                    placeholderEl.classList.remove('d-none');
+                }
+                capNhatTongTienThem();
+            });
     }
 
     function locDichVuLeTheoLoai(loaiSelectId, rowSelector, checkboxSelector, capNhatTongFn) {
@@ -532,19 +609,43 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilter();
     }
 
-    locDichVuLeTheoLoai('them_loai', '.them-dich-vu-le-row', '.them-dich-vu-le-cb', capNhatTongTienThem);
+    var themLoaiSelect = document.getElementById('them_loai');
+    if (themLoaiSelect) {
+        var onThemLoaiChange = function() {
+            taiThemDichVuLeTheoLoai(themLoaiSelect.value || '', []);
+        };
+        if (window.jQuery) {
+            jQuery(themLoaiSelect).on('change', onThemLoaiChange);
+        } else {
+            themLoaiSelect.addEventListener('change', onThemLoaiChange);
+        }
+        if (themLoaiSelect.value) {
+            taiThemDichVuLeTheoLoai(themLoaiSelect.value, oldDichVuLeIds);
+        }
+    }
+
     locDichVuLeTheoLoai('sua_loai', '.sua-dich-vu-le-row', '.sua-dich-vu-le-cb', capNhatTongTienSua);
 
-    document.querySelectorAll('.them-dich-vu-le-cb').forEach(function(cb) {
-        cb.addEventListener('change', capNhatTongTienThem);
-    });
     document.querySelectorAll('.sua-dich-vu-le-cb').forEach(function(cb) {
         cb.addEventListener('change', capNhatTongTienSua);
     });
 
     var modalThem = document.getElementById('modalThemNhomDichVu');
     if (modalThem) {
-        modalThem.addEventListener('show.bs.modal', capNhatTongTienThem);
+        modalThem.addEventListener('show.bs.modal', function() {
+            @if(!$errors->any())
+            if (themLoaiSelect) {
+                if (window.jQuery && jQuery(themLoaiSelect).data('select2')) {
+                    jQuery(themLoaiSelect).val(null).trigger('change');
+                } else {
+                    themLoaiSelect.value = '';
+                    taiThemDichVuLeTheoLoai('', []);
+                }
+            }
+            @else
+            capNhatTongTienThem();
+            @endif
+        });
         @if($errors->any())
         var m = new bootstrap.Modal(modalThem);
         m.show();

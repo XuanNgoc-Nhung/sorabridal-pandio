@@ -135,6 +135,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/dich-vu-le', [AdminDichVu::class, 'store'])->name('dich-vu.store');
         Route::put('/dich-vu-le/{dichVu}', [AdminDichVu::class, 'update'])->name('dich-vu.update');
         Route::delete('/dich-vu-le/{dichVu}', [AdminDichVu::class, 'destroy'])->name('dich-vu.destroy');
+        Route::get('/dich-vu-le-theo-loai', [AdminDichVu::class, 'listDichVuLeTheoLoai'])->name('dich-vu.list-dich-vu-le-theo-loai');
         Route::get('/nhom-dich-vu', [AdminDichVu::class, 'nhomDichVu'])->name('dich-vu.nhom-dich-vu');
         Route::post('/nhom-dich-vu', [AdminDichVu::class, 'storeNhomDichVu'])->name('dich-vu.store-nhom-dich-vu');
         Route::put('/nhom-dich-vu/{nhomDichVu}', [AdminDichVu::class, 'updateNhomDichVu'])->name('dich-vu.update-nhom-dich-vu');

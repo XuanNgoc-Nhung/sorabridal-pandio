@@ -8,6 +8,7 @@ use App\Models\NhomDichVu;
 use App\Models\PhongBan;
 use App\Support\AdminPagination;
 use App\Support\LoaiCuoiPhongSu;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -382,5 +383,30 @@ class DichVuController extends Controller
         $nhomDichVu->delete();
 
         return redirect()->route('admin.dich-vu.nhom-dich-vu')->with('success', 'Đã xóa nhóm dịch vụ.');
+    }
+
+    /**
+     * Danh sách dịch vụ lẻ theo loại (JSON) cho modal nhóm dịch vụ.
+     */
+    public function listDichVuLeTheoLoai(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
+        ]);
+
+        $items = DichVuLe::query()
+            ->where('loai', $validated['loai'])
+            ->orderBy('ten_dich_vu')
+            ->get(['id', 'ten_dich_vu', 'ma_dich_vu', 'gia_dich_vu', 'loai'])
+            ->map(fn (DichVuLe $dv) => [
+                'id' => $dv->id,
+                'ten_dich_vu' => $dv->ten_dich_vu,
+                'ma_dich_vu' => $dv->ma_dich_vu,
+                'gia_dich_vu' => $dv->gia_dich_vu !== null ? (float) $dv->gia_dich_vu : 0,
+                'loai' => $dv->loai,
+            ])
+            ->values();
+
+        return response()->json(['items' => $items]);
     }
 }
