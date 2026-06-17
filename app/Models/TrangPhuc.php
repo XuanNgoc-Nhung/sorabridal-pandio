@@ -50,6 +50,7 @@ class TrangPhuc extends Model
     protected $fillable = [
         'ten_san_pham',
         'ma_san_pham',
+        'loai',
         'slug',
         'hinh_anh',
         'mo_ta',

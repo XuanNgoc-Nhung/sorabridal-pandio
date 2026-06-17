@@ -34,6 +34,7 @@ class DichVuLe extends Model
     protected $fillable = [
         'ten_dich_vu',
         'ma_dich_vu',
+        'loai',
         'slug',
         'mo_ta',
         'trang_thai',

@@ -7,6 +7,7 @@ use App\Models\DichVuLe;
 use App\Models\NhomDichVu;
 use App\Models\PhongBan;
 use App\Support\AdminPagination;
+use App\Support\LoaiCuoiPhongSu;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -41,6 +42,10 @@ class DichVuController extends Controller
             }
         }
 
+        if ($request->filled('loai') && in_array($request->input('loai'), LoaiCuoiPhongSu::values(), true)) {
+            $query->where('loai', $request->input('loai'));
+        }
+
         $sapXepTheo = $request->input('sap_xep_theo', DichVuLe::SAP_XEP_TEN);
         if (! in_array($sapXepTheo, [DichVuLe::SAP_XEP_TEN, DichVuLe::SAP_XEP_GIA], true)) {
             $sapXepTheo = DichVuLe::SAP_XEP_TEN;
@@ -65,6 +70,7 @@ class DichVuController extends Controller
             'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'phong_ban_id' => 'required|array|min:1',
             'phong_ban_id.*' => 'integer|exists:phong_ban,id',
         ], [
@@ -82,6 +88,8 @@ class DichVuController extends Controller
             'gia_dich_vu.required' => 'Vui lòng nhập giá dịch vụ.',
             'gia_dich_vu.numeric' => 'Giá dịch vụ phải là số.',
             'gia_dich_vu.min' => 'Giá dịch vụ không được âm.',
+            'loai.required' => 'Vui lòng chọn loại dịch vụ.',
+            'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'phong_ban_id.required' => 'Vui lòng chọn ít nhất một phòng ban phụ trách.',
             'phong_ban_id.min' => 'Vui lòng chọn ít nhất một phòng ban phụ trách.',
             'phong_ban_id.*.integer' => 'Phòng ban không hợp lệ.',
@@ -95,6 +103,7 @@ class DichVuController extends Controller
             'trang_thai' => (int) $request->input('trang_thai', DichVuLe::TRANG_THAI_HIEN_THI),
             'ghi_chu' => $request->input('ghi_chu'),
             'gia_dich_vu' => $request->input('gia_dich_vu'),
+            'loai' => $request->input('loai'),
             'phong_ban_id' => $this->formatPhongBanId($request->input('phong_ban_id', [])),
             'nguoi_tao_id' => $request->user()?->id,
         ]);
@@ -111,6 +120,7 @@ class DichVuController extends Controller
             'trang_thai' => 'nullable|integer|in:0,1',
             'ghi_chu' => 'nullable|string',
             'gia_dich_vu' => 'required|numeric|min:0',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'phong_ban_id' => 'required|array|min:1',
             'phong_ban_id.*' => 'integer|exists:phong_ban,id',
         ], [
@@ -128,6 +138,8 @@ class DichVuController extends Controller
             'gia_dich_vu.required' => 'Vui lòng nhập giá dịch vụ.',
             'gia_dich_vu.numeric' => 'Giá dịch vụ phải là số.',
             'gia_dich_vu.min' => 'Giá dịch vụ không được âm.',
+            'loai.required' => 'Vui lòng chọn loại dịch vụ.',
+            'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'phong_ban_id.required' => 'Vui lòng chọn ít nhất một phòng ban phụ trách.',
             'phong_ban_id.min' => 'Vui lòng chọn ít nhất một phòng ban phụ trách.',
             'phong_ban_id.*.integer' => 'Phòng ban không hợp lệ.',
@@ -141,6 +153,7 @@ class DichVuController extends Controller
             'trang_thai' => (int) $request->input('trang_thai', DichVuLe::TRANG_THAI_HIEN_THI),
             'ghi_chu' => $request->input('ghi_chu'),
             'gia_dich_vu' => $request->input('gia_dich_vu'),
+            'loai' => $request->input('loai'),
             'phong_ban_id' => $this->formatPhongBanId($request->input('phong_ban_id', [])),
         ]);
 
@@ -171,6 +184,7 @@ class DichVuController extends Controller
         $validated = $request->validate([
             'search' => 'nullable|string|max:200',
             'trang_thai' => 'nullable|in:0,1',
+            'loai' => 'nullable|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'dich_vu_le_id' => 'nullable|integer|exists:dich_vu_le,id',
             'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(NhomDichVu::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
@@ -192,6 +206,10 @@ class DichVuController extends Controller
 
         if ($request->filled('trang_thai') && in_array((string) $request->input('trang_thai'), ['0', '1'], true)) {
             $query->where('trang_thai', (int) $request->input('trang_thai'));
+        }
+
+        if (! empty($validated['loai'])) {
+            $query->where('loai', $validated['loai']);
         }
 
         if ($request->filled('dich_vu_le_id')) {
@@ -231,6 +249,7 @@ class DichVuController extends Controller
             'ghi_chu' => 'nullable|string',
             'mo_ta' => 'nullable|string',
             'trang_thai' => 'nullable|integer|in:0,1',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'dich_vu_le_ids' => 'nullable|array',
             'dich_vu_le_ids.*' => 'integer|exists:dich_vu_le,id',
         ], [
@@ -246,12 +265,26 @@ class DichVuController extends Controller
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
             'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
             'trang_thai.in' => 'Trạng thái không hợp lệ.',
+            'loai.required' => 'Vui lòng chọn loại dịch vụ.',
+            'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'dich_vu_le_ids.array' => 'Danh sách dịch vụ lẻ không hợp lệ.',
             'dich_vu_le_ids.*.integer' => 'Mỗi dịch vụ lẻ phải là số nguyên.',
             'dich_vu_le_ids.*.exists' => 'Một hoặc nhiều dịch vụ lẻ không tồn tại trong hệ thống.',
         ]);
 
         $ids = array_map('intval', (array) $request->input('dich_vu_le_ids', []));
+        $loai = $request->input('loai');
+        if (! empty($ids)) {
+            $mismatchCount = DichVuLe::query()
+                ->whereIn('id', $ids)
+                ->where('loai', '!=', $loai)
+                ->count();
+            if ($mismatchCount > 0) {
+                return redirect()->back()
+                    ->withErrors(['dich_vu_le_ids' => 'Các dịch vụ lẻ đã chọn phải cùng loại với nhóm dịch vụ.'])
+                    ->withInput();
+            }
+        }
         $giaGoc = empty($ids)
             ? 0
             : (float) DichVuLe::whereIn('id', $ids)->sum('gia_dich_vu');
@@ -259,6 +292,7 @@ class DichVuController extends Controller
         $nhomDichVu = NhomDichVu::create([
             'ten_nhom' => $request->input('ten_nhom'),
             'ma_nhom' => $request->input('ma_nhom'),
+            'loai' => $loai,
             'gia_tien' => $request->input('gia_tien'),
             'gia_goc' => $giaGoc,
             'the' => $request->input('the'),
@@ -285,6 +319,7 @@ class DichVuController extends Controller
             'ghi_chu' => 'nullable|string',
             'mo_ta' => 'nullable|string',
             'trang_thai' => 'nullable|integer|in:0,1',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'dich_vu_le_ids' => 'nullable|array',
             'dich_vu_le_ids.*' => 'integer|exists:dich_vu_le,id',
         ], [
@@ -300,12 +335,26 @@ class DichVuController extends Controller
             'mo_ta.string' => 'Mô tả phải là chuỗi ký tự.',
             'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
             'trang_thai.in' => 'Trạng thái không hợp lệ.',
+            'loai.required' => 'Vui lòng chọn loại dịch vụ.',
+            'loai.in' => 'Loại dịch vụ không hợp lệ.',
             'dich_vu_le_ids.array' => 'Danh sách dịch vụ lẻ không hợp lệ.',
             'dich_vu_le_ids.*.integer' => 'Mỗi dịch vụ lẻ phải là số nguyên.',
             'dich_vu_le_ids.*.exists' => 'Một hoặc nhiều dịch vụ lẻ không tồn tại trong hệ thống.',
         ]);
 
         $ids = array_map('intval', (array) $request->input('dich_vu_le_ids', []));
+        $loai = $request->input('loai');
+        if (! empty($ids)) {
+            $mismatchCount = DichVuLe::query()
+                ->whereIn('id', $ids)
+                ->where('loai', '!=', $loai)
+                ->count();
+            if ($mismatchCount > 0) {
+                return redirect()->back()
+                    ->withErrors(['dich_vu_le_ids' => 'Các dịch vụ lẻ đã chọn phải cùng loại với nhóm dịch vụ.'])
+                    ->withInput();
+            }
+        }
         $giaGoc = empty($ids)
             ? 0
             : (float) DichVuLe::whereIn('id', $ids)->sum('gia_dich_vu');
@@ -313,6 +362,7 @@ class DichVuController extends Controller
         $nhomDichVu->update([
             'ten_nhom' => $request->input('ten_nhom'),
             'ma_nhom' => $request->input('ma_nhom'),
+            'loai' => $loai,
             'gia_tien' => $request->input('gia_tien'),
             'gia_goc' => $giaGoc,
             'the' => $request->input('the'),

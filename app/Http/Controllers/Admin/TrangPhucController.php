@@ -9,6 +9,7 @@ use App\Models\HopDongCuoiTrangPhuc;
 use App\Models\SanPhamChoThue;
 use App\Models\TrangPhuc;
 use App\Support\AdminPagination;
+use App\Support\LoaiCuoiPhongSu;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class TrangPhucController extends Controller
             'search' => 'nullable|string|max:200',
             'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(TrangPhuc::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
+            'loai' => 'nullable|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
         ]);
 
         $query = TrangPhuc::query();
@@ -51,6 +53,10 @@ class TrangPhucController extends Controller
                     ->orWhere('mo_ta', 'like', $like)
                     ->orWhere('ghi_chu', 'like', $like);
             });
+        }
+
+        if (! empty($validated['loai'])) {
+            $query->where('loai', $validated['loai']);
         }
 
         $sapXepTheo = $validated['sap_xep_theo'] ?? TrangPhuc::SAP_XEP_MAC_DINH;
@@ -82,6 +88,7 @@ class TrangPhucController extends Controller
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
             'trang_thai' => 'nullable|in:0,1',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
 
@@ -95,6 +102,7 @@ class TrangPhucController extends Controller
         TrangPhuc::create([
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
+            'loai' => $validated['loai'],
             'slug' => $slug,
             'hinh_anh' => $hinhAnhPath,
             'mo_ta' => $validated['mo_ta'] ?? null,
@@ -115,6 +123,7 @@ class TrangPhucController extends Controller
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
             'trang_thai' => 'nullable|in:0,1',
+            'loai' => 'required|string|in:'.implode(',', LoaiCuoiPhongSu::values()),
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
 
@@ -127,6 +136,7 @@ class TrangPhucController extends Controller
             'mo_ta' => $validated['mo_ta'] ?? null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'trang_thai' => $validated['trang_thai'] ?? 1,
+            'loai' => $validated['loai'],
             'gia_tri' => $validated['gia_tri'] ?? 0,
         ];
 

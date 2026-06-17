@@ -7,6 +7,7 @@
     $thuTu = request('thu_tu', 'asc');
     $hasFilter = request()->filled('search')
         || request()->filled('trang_thai')
+        || request()->filled('loai')
         || request()->filled('dich_vu_le_id')
         || $sapXepTheo !== $sapXepTheoMacDinh
         || $thuTu !== 'asc';
@@ -45,6 +46,15 @@
                         <option value="">-- Tất cả --</option>
                         @foreach(\App\Models\NhomDichVu::TRANG_THAI_LABELS as $value => $label)
                             <option value="{{ $value }}" @selected((string) request('trang_thai') === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label" for="filter_loai">Loại</label>
+                    <select class="select2-admin form-select" id="filter_loai" name="loai" data-placeholder="Tất cả">
+                        <option value="">-- Tất cả --</option>
+                        @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
+                            <option value="{{ $value }}" @selected(request('loai') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -110,6 +120,7 @@
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th>Tên nhóm</th>
                         <th>Mã nhóm</th>
+                        <th class="text-center" style="width: 90px;">Loại</th>
                         <th>Danh sách dịch vụ</th>
                         <th class="text-end" style="width: 120px;">Giá tiền</th>
                         <th class="text-end" style="width: 120px;">Giá gốc</th>
@@ -127,11 +138,15 @@
                         $trangThaiLabel = \App\Models\NhomDichVu::TRANG_THAI_LABELS[(int)($item->trang_thai ?? 0)] ?? '—';
                         $trangThaiBadge = ($item->trang_thai ?? 0) == \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI ? 'bg-label-success' : 'bg-label-secondary';
                         $dsDichVu = $item->dichVuLe->pluck('ten_dich_vu')->filter()->values();
+                        $loaiLabel = \App\Support\LoaiCuoiPhongSu::label($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI);
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
                         <td><span class="fw-medium">{{ $item->ten_nhom ?? '—' }}</span></td>
                         <td>{{ $item->ma_nhom ?? '—' }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-label-primary">{{ $loaiLabel }}</span>
+                        </td>
                         <td>
                             @if($dsDichVu->isNotEmpty())
                                 {{ $dsDichVu->take(5)->implode(', ') }}{{ $dsDichVu->count() > 5 ? '...' : '' }}
@@ -166,6 +181,7 @@
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-mo-ta="{{ e($item->mo_ta ?? '') }}"
                                        data-trang-thai="{{ (int)($item->trang_thai ?? 0) }}"
+                                       data-loai="{{ e($item->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                        data-dich-vu-le-ids="{{ $item->dichVuLe->pluck('id')->implode(',') }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
                                     </a>
@@ -182,7 +198,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="12" class="text-center py-4 text-muted">Chưa có dữ liệu nhóm dịch vụ.</td>
+                        <td colspan="13" class="text-center py-4 text-muted">Chưa có dữ liệu nhóm dịch vụ.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -230,6 +246,14 @@
                             <input type="number" class="form-control" id="them_gia_tien" name="gia_tien" value="{{ old('gia_tien') }}" placeholder="0" min="0" step="1000">
                         </div>
                         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <label class="form-label" for="them_loai">Loại dịch vụ <span class="text-danger">*</span></label>
+                            <select class="select2-admin form-select" id="them_loai" name="loai" required data-placeholder="Chọn loại">
+                                @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('loai', \App\Support\LoaiCuoiPhongSu::CUOI) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                             <label class="form-label" for="them_trang_thai">Trạng thái</label>
                             <select class="select2-admin form-select" id="them_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
                                 <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}" {{ old('trang_thai', \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI) == \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI ? 'selected' : '' }}>Hiển thị</option>
@@ -246,7 +270,8 @@
                             <div class="border rounded p-3 bg-light" style="max-height: 240px; overflow-y: auto;">
                                 @forelse($tatCaDichVuLe ?? [] as $dv)
                                 @php $giaDv = (float)($dv->gia_dich_vu ?? 0); @endphp
-                                <div class="form-check d-flex align-items-center justify-content-between py-1 them-dich-vu-le-row">
+                                <div class="form-check d-flex align-items-center justify-content-between py-1 them-dich-vu-le-row"
+                                     data-loai="{{ e($dv->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}">
                                     <div class="d-flex align-items-center flex-grow-1">
                                         <input class="form-check-input me-2 them-dich-vu-le-cb"
                                                type="checkbox"
@@ -330,6 +355,14 @@
                             <input type="number" class="form-control" id="sua_gia_tien" name="gia_tien" placeholder="0" min="0" step="1000">
                         </div>
                         <div class="col-12 col-sm-6">
+                            <label class="form-label" for="sua_loai">Loại dịch vụ <span class="text-danger">*</span></label>
+                            <select class="select2-admin form-select" id="sua_loai" name="loai" required data-placeholder="Chọn loại">
+                                @foreach(\App\Support\LoaiCuoiPhongSu::LABELS as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6">
                             <label class="form-label" for="sua_trang_thai">Trạng thái</label>
                             <select class="select2-admin form-select" id="sua_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
                                 <option value="{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}">Hiển thị</option>
@@ -346,7 +379,8 @@
                             <div class="border rounded p-3 bg-light" style="max-height: 240px; overflow-y: auto;">
                                 @forelse($tatCaDichVuLe ?? [] as $dv)
                                 @php $giaDv = (float)($dv->gia_dich_vu ?? 0); @endphp
-                                <div class="form-check d-flex align-items-center justify-content-between py-1 sua-dich-vu-le-row">
+                                <div class="form-check d-flex align-items-center justify-content-between py-1 sua-dich-vu-le-row"
+                                     data-loai="{{ e($dv->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}">
                                     <div class="d-flex align-items-center flex-grow-1">
                                         <input class="form-check-input me-2 sua-dich-vu-le-cb"
                                                type="checkbox"
@@ -474,6 +508,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (el) el.textContent = formatTien(total);
     }
 
+    function locDichVuLeTheoLoai(loaiSelectId, rowSelector, checkboxSelector, capNhatTongFn) {
+        var loaiSelect = document.getElementById(loaiSelectId);
+        if (!loaiSelect) return;
+
+        function applyFilter() {
+            var loai = loaiSelect.value || '';
+            document.querySelectorAll(rowSelector).forEach(function(row) {
+                var rowLoai = row.getAttribute('data-loai') || '';
+                var match = loai === '' || rowLoai === loai;
+                row.classList.toggle('d-none', !match);
+                if (!match) {
+                    var cb = row.querySelector(checkboxSelector);
+                    if (cb) cb.checked = false;
+                }
+            });
+            if (typeof capNhatTongFn === 'function') {
+                capNhatTongFn();
+            }
+        }
+
+        loaiSelect.addEventListener('change', applyFilter);
+        applyFilter();
+    }
+
+    locDichVuLeTheoLoai('them_loai', '.them-dich-vu-le-row', '.them-dich-vu-le-cb', capNhatTongTienThem);
+    locDichVuLeTheoLoai('sua_loai', '.sua-dich-vu-le-row', '.sua-dich-vu-le-cb', capNhatTongTienSua);
+
     document.querySelectorAll('.them-dich-vu-le-cb').forEach(function(cb) {
         cb.addEventListener('change', capNhatTongTienThem);
     });
@@ -506,6 +567,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_trang_thai').value = btn.getAttribute('data-trang-thai') || '{{ \App\Models\NhomDichVu::TRANG_THAI_HIEN_THI }}';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_mo_ta').value = btn.getAttribute('data-mo-ta') || '';
+            var suaLoai = document.getElementById('sua_loai');
+            if (suaLoai) {
+                suaLoai.value = btn.getAttribute('data-loai') || '{{ \App\Support\LoaiCuoiPhongSu::CUOI }}';
+                suaLoai.dispatchEvent(new Event('change'));
+            }
             // Chọn lại danh sách dịch vụ lẻ theo nhóm
             var idsStr = btn.getAttribute('data-dich-vu-le-ids') || '';
             var ids = idsStr ? idsStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];

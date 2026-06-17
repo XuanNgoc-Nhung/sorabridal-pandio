@@ -49,6 +49,7 @@ class NhomDichVu extends Model
     protected $fillable = [
         'ten_nhom',
         'ma_nhom',
+        'loai',
         'slug',
         'gia_tien',
         'gia_goc',
