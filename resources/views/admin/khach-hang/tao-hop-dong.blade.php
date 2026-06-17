@@ -207,6 +207,7 @@
                                         @endphp
                                         <div
                                             class="col-12 col-md-6 col-xl-4 js-combo-item"
+                                            data-loai-dich-vu="{{ e($nhomDichVu->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                             data-search-text="{{ mb_strtolower(trim(($nhomDichVu->ten_nhom ?? '') . ' ' . ($nhomDichVu->the ?? '') . ' ' . ($nhomDichVu->mo_ta ?? '') . ' ' . ($nhomDichVu->ghi_chu ?? ''))) }}">
                                             <div class="combo-service-card h-100 w-100">
                                                 <input
@@ -304,7 +305,7 @@
                                             $giaFmtLe = number_format($giaSoLe, 0, ',', '.');
                                             $searchLe = mb_strtolower(trim(($dvLe->ten_dich_vu ?? '') . ' ' . ($dvLe->mo_ta ?? '') . ' ' . ($dvLe->ma_dich_vu ?? '')));
                                         @endphp
-                                        <label class="dich-vu-le-item js-dich-vu-le-item" for="dv_le_{{ $dvLe->id }}" data-search-text="{{ $searchLe }}">
+                                        <label class="dich-vu-le-item js-dich-vu-le-item" for="dv_le_{{ $dvLe->id }}" data-loai-dich-vu="{{ e($dvLe->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}" data-search-text="{{ $searchLe }}">
                                             <input
                                                 class="form-check-input js-dich-vu-le"
                                                 type="checkbox"
@@ -378,6 +379,7 @@
                                         @endphp
                                         <div
                                             class="col-12 col-md-6 col-xl-4 js-combo-item-nang-cap"
+                                            data-loai-dich-vu="{{ e($nhomDichVu->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                             data-search-text="{{ mb_strtolower(trim(($nhomDichVu->ten_nhom ?? '') . ' ' . ($nhomDichVu->the ?? '') . ' ' . ($nhomDichVu->mo_ta ?? '') . ' ' . ($nhomDichVu->ghi_chu ?? ''))) }}">
                                             <div class="combo-service-card h-100 w-100">
                                                 <input
@@ -430,7 +432,7 @@
                                         {{-- <label class="form-label mb-1">Dịch vụ trong combo đã chọn</label> --}}
                                         <p class="text-muted small mb-3">Giữ chọn các hạng mục khách sẽ dùng; bỏ chọn nếu không sử dụng.</p>
                                         @foreach ($nhomDichVus ?? [] as $nhomDvNc)
-                                            <div class="js-nang-cap-combo-dich-vu-group d-none pt-3" data-nhom-dich-vu-id="{{ $nhomDvNc->id }}">
+                                            <div class="js-nang-cap-combo-dich-vu-group d-none pt-3" data-nhom-dich-vu-id="{{ $nhomDvNc->id }}" data-loai-dich-vu="{{ e($nhomDvNc->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}">
                                                 @if (($nhomDvNc->dichVuLe ?? collect())->isNotEmpty())
                                                     @foreach ($nhomDvNc->dichVuLe as $dichVuNc)
                                                         <div class="form-check mb-2">
@@ -474,7 +476,7 @@
                                             $giaFmtNcList = number_format($giaSoNcList, 0, ',', '.');
                                             $searchNcList = mb_strtolower(trim(($dvNcList->ten_dich_vu ?? '') . ' ' . ($dvNcList->mo_ta ?? '') . ' ' . ($dvNcList->ma_dich_vu ?? '')));
                                         @endphp
-                                        <label class="dich-vu-le-item js-dich-vu-le-nang-cap-item" for="dv_nc_{{ $dvNcList->id }}" data-search-text="{{ $searchNcList }}">
+                                        <label class="dich-vu-le-item js-dich-vu-le-nang-cap-item" for="dv_nc_{{ $dvNcList->id }}" data-loai-dich-vu="{{ e($dvNcList->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}" data-search-text="{{ $searchNcList }}">
                                             <input
                                                 class="form-check-input js-dich-vu-le-nang-cap"
                                                 type="checkbox"
@@ -1170,6 +1172,9 @@
     white-space: nowrap;
 }
 .tao-hop-dong-wizard .wizard-page-hidden {
+    display: none !important;
+}
+.tao-hop-dong-wizard .wizard-loai-hidden {
     display: none !important;
 }
 .tao-hop-dong-wizard .wizard-list-pagination .pagination {
@@ -2721,6 +2726,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function getMatchedItems() {
             var keyword = getKeyword();
             return getItems().filter(function(item) {
+                if (item.classList.contains('wizard-loai-hidden')) return false;
                 if (!keyword) return true;
                 var text = (item.getAttribute('data-search-text') || '').toLowerCase();
                 return text.indexOf(keyword) !== -1;
@@ -2865,11 +2871,78 @@ document.addEventListener('DOMContentLoaded', function() {
         khac: 'Khác'
     };
     var loaiHopDongLabels = @json(\App\Models\HopDongCuoi::LOAI_HOP_DONG);
+    var loaiHopDongToLoaiDichVu = @json(\App\Support\LoaiCuoiPhongSu::LOAI_HOP_DONG_TO_LOAI);
+    var loaiDichVuMacDinh = @json(\App\Support\LoaiCuoiPhongSu::CUOI);
+
+    /** Đọc giá trị select (ưu tiên Select2 vì .value native có thể lệch). */
+    function getSelectFieldValue(el) {
+        if (!el) return '';
+        if (window.jQuery && window.jQuery.fn.select2) {
+            var $el = window.jQuery(el);
+            if ($el.data('select2')) {
+                var v = $el.val();
+                return v != null && v !== '' ? String(v).trim() : '';
+            }
+        }
+        return (el.value || '').trim();
+    }
+
+    /** Giá trị loai_hop_dong từ bước 1 (Select2 hoặc data đã lưu). */
+    function getLoaiHopDongValue() {
+        var el = document.getElementById('wizard_loai_hop_dong');
+        var loaiHd = getSelectFieldValue(el);
+        if (loaiHd) return loaiHd;
+        if (!formWizard) return '';
+        try {
+            var hopData = JSON.parse(formWizard.getAttribute('data-hop-dong-cuoi') || '{}') || {};
+            return hopData.loai_hop_dong ? String(hopData.loai_hop_dong).trim() : '';
+        } catch (eHopLoai) {
+            return '';
+        }
+    }
+
+    /** Loai dịch vụ/nhóm dịch vụ tương ứng với loại hợp đồng đã chọn ở bước 1. */
+    function getLoaiDichVuFromLoaiHopDong() {
+        var loaiHd = getLoaiHopDongValue();
+        return loaiHopDongToLoaiDichVu[loaiHd] || loaiDichVuMacDinh;
+    }
+
+    /** Lọc combo / dịch vụ lẻ bước 2 theo loai_hop_dong; bỏ chọn mục không thuộc loại. */
+    function applyStep2LoaiFilter() {
+        var targetLoai = getLoaiDichVuFromLoaiHopDong();
+        var hadHiddenSelection = false;
+
+        document.querySelectorAll(
+            '.js-combo-item, .js-combo-item-nang-cap, .js-dich-vu-le-item, .js-dich-vu-le-nang-cap-item, .js-nang-cap-combo-dich-vu-group'
+        ).forEach(function(el) {
+            var itemLoai = el.getAttribute('data-loai-dich-vu') || loaiDichVuMacDinh;
+            var match = itemLoai === targetLoai;
+            el.classList.toggle('wizard-loai-hidden', !match);
+            if (!match) {
+                el.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked').forEach(function(inp) {
+                    inp.checked = false;
+                    hadHiddenSelection = true;
+                });
+            }
+        });
+
+        if (hadHiddenSelection) {
+            syncComboCheckedState();
+            syncDichVuLeCheckedState();
+            buildDichVuLeTable('.js-dich-vu-le', 'wizard-table-dich-vu-le-body', 'wizard-dich-vu-le-total', 'Chưa chọn dịch vụ lẻ nào.');
+            buildDichVuLeTable('.js-dich-vu-le-nang-cap', 'wizard-table-dich-vu-le-nang-cap-body', 'wizard-dich-vu-le-nang-cap-total', 'Chưa chọn dịch vụ lẻ nâng cấp nào.', 'dich_vu_nang_cap');
+            updateNangCapComboDichVuPanel();
+            updateTongTienDichVu();
+        }
+
+        refreshWizardPaginators();
+    }
 
     function valByName(name) {
         var el = formWizard.querySelector('[name="' + name + '"]');
         if (!el) return '';
-        if (el.tagName === 'SELECT' || el.type === 'date' || el.type === 'number') return (el.value || '').trim();
+        if (el.tagName === 'SELECT') return getSelectFieldValue(el);
+        if (el.type === 'date' || el.type === 'number') return (el.value || '').trim();
         return (el.value || '').trim();
     }
 
@@ -2995,6 +3068,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (el.tagName === 'SELECT') {
                 el.value = String(value);
+                if (window.jQuery && window.jQuery.fn.select2 && window.jQuery(el).data('select2')) {
+                    window.jQuery(el).val(String(value)).trigger('change');
+                }
                 return;
             }
 
@@ -3103,6 +3179,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 Array.prototype.forEach.call(el.selectedOptions || [], function(opt) {
                     fd.append(el.name, opt.value);
                 });
+                return;
+            }
+            if (el.tagName === 'SELECT') {
+                fd.append(el.name, getSelectFieldValue(el));
                 return;
             }
             fd.append(el.name, el.value);
@@ -3335,6 +3415,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(res) {
                 updateNextButtonState();
                 if (res.ok) {
+                    try {
+                        var hopSync = JSON.parse(formWizard.getAttribute('data-hop-dong-cuoi') || '{}') || {};
+                        hopSync.loai_hop_dong = getLoaiHopDongValue() || null;
+                        formWizard.setAttribute('data-hop-dong-cuoi', JSON.stringify(hopSync));
+                    } catch (eSyncLoai) { /* ignore */ }
                     done(null);
                     return;
                 }
@@ -3493,9 +3578,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 2) {
             window.requestAnimationFrame(function() {
                 ensureStep2Select2();
-                refreshWizardPaginators();
+                applyStep2LoaiFilter();
                 applyWizardStep2Restore(function() {
-                    refreshWizardPaginators();
+                    applyStep2LoaiFilter();
                     updateNangCapComboDichVuPanel();
                     syncStep3PaymentFields();
                     updateNextButtonState();
@@ -3644,6 +3729,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     prefillHopDongInputs();
     applyWizardFieldLabelNumbers();
+    var loaiHopDongEl = document.getElementById('wizard_loai_hop_dong');
+    if (loaiHopDongEl) {
+        function onLoaiHopDongChangedForStep2() {
+            if (currentStep === 2) {
+                applyStep2LoaiFilter();
+                updateNangCapComboDichVuPanel();
+                updateNextButtonState();
+            }
+        }
+        loaiHopDongEl.addEventListener('change', onLoaiHopDongChangedForStep2);
+        if (window.jQuery && window.jQuery.fn.select2) {
+            window.jQuery(loaiHopDongEl).on('select2:select select2:clear', onLoaiHopDongChangedForStep2);
+        }
+    }
     syncComboCheckedState();
     updateNangCapComboDichVuPanel();
     syncDichVuLeCheckedState();

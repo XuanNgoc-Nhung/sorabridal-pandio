@@ -470,7 +470,7 @@ class KhachHangController extends Controller
         $nhomDichVus = NhomDichVu::query()
             ->where('trang_thai', NhomDichVu::TRANG_THAI_HIEN_THI)
             ->with(['dichVuLe' => function ($query) {
-                $query->select('dich_vu_le.id', 'ten_dich_vu', 'ma_dich_vu', 'gia_dich_vu', 'mo_ta')
+                $query->select('dich_vu_le.id', 'ten_dich_vu', 'ma_dich_vu', 'gia_dich_vu', 'mo_ta', 'loai')
                     ->orderBy('ten_dich_vu');
             }])
             ->withCount('dichVuLe')
@@ -480,7 +480,7 @@ class KhachHangController extends Controller
         $dichVuLes = DichVuLe::query()
             ->where('trang_thai', DichVuLe::TRANG_THAI_HIEN_THI)
             ->orderBy('ten_dich_vu')
-            ->get(['id', 'ten_dich_vu', 'ma_dich_vu', 'gia_dich_vu', 'mo_ta']);
+            ->get(['id', 'ten_dich_vu', 'ma_dich_vu', 'gia_dich_vu', 'mo_ta', 'loai']);
 
         $concepts = Concept::query()
             ->where('trang_thai', Concept::TRANG_THAI_ACTIVE)
