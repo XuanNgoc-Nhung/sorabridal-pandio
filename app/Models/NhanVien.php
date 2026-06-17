@@ -66,4 +66,12 @@ class NhanVien extends Model
     {
         return $this->belongsToMany(PhongBan::class, 'nhan_vien_phong_ban')->withTimestamps();
     }
+
+    /**
+     * Lọc nhân viên thuộc phòng ban theo mã (ví dụ CS01, MS01, PS01).
+     */
+    public function scopeThuocMaPhongBan($query, string $maPhongBan)
+    {
+        return $query->whereHas('phongBans', fn ($q) => $q->where('ma_phong_ban', $maPhongBan));
+    }
 }

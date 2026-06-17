@@ -196,7 +196,7 @@
                                         <label class="form-label" for="wsAddWorkThoEdit">Người edit</label>
                                         <select class="select2-admin form-select" id="wsAddWorkThoEdit" name="tho_edit_id" data-placeholder="Chọn người edit" style="width: 100%;">
                                             <option value="">—</option>
-                                            @foreach($danhSachNhanVien ?? [] as $nv)
+                                            @foreach($danhSachNhanVienEdit ?? [] as $nv)
                                                 <option value="{{ $nv->id }}">{{ $nv->user?->name ?? ('Nhân viên #'.$nv->id) }}</option>
                                             @endforeach
                                         </select>
@@ -1559,6 +1559,8 @@
             }
 
             var WS_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
+            var WS_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
+            var WS_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
             var WS_DIEU_PHOI_DATA_TMPL = @json(route('admin.lich-lam-viec.hop-dong-dieu-phoi-data', ['hopDongCuoi' => '__HDC__']));
             var WS_DIEU_PHOI_PUT_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi', ['hopDongCuoi' => '__HDC__']));
             var wsAddWorkHopId = null;
@@ -1711,53 +1713,63 @@
                 });
             }
 
-            function wsAddWorkRebuildChupMake(items, wantChup, wantMake) {
+            function wsAddWorkRebuildSelect(sel, items, ph, want) {
                 var $ = window.jQuery || window.$;
                 if (!$) return;
-                function fill(sel, ph, want) {
-                    var $sel = $(sel);
-                    if (!$sel.length) return;
-                    var prev = want != null && want !== '' ? String(want) : '';
-                    if ($sel.data('select2')) $sel.select2('destroy');
-                    $sel.empty().append(new Option('—', '', false, false));
-                    (items || []).forEach(function (it) {
-                        var o = new Option(it.ten, String(it.id), false, false);
-                        if (it.disabled) o.dataset.busy = '1';
-                        $sel.append(o);
-                    });
-                    var $match = $sel.find('option').filter(function () {
-                        return String($(this).val()) === prev;
-                    });
-                    var pick = $match.length ? prev : '';
-                    wsAddWorkBindSelect2($sel, ph);
-                    $sel.val(pick || null).trigger('change');
-                }
-                fill('#wsAddWorkThoChup', 'Chọn người chụp', wantChup);
-                fill('#wsAddWorkThoMake', 'Chọn người make', wantMake);
+                var $sel = $(sel);
+                if (!$sel.length) return;
+                var prev = want != null && want !== '' ? String(want) : '';
+                if ($sel.data('select2')) $sel.select2('destroy');
+                $sel.empty().append(new Option('—', '', false, false));
+                (items || []).forEach(function (it) {
+                    var o = new Option(it.ten, String(it.id), false, false);
+                    if (it.disabled) o.dataset.busy = '1';
+                    $sel.append(o);
+                });
+                var $match = $sel.find('option').filter(function () {
+                    return String($(this).val()) === prev;
+                });
+                var pick = $match.length ? prev : '';
+                wsAddWorkBindSelect2($sel, ph);
+                $sel.val(pick || null).trigger('change');
             }
 
-            function wsAddWorkFetchChupMake(ymd, wantChup, wantMake) {
-                if (!wsAddWorkHopId || !ymd) {
-                    wsAddWorkSetChupMakeDisabled(true);
-                    wsAddWorkRebuildChupMake([], '', '');
-                    return;
-                }
-                var url = wsAddWorkNvUrl(wsAddWorkHopId) + '?ngay=' + encodeURIComponent(ymd);
-                fetch(url, {
+            function wsAddWorkRebuildChupMake(chupItems, makeItems, wantChup, wantMake) {
+                wsAddWorkRebuildSelect('#wsAddWorkThoChup', chupItems, 'Chọn người chụp', wantChup);
+                wsAddWorkRebuildSelect('#wsAddWorkThoMake', makeItems, 'Chọn người make', wantMake);
+            }
+
+            function wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, maPhongBan) {
+                var url = wsAddWorkNvUrl(wsAddWorkHopId)
+                    + '?ngay=' + encodeURIComponent(ymd)
+                    + '&ma_phong_ban=' + encodeURIComponent(maPhongBan);
+                return fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
                     credentials: 'same-origin'
                 })
                     .then(function (r) {
                         if (!r.ok) throw new Error('HTTP ' + r.status);
                         return r.json();
-                    })
-                    .then(function (data) {
+                    });
+            }
+
+            function wsAddWorkFetchChupMake(ymd, wantChup, wantMake) {
+                if (!wsAddWorkHopId || !ymd) {
+                    wsAddWorkSetChupMakeDisabled(true);
+                    wsAddWorkRebuildChupMake([], [], '', '');
+                    return;
+                }
+                Promise.all([
+                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, WS_MA_PHONG_BAN_CHUP),
+                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, WS_MA_PHONG_BAN_MAKE)
+                ])
+                    .then(function (results) {
                         wsAddWorkSetChupMakeDisabled(false);
-                        wsAddWorkRebuildChupMake(data.items || [], wantChup, wantMake);
+                        wsAddWorkRebuildChupMake(results[0].items || [], results[1].items || [], wantChup, wantMake);
                     })
                     .catch(function () {
                         wsAddWorkSetChupMakeDisabled(true);
-                        wsAddWorkRebuildChupMake([], '', '');
+                        wsAddWorkRebuildChupMake([], [], '', '');
                     });
             }
 
@@ -1789,7 +1801,7 @@
                 var ghiChuEl = document.getElementById('wsAddWorkGhiChuSale');
                 if (ghiChuEl) ghiChuEl.value = '';
                 wsAddWorkSetChupMakeDisabled(true);
-                wsAddWorkRebuildChupMake([], '', '');
+                wsAddWorkRebuildChupMake([], [], '', '');
                 var $ = window.jQuery || window.$;
                 if ($) $('#wsAddWorkThoEdit').val('').trigger('change');
             }

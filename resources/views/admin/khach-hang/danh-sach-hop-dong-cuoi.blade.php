@@ -967,7 +967,7 @@
                             <label class="form-label" for="dpc_tho_edit_id">Người edit</label>
                             <select id="dpc_tho_edit_id" name="tho_edit_id" class="select2-admin form-select" data-placeholder="Chọn người edit" style="width: 100%;">
                                 <option value="">—</option>
-                                @foreach($danhSachNhanVien ?? [] as $nv)
+                                @foreach($danhSachNhanVienEdit ?? [] as $nv)
                                 <option value="{{ $nv->id }}">{{ $nv->user?->name ?? 'Nhân viên #' . $nv->id }}</option>
                                 @endforeach
                             </select>
@@ -1338,6 +1338,8 @@ document.addEventListener('DOMContentLoaded', function () {
     dpcLog('1 DOMContentLoaded: khởi tạo module điều phối modal');
 
     var DPC_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
+    var DPC_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
+    var DPC_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
     var dpcHopId = null;
 
     function dpcNvUrl(hopId) {
@@ -1383,57 +1385,74 @@ document.addEventListener('DOMContentLoaded', function () {
         // $('#dpc_tho_make_hint').text(disabled ? hint : busyHint);
     }
 
-    function dpcRebuildChupMake(items, wantChup, wantMake) {
-        function fill($sel, ph, want) {
-            var prev = want != null && want !== '' ? String(want) : '';
-            if ($sel.data('select2')) {
-                $sel.select2('destroy');
-            }
-            $sel.empty().append(new Option('—', '', false, false));
-            (items || []).forEach(function (it) {
-                var o = new Option(it.ten, String(it.id), false, false);
-                // Cho phép chọn nhân viên bận, chỉ gắn cờ để nhận biết.
-                if (it.disabled) o.dataset.busy = '1';
-                $sel.append(o);
-            });
-            var $match = $sel.find('option').filter(function () {
-                return String($(this).val()) === prev;
-            });
-            var pick = $match.length ? prev : '';
-            dpcBindSelect2($sel, ph);
-            $sel.val(pick || null).trigger('change');
+    function dpcRebuildSelect($sel, items, ph, want) {
+        var prev = want != null && want !== '' ? String(want) : '';
+        if ($sel.data('select2')) {
+            $sel.select2('destroy');
         }
-        fill($('#dpc_tho_chup_id'), 'Chọn người chụp', wantChup);
-        fill($('#dpc_tho_make_id'), 'Chọn người make', wantMake);
+        $sel.empty().append(new Option('—', '', false, false));
+        (items || []).forEach(function (it) {
+            var o = new Option(it.ten, String(it.id), false, false);
+            if (it.disabled) o.dataset.busy = '1';
+            $sel.append(o);
+        });
+        var $match = $sel.find('option').filter(function () {
+            return String($(this).val()) === prev;
+        });
+        var pick = $match.length ? prev : '';
+        dpcBindSelect2($sel, ph);
+        $sel.val(pick || null).trigger('change');
+    }
+
+    function dpcRebuildChupMake(chupItems, makeItems, wantChup, wantMake) {
+        dpcRebuildSelect($('#dpc_tho_chup_id'), chupItems, 'Chọn người chụp', wantChup);
+        dpcRebuildSelect($('#dpc_tho_make_id'), makeItems, 'Chọn người make', wantMake);
+    }
+
+    function dpcFetchNhanVienTheoNgayVaPhongBan(ymd, maPhongBan) {
+        var url = dpcNvUrl(dpcHopId)
+            + '?ngay=' + encodeURIComponent(ymd)
+            + '&ma_phong_ban=' + encodeURIComponent(maPhongBan);
+        return fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            });
     }
 
     function dpcFetchChupMake(ymd, wantChup, wantMake) {
         if (!dpcHopId || !ymd) {
             dpcLog('7a dpcFetchChupMake: bỏ qua (thiếu hopId hoặc ngày)', { dpcHopId: dpcHopId, ymd: ymd });
             dpcSetChupMakeDisabled(true);
-            dpcRebuildChupMake([], '', '');
+            dpcRebuildChupMake([], [], '', '');
             return;
         }
-        var url = dpcNvUrl(dpcHopId) + '?ngay=' + encodeURIComponent(ymd);
-        dpcLog('7b dpcFetchChupMake: bắt đầu fetch', { url: url, wantChup: wantChup, wantMake: wantMake });
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-            credentials: 'same-origin'
-        })
-            .then(function (r) {
-                dpcLog('7c dpcFetchChupMake: HTTP response', { ok: r.ok, status: r.status, statusText: r.statusText });
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            })
-            .then(function (data) {
-                dpcLog('7d dpcFetchChupMake: JSON OK', { soNhanVien: (data.items || []).length });
+        dpcLog('7b dpcFetchChupMake: bắt đầu fetch', {
+            ymd: ymd,
+            wantChup: wantChup,
+            wantMake: wantMake,
+            maChup: DPC_MA_PHONG_BAN_CHUP,
+            maMake: DPC_MA_PHONG_BAN_MAKE
+        });
+        Promise.all([
+            dpcFetchNhanVienTheoNgayVaPhongBan(ymd, DPC_MA_PHONG_BAN_CHUP),
+            dpcFetchNhanVienTheoNgayVaPhongBan(ymd, DPC_MA_PHONG_BAN_MAKE)
+        ])
+            .then(function (results) {
+                dpcLog('7d dpcFetchChupMake: JSON OK', {
+                    soChup: (results[0].items || []).length,
+                    soMake: (results[1].items || []).length
+                });
                 dpcSetChupMakeDisabled(false);
-                dpcRebuildChupMake(data.items || [], wantChup, wantMake);
+                dpcRebuildChupMake(results[0].items || [], results[1].items || [], wantChup, wantMake);
             })
             .catch(function (err) {
                 console.error('[DPC] 7e dpcFetchChupMake: lỗi', err);
                 dpcSetChupMakeDisabled(true);
-                dpcRebuildChupMake([], '', '');
+                dpcRebuildChupMake([], [], '', '');
             });
     }
 
@@ -1450,7 +1469,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!ymd || !dpcHopId) {
             dpcLog('6a dpcSyncChupMakeTheoNgay: dừng — chưa có ngày hoặc chưa có hop_dong_cuoi_id', { ymd: ymd, dpcHopId: dpcHopId });
             dpcSetChupMakeDisabled(true);
-            dpcRebuildChupMake([], '', '');
+            dpcRebuildChupMake([], [], '', '');
             return;
         }
         if (arguments.length < 2) {

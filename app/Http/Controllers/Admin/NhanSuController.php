@@ -706,8 +706,9 @@ class NhanSuController extends Controller
                 ->get();
         }
 
-        $danhSachNhanVien = NhanVien::query()
+        $danhSachNhanVienEdit = NhanVien::query()
             ->with('user')
+            ->thuocMaPhongBan(PhongBan::MA_EDIT)
             ->orderBy('id')
             ->get();
 
@@ -719,7 +720,7 @@ class NhanSuController extends Controller
             'ketThucTuan',
             'dsNgayTrongTuan',
             'hopDongTrongTuan',
-            'danhSachNhanVien',
+            'danhSachNhanVienEdit',
             'nhanVienId',
             'isAdmin',
             'tienDoLegend',

@@ -11,6 +11,20 @@ class PhongBan extends Model
 {
     use HasFactory;
 
+    /** Mã phòng ban dùng khi điều phối hợp đồng cưới. */
+    public const MA_CHUP = 'CS01';
+
+    public const MA_MAKE = 'MS01';
+
+    public const MA_EDIT = 'PS01';
+
+    /** @var list<string> */
+    public const MA_DIEU_PHOI_HOP_DONG = [
+        self::MA_CHUP,
+        self::MA_MAKE,
+        self::MA_EDIT,
+    ];
+
     public const SAP_XEP_ID = 'id';
 
     public const SAP_XEP_NHAN_VIENS = 'nhan_viens_count';

@@ -11,6 +11,7 @@ use App\Models\HopDongCuoiNhomDichVu;
 use App\Models\HopDongCuoiTrangPhuc;
 use App\Models\HopDongThanhToan;
 use App\Models\NhanVien;
+use App\Models\PhongBan;
 use App\Models\NhomDichVu;
 use App\Models\ThanhVienHopDongCuoi;
 use App\Models\TrangPhuc;
@@ -122,8 +123,9 @@ class KhachHangController extends Controller
 
         $hopDongCuois = $query->paginate(AdminPagination::perPage())->withQueryString();
 
-        $danhSachNhanVien = NhanVien::query()
+        $danhSachNhanVienEdit = NhanVien::query()
             ->with('user')
+            ->thuocMaPhongBan(PhongBan::MA_EDIT)
             ->orderBy('id')
             ->get();
 
@@ -131,7 +133,7 @@ class KhachHangController extends Controller
 
         return view('admin.khach-hang.danh-sach-hop-dong-cuoi', compact(
             'hopDongCuois',
-            'danhSachNhanVien',
+            'danhSachNhanVienEdit',
             'locTienDoFilters',
             'locFilters',
         ));
@@ -331,8 +333,10 @@ class KhachHangController extends Controller
     {
         $validated = $request->validate([
             'ngay' => 'required|date',
+            'ma_phong_ban' => ['required', 'string', Rule::in(PhongBan::MA_DIEU_PHOI_HOP_DONG)],
         ], [], [
             'ngay' => 'ngày chụp',
+            'ma_phong_ban' => 'mã phòng ban',
         ]);
 
         $ngay = Carbon::parse($validated['ngay'])->toDateString();
@@ -340,6 +344,7 @@ class KhachHangController extends Controller
 
         $items = NhanVien::query()
             ->with('user')
+            ->thuocMaPhongBan($validated['ma_phong_ban'])
             ->orderBy('id')
             ->get()
             ->map(function (NhanVien $nv) use ($banIds): array {
