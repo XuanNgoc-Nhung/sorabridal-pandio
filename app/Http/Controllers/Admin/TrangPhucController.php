@@ -346,6 +346,8 @@ class TrangPhucController extends Controller
             'id' => $id,
             'ten' => (string) ($sp->ten_san_pham ?? ''),
             'ma' => (string) ($sp->ma_san_pham ?? ''),
+            'loai' => LoaiTrangPhuc::normalize($sp->loai),
+            'loai_label' => LoaiTrangPhuc::label($sp->loai),
             'hinh_anh_url' => $hinhPath ? '/storage/'.ltrim($hinhPath, '/') : '',
             'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
             'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),

@@ -656,13 +656,15 @@
                 <div class="row g-3 mb-3">
                     <div class="col-12">
                         <div class="d-none" id="wizard_tp_da_chon_wrap">
-                            <div class="small text-muted mb-1">Trang phục đã chọn</div>
+                            <label class="form-label" for="wizard_tp_da_chon">Trang phục đã chọn</label>
                             <div class="table-responsive border rounded">
                                 <table class="table table-sm mb-0 align-middle">
                                     <thead>
                                         <tr>
-                                            <th style="width: 84px;">Ảnh</th>
-                                            <th style="width: 140px;">Mã</th>
+                                            <th style="width: 56px;">Ảnh</th>
+                                            <th>Tên</th>
+                                            <th>Loại</th>
+                                            <th>Mã</th>
                                             <th style="width: 70px;" class="text-end">Xóa</th>
                                         </tr>
                                     </thead>
@@ -1292,6 +1294,17 @@
     font-size: 1.35rem;
     background-color: #fff;
 }
+.tao-hop-dong-wizard .wizard-tp-da-chon-thumb-img {
+    width: 44px;
+    height: 58px;
+    object-fit: cover;
+    display: block;
+}
+.tao-hop-dong-wizard .wizard-tp-da-chon-thumb-placeholder {
+    width: 44px;
+    height: 58px;
+    font-size: 0.95rem;
+}
 body.modal-wizard-ktsp-open .modal-backdrop:last-of-type {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -1603,6 +1616,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function wizardTpLoaiLabel(p) {
+        if (p && p.loai_label) return String(p.loai_label);
+        if (p && p.loai === 'chup') return 'Trang phục chụp';
+        if (p && p.loai === 'cuoi') return 'Trang phục cưới';
+        return '—';
+    }
+
     function wizardTpRenderSelectedTable() {
         if (!wizardTpState.daChon || !wizardTpState.daChonWrap) return;
         wizardTpState.daChon.innerHTML = '';
@@ -1625,25 +1645,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.alt = ten;
                 img.title = ten;
                 img.loading = 'lazy';
-                img.className = 'rounded border bg-body';
-                img.style.width = '72px';
-                img.style.height = '96px';
-                img.style.objectFit = 'cover';
+                img.className = 'wizard-tp-da-chon-thumb-img rounded border bg-body';
                 thumbWrap.appendChild(img);
             } else {
                 var ph = document.createElement('div');
-                ph.className = 'rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
+                ph.className = 'wizard-tp-da-chon-thumb-placeholder rounded border bg-body-secondary d-flex align-items-center justify-content-center text-muted';
                 ph.title = ten;
-                ph.style.width = '72px';
-                ph.style.height = '96px';
                 ph.innerHTML = '<i class="fa-regular fa-image"></i>';
                 thumbWrap.appendChild(ph);
             }
             wizardTpAppendSuDungBadge(thumbWrap, p);
             tdImg.appendChild(thumbWrap);
 
+            var tdTen = document.createElement('td');
+            tdTen.className = 'text-break';
+            tdTen.textContent = ten;
+
+            var tdLoai = document.createElement('td');
+            tdLoai.className = 'text-muted small';
+            tdLoai.textContent = wizardTpLoaiLabel(p);
+
             var tdMa = document.createElement('td');
-            tdMa.className = 'text-muted';
+            tdMa.className = 'text-muted small';
             tdMa.textContent = p && p.ma ? String(p.ma) : '—';
 
             var tdAct = document.createElement('td');
@@ -1657,6 +1680,8 @@ document.addEventListener('DOMContentLoaded', function() {
             tdAct.appendChild(btn);
 
             tr.appendChild(tdImg);
+            tr.appendChild(tdTen);
+            tr.appendChild(tdLoai);
             tr.appendChild(tdMa);
             tr.appendChild(tdAct);
             wizardTpState.daChon.appendChild(tr);
@@ -1691,7 +1716,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function initWizardTrangPhucPicker(opts) {
         var catalog = Array.isArray(opts.catalog) ? opts.catalog : [];
         catalog.forEach(function(p) {
-            if (p && p.id != null) wizardTpState.byId[p.id] = p;
+            if (p && p.id != null) {
+                if (!p.loai && opts.loai) p.loai = opts.loai;
+                wizardTpState.byId[p.id] = p;
+            }
         });
 
         var picker = {
@@ -1721,7 +1749,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 list.forEach(function(p) {
                     var pid = parseInt(p && p.id != null ? p.id : '', 10);
                     if (isNaN(pid)) return;
-                    if (p && p.id != null) wizardTpState.byId[p.id] = p;
+                    if (p && p.id != null) {
+                        if (!p.loai && picker.loai) p.loai = picker.loai;
+                        wizardTpState.byId[p.id] = p;
+                    }
                     var col = document.createElement('div');
                     col.className = 'col-12 col-sm-6 col-md-4 col-xl-3';
                     var card = wizardTpCreateProductCard(p, wizardTpState.selected.has(pid));
@@ -1751,7 +1782,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (reqId !== picker.searchReqId) return;
                             var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
                             items.forEach(function(p) {
-                                if (p && p.id != null) wizardTpState.byId[p.id] = p;
+                                if (p && p.id != null) {
+                                    if (!p.loai && picker.loai) p.loai = picker.loai;
+                                    wizardTpState.byId[p.id] = p;
+                                }
                             });
                             picker.remoteList = items;
                             picker.renderCards();
