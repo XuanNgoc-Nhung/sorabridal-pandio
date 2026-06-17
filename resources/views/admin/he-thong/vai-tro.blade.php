@@ -91,6 +91,7 @@
                         <th class="text-center">Số menu</th>
                         <th>Mô tả</th>
                         <th>Ghi chú</th>
+                        <th class="text-center">Điều chỉnh hợp đồng cưới</th>
                         <th class="text-center" style="width: 100px;">Thao tác</th>
                     </tr>
                 </thead>
@@ -104,6 +105,15 @@
                         <td class="text-center">{{ count($item->ds_menu ?? []) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->mo_ta ?? '—', 50) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($item->ghi_chu ?? '—', 40) }}</td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-inline-flex justify-content-center mb-0">
+                                <input class="form-check-input switch-dieu-chinh-hop-dong-cuoi"
+                                       type="checkbox"
+                                       role="switch"
+                                       data-url="{{ route('admin.he-thong.vai-tro.update-dieu-chinh-hop-dong-cuoi', $item) }}"
+                                       @checked((bool) $item->dieu_chinh_hop_dong_cuoi)>
+                            </div>
+                        </td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -145,7 +155,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">Chưa có dữ liệu vai trò.</td>
+                        <td colspan="9" class="text-center py-4 text-muted">Chưa có dữ liệu vai trò.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -644,6 +654,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
         modalDsNd.addEventListener('hidden.bs.modal', dvvtReset);
     }
+
+    var token = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = token ? token.getAttribute('content') : @json(csrf_token());
+    document.querySelectorAll('.switch-dieu-chinh-hop-dong-cuoi').forEach(function (switchEl) {
+        switchEl.addEventListener('change', function () {
+            var target = this;
+            var url = target.getAttribute('data-url');
+            if (!url) {
+                target.checked = !target.checked;
+                return;
+            }
+
+            var oldValue = !target.checked;
+            target.disabled = true;
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    dieu_chinh_hop_dong_cuoi: target.checked ? 1 : 0
+                })
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+
+                    return response.json();
+                })
+                .catch(function () {
+                    target.checked = oldValue;
+                })
+                .finally(function () {
+                    target.disabled = false;
+                });
+        });
+    });
 
     var modalXoa = document.getElementById('modalXacNhanXoaVaiTro');
     var btnXacNhanXoa = document.getElementById('btnXacNhanXoaVaiTro');

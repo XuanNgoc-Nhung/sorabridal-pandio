@@ -55,12 +55,14 @@ class VaiTro extends Model
         'mo_ta',
         'ghi_chu',
         'ds_menu',
+        'dieu_chinh_hop_dong_cuoi',
     ];
 
     protected function casts(): array
     {
         return [
             'ds_menu' => 'array',
+            'dieu_chinh_hop_dong_cuoi' => 'boolean',
         ];
     }
 

@@ -212,6 +212,7 @@ class HeThongController extends Controller
             'mo_ta' => $request->input('mo_ta'),
             'ghi_chu' => $request->input('ghi_chu'),
             'ds_menu' => AdminMenuPermissions::buildDsMenu($request->input('permissions')),
+            'dieu_chinh_hop_dong_cuoi' => false,
         ]);
 
         return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã thêm vai trò thành công.');
@@ -263,6 +264,26 @@ class HeThongController extends Controller
         $vaiTro->delete();
 
         return redirect()->route('admin.he-thong.vai-tro')->with('success', 'Đã xóa vai trò.');
+    }
+
+    public function updateVaiTroDieuChinhHopDongCuoi(Request $request, VaiTro $vaiTro): JsonResponse
+    {
+        $validated = $request->validate([
+            'dieu_chinh_hop_dong_cuoi' => 'required|boolean',
+        ]);
+
+        $vaiTro->update([
+            'dieu_chinh_hop_dong_cuoi' => (bool) $validated['dieu_chinh_hop_dong_cuoi'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã cập nhật quyền điều chỉnh hợp đồng cưới.',
+            'data' => [
+                'id' => (int) $vaiTro->id,
+                'dieu_chinh_hop_dong_cuoi' => (bool) $vaiTro->dieu_chinh_hop_dong_cuoi,
+            ],
+        ]);
     }
 
     /**
