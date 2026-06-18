@@ -102,16 +102,24 @@
                         <input type="text" class="form-control" id="wizard_ten_chu_re" name="ten_chu_re" value="{{ old('ten_chu_re', $hopDongCuoi->ten_chu_re) }}" placeholder="Họ và tên" data-wizard-step1-required>
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
+                        <label class="form-label" for="wizard_email_sdt_chu_re">SĐT chú rể</label>
+                        <input type="text" class="form-control" id="wizard_email_sdt_chu_re" name="email_sdt_chu_re" value="{{ old('email_sdt_chu_re', $hopDongCuoi->email_sdt_chu_re) }}" placeholder="Số điện thoại" autocomplete="tel">
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-3{{ old('loai_hop_dong', $hopDongCuoi->loai_hop_dong) === 'phong_su_cuoi' ? '' : ' d-none' }}" id="wizard_dia_chi_chu_re_wrap">
+                        <label class="form-label" for="wizard_dia_chi_chu_re">Địa chỉ chú rể</label>
+                        <input type="text" class="form-control" id="wizard_dia_chi_chu_re" name="dia_chi_chu_re" value="{{ old('dia_chi_chu_re', $hopDongCuoi->dia_chi_chu_re) }}" placeholder="Địa chỉ chú rể">
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_ten_co_dau">Họ tên cô dâu</label>
                         <input type="text" class="form-control" id="wizard_ten_co_dau" name="ten_co_dau" value="{{ old('ten_co_dau', $hopDongCuoi->ten_co_dau) }}" placeholder="Họ và tên" data-wizard-step1-required>
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
-                        <label class="form-label" for="wizard_email_sdt_chu_re">SĐT chú rể</label>
-                        <input type="text" class="form-control" id="wizard_email_sdt_chu_re" name="email_sdt_chu_re" value="{{ old('email_sdt_chu_re', $hopDongCuoi->email_sdt_chu_re) }}" placeholder="Số điện thoại" autocomplete="tel">
-                    </div>
-                    <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_email_sdt_co_dau">SĐT cô dâu</label>
                         <input type="text" class="form-control" id="wizard_email_sdt_co_dau" name="email_sdt_co_dau" value="{{ old('email_sdt_co_dau', $hopDongCuoi->email_sdt_co_dau) }}" placeholder="Số điện thoại" autocomplete="tel">
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-3{{ old('loai_hop_dong', $hopDongCuoi->loai_hop_dong) === 'phong_su_cuoi' ? '' : ' d-none' }}" id="wizard_dia_chi_co_dau_wrap">
+                        <label class="form-label" for="wizard_dia_chi_co_dau">Địa chỉ cô dâu</label>
+                        <input type="text" class="form-control" id="wizard_dia_chi_co_dau" name="dia_chi_co_dau" value="{{ old('dia_chi_co_dau', $hopDongCuoi->dia_chi_co_dau) }}" placeholder="Địa chỉ cô dâu">
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_ngay_chup_du_kien">Ngày chụp dự kiến</label>
@@ -1296,7 +1304,7 @@
 .tao-hop-dong-wizard .them-sp-su-dung-badge {
     position: absolute;
     z-index: 2;
-    color: var(--bs-success, #71dd37);
+    color: #ff9f43;
     font-size: 0.875rem;
     line-height: 1;
     text-shadow: 0 0 2px #fff, 0 0 4px #fff;
@@ -1620,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', function() {
         badge.className = 'them-sp-su-dung-badge';
         badge.title = wizardTpSuDungBadgeTitle(p);
         badge.setAttribute('aria-label', badge.title);
-        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        badge.innerHTML = '<i class="fa-solid fa-clock" aria-hidden="true"></i>';
         wrap.appendChild(badge);
     }
 
@@ -1630,7 +1638,7 @@ document.addEventListener('DOMContentLoaded', function() {
         wrap.setAttribute('aria-label', wrap.title);
         var badge = document.createElement('span');
         badge.className = 'them-sp-su-dung-badge';
-        badge.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+        badge.innerHTML = '<i class="fa-solid fa-clock" aria-hidden="true"></i>';
         wrap.appendChild(badge);
     }
 
@@ -3805,8 +3813,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (gioiHanChinhSua && loaiHopDongEl && window.jQuery && window.jQuery.fn.select2) {
         window.jQuery(loaiHopDongEl).prop('disabled', true);
     }
+    function togglePhongSuCuoiAddressFields() {
+        var isPhongSu = getLoaiHopDongValue() === 'phong_su_cuoi';
+        ['wizard_dia_chi_chu_re_wrap', 'wizard_dia_chi_co_dau_wrap'].forEach(function(id) {
+            var wrap = document.getElementById(id);
+            if (wrap) wrap.classList.toggle('d-none', !isPhongSu);
+        });
+    }
+
     if (loaiHopDongEl) {
         function onLoaiHopDongChangedForStep2() {
+            togglePhongSuCuoiAddressFields();
             if (currentStep === 1) {
                 updateNextButtonState();
             } else if (currentStep === 2) {
@@ -3820,6 +3837,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.jQuery(loaiHopDongEl).on('select2:select select2:clear', onLoaiHopDongChangedForStep2);
         }
     }
+    togglePhongSuCuoiAddressFields();
     syncComboCheckedState();
     updateNangCapComboDichVuPanel();
     syncDichVuLeCheckedState();

@@ -83,6 +83,8 @@ class HopDongCuoi extends Model
         'ten_chu_re',
         'email_sdt_co_dau',
         'email_sdt_chu_re',
+        'dia_chi_chu_re',
+        'dia_chi_co_dau',
         'ngay_chup_du_kien',
         'ngay_chup_thuc_te',
         'gio_chup',
