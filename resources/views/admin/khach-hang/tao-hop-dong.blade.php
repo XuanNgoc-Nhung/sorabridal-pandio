@@ -208,7 +208,7 @@
                                             $collapseId = 'wizard_combo_services_' . $nhomDichVu->id;
                                         @endphp
                                         <div
-                                            class="col-12 col-md-6 col-xl-4 js-combo-item"
+                                            class="col-12 col-md-4 col-xl-3 js-combo-item"
                                             data-loai-dich-vu="{{ e($nhomDichVu->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                             data-search-text="{{ mb_strtolower(trim(($nhomDichVu->ten_nhom ?? '') . ' ' . ($nhomDichVu->the ?? '') . ' ' . ($nhomDichVu->mo_ta ?? '') . ' ' . ($nhomDichVu->ghi_chu ?? ''))) }}">
                                             <div class="combo-service-card h-100 w-100">
@@ -242,7 +242,6 @@
                                                         @elseif (!empty($nhomDichVu->ghi_chu))
                                                             <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
                                                         @else
-                                                            <span class="combo-service-desc text-muted">-</span>
                                                         @endif
                                                     </label>
                                                     <div class="combo-service-footer">
@@ -622,6 +621,16 @@
                 </div>
 
                 @php
+                    /**
+                     * true (mặc định): trang phục chụp & cưới dùng chung toàn bộ sản phẩm (trừ ẩn).
+                     * false: tách danh sách theo loại sản phẩm như trước.
+                     */
+                    $wizardDungChungTrangPhucChupCuoi = true;
+                    $trangPhucCatalogs = app(\App\Http\Controllers\Admin\TrangPhucController::class)
+                        ->sanPhamCatalogChoWizardHopDongCuoi($wizardDungChungTrangPhucChupCuoi);
+                    $wizardTrangPhucChupCatalog = $trangPhucCatalogs['chup'];
+                    $wizardTrangPhucCuoiCatalog = $trangPhucCatalogs['cuoi'];
+
                     $trangPhucDaChon = collect(old('trang_phuc', $hopDongCuoiData['trang_phuc_ids'] ?? []))
                         ->map(fn ($value) => (int) $value)
                         ->filter(fn ($id) => $id > 0)
@@ -686,6 +695,7 @@
                         </div>
                         <div id="wizard_trang_phuc_hidden_wrap" class="visually-hidden" aria-hidden="true"></div>
                         <script type="application/json" id="wizard-tp-search-url">@json(route('admin.trang-phuc.hop-dong.tim-san-pham'))</script>
+                        <script type="application/json" id="wizard-tp-dung-chung-flag">@json($wizardDungChungTrangPhucChupCuoi)</script>
                         <script type="application/json" id="wizard-tp-selected-data">@json($trangPhucDaChon)</script>
                     </div>
                 </div>
@@ -1496,7 +1506,8 @@ document.addEventListener('DOMContentLoaded', function() {
         hiddenWrap: null,
         daChon: null,
         daChonWrap: null,
-        pickers: []
+        pickers: [],
+        dungChung: false
     };
 
     function wizardTpNorm(s) {
@@ -1650,14 +1661,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var body = document.createElement('div');
         body.className = 'them-sp-card__body';
         var t1 = document.createElement('div');
-        t1.className = 'fw-semibold text-break';
+        t1.className = 'text-break';
         t1.textContent = p.ten || '—';
         var t2 = document.createElement('div');
         t2.className = 'small text-muted';
         t2.textContent = 'Mã: ' + (p.ma || '—');
         var t3 = document.createElement('div');
         t3.className = 'small';
-        t3.innerHTML = '<span class="text-muted">Giá trị: </span><strong>' + wizardTpEscHtml(wizardTpFormatGiaTri(p.gia_tri)) + '</strong>';
+        t3.innerHTML = '<span class="text-muted">Giá trị: </span><span>' + wizardTpEscHtml(wizardTpFormatGiaTri(p.gia_tri)) + '</span>';
         body.appendChild(t1);
         body.appendChild(t2);
         body.appendChild(t3);
@@ -1767,14 +1778,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function wizardTpToggle(id) {
+    function wizardTpToggle(id, pickerLoai) {
         id = parseInt(id, 10);
         if (isNaN(id)) return;
         var p = wizardTpState.byId[id];
         var loai = p && p.loai ? String(p.loai) : '';
         if (!wizardTpState.selected.has(id)) {
-            if (loai === 'chup' && !wizardTpPickerIsEnabled('chup')) return;
-            if (loai === 'cuoi' && !wizardTpPickerIsEnabled('cuoi')) return;
+            if (wizardTpState.dungChung) {
+                if (pickerLoai && !wizardTpPickerIsEnabled(pickerLoai)) return;
+            } else {
+                if (loai === 'chup' && !wizardTpPickerIsEnabled('chup')) return;
+                if (loai === 'cuoi' && !wizardTpPickerIsEnabled('cuoi')) return;
+            }
         }
         if (wizardTpState.selected.has(id)) wizardTpState.selected.delete(id);
         else wizardTpState.selected.add(id);
@@ -1868,7 +1883,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
                     var reqId = ++picker.searchReqId;
-                    ax.get(opts.searchUrl, { params: { q: raw.trim(), loai: picker.loai } })
+                    var params = { q: raw.trim(), loai: picker.loai };
+                    if (wizardTpState.dungChung) params.dung_chung = 1;
+                    ax.get(opts.searchUrl, { params: params })
                         .then(function(res) {
                             if (reqId !== picker.searchReqId) return;
                             var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
@@ -1900,7 +1917,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (ev.target.closest('.them-sp-btn-lich')) return;
                 var card = ev.target.closest('[data-sp-id]');
                 if (!card || !picker.ketQua.contains(card)) return;
-                wizardTpToggle(card.getAttribute('data-sp-id'));
+                wizardTpToggle(card.getAttribute('data-sp-id'), picker.loai);
             });
             picker.ketQua.addEventListener('keydown', function(ev) {
                 if (!picker.enabled) return;
@@ -1909,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var card = ev.target.closest('[data-sp-id]');
                 if (!card || !picker.ketQua.contains(card)) return;
                 ev.preventDefault();
-                wizardTpToggle(card.getAttribute('data-sp-id'));
+                wizardTpToggle(card.getAttribute('data-sp-id'), picker.loai);
             });
         }
 
@@ -1927,6 +1944,7 @@ document.addEventListener('DOMContentLoaded', function() {
         wizardTpState.daChonWrap = document.getElementById('wizard_tp_da_chon_wrap');
 
         var searchUrl = wizardTpParseJsonEl('wizard-tp-search-url', '');
+        wizardTpState.dungChung = !!wizardTpParseJsonEl('wizard-tp-dung-chung-flag', false);
         var chupCatalog = wizardTpParseJsonEl('wizard-tp-chup-catalog-data', []);
         var cuoiCatalog = wizardTpParseJsonEl('wizard-tp-cuoi-catalog-data', []);
 

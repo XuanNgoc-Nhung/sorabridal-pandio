@@ -284,16 +284,18 @@ class TrangPhucController extends Controller
         $validated = $request->validate([
             'q' => 'nullable|string|max:255',
             'loai' => 'nullable|string|in:'.implode(',', LoaiTrangPhuc::values()),
+            'dung_chung' => 'nullable|boolean',
         ]);
 
         $needle = trim((string) ($validated['q'] ?? ''));
+        $dungChung = filter_var($validated['dung_chung'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $query = TrangPhuc::query()
             ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
             ->orderByDesc('id')
             ->limit(80);
 
-        if (! empty($validated['loai'])) {
+        if (! $dungChung && ! empty($validated['loai'])) {
             if ($validated['loai'] === LoaiTrangPhuc::CHUP) {
                 $query->whereIn('loai', [LoaiTrangPhuc::CHUP, 'phong_su']);
             } else {
@@ -326,7 +328,7 @@ class TrangPhucController extends Controller
      *
      * @return array{chup: list<array<string, mixed>>, cuoi: list<array<string, mixed>>}
      */
-    public function sanPhamCatalogChoWizardHopDongCuoi(): array
+    public function sanPhamCatalogChoWizardHopDongCuoi(bool $dungChungTrangPhuc = true): array
     {
         $items = TrangPhuc::query()
             ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
@@ -341,7 +343,10 @@ class TrangPhucController extends Controller
 
         foreach ($items as $sp) {
             $entry = $this->buildSanPhamCatalogEntry($sp, isset($coLichSuIds[(int) $sp->id]));
-            if (LoaiTrangPhuc::normalize($sp->loai) === LoaiTrangPhuc::CHUP) {
+            if ($dungChungTrangPhuc) {
+                $chup[] = $entry;
+                $cuoi[] = $entry;
+            } elseif (LoaiTrangPhuc::normalize($sp->loai) === LoaiTrangPhuc::CHUP) {
                 $chup[] = $entry;
             } else {
                 $cuoi[] = $entry;
