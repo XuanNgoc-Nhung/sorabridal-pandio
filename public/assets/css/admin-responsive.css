@@ -9,6 +9,9 @@
  */
 :root,
 [data-bs-theme='light'] {
+  --bs-body-color: #000000;
+  --bs-menu-color: #000000;
+  --bs-heading-color: #000000;
   --admin-text-body: #384551;
   --admin-text-secondary: #566a7f;
   --admin-text-muted: #697a8d;
@@ -16,6 +19,9 @@
 }
 
 [data-bs-theme='dark'] {
+  --bs-body-color: #cbd5e0;
+  --bs-menu-color: #cbd5e0;
+  --bs-heading-color: #cbd5e0;
   --admin-text-body: #cbd5e0;
   --admin-text-secondary: #adb5bd;
   --admin-text-muted: #a8b0bc;

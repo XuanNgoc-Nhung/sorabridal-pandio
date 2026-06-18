@@ -474,7 +474,7 @@
                             @endforelse
                         </td>
                         <td class="text-wrap" style="min-width: 150px;">
-                            <div class="fw-semibold">{{ number_format((float) ($item->tong_tien ?? 0), 0, ',', '.') }} đ</div>
+                            <div>{{ number_format((float) ($item->tong_tien ?? 0), 0, ',', '.') }} đ</div>
                             <div class="progress mt-2" style="height: 0.45rem;">
                                 <div class="progress-bar bg-success"
                                      role="progressbar"
