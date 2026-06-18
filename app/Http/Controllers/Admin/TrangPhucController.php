@@ -92,7 +92,6 @@ class TrangPhucController extends Controller
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
-            'trang_thai' => 'nullable|in:0,1',
             'loai' => 'required|string|in:'.implode(',', LoaiTrangPhuc::values()),
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
@@ -112,7 +111,7 @@ class TrangPhucController extends Controller
             'hinh_anh' => $hinhAnhPath,
             'mo_ta' => $validated['mo_ta'] ?? null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
-            'trang_thai' => $validated['trang_thai'] ?? 1,
+            'trang_thai' => TrangPhuc::TRANG_THAI_ACTIVE,
             'gia_tri' => $validated['gia_tri'] ?? 0,
         ]);
 
@@ -127,7 +126,6 @@ class TrangPhucController extends Controller
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
-            'trang_thai' => 'nullable|in:0,1',
             'loai' => 'required|string|in:'.implode(',', LoaiTrangPhuc::values()),
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
@@ -138,9 +136,7 @@ class TrangPhucController extends Controller
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
             'slug' => $slug,
-            'mo_ta' => $validated['mo_ta'] ?? null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
-            'trang_thai' => $validated['trang_thai'] ?? 1,
             'loai' => $validated['loai'],
             'gia_tri' => $validated['gia_tri'] ?? 0,
         ];
@@ -157,6 +153,27 @@ class TrangPhucController extends Controller
         $trangPhuc->update($updateData);
 
         return redirect()->route('admin.trang-phuc.san-pham')->with('success', 'Đã cập nhật sản phẩm trang phục thành công.');
+    }
+
+    public function updateSanPhamTrangThai(Request $request, TrangPhuc $trangPhuc): JsonResponse
+    {
+        $validated = $request->validate([
+            'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
+            'trang_thai.in' => 'Trạng thái không hợp lệ.',
+        ]);
+
+        $trangPhuc->update([
+            'trang_thai' => (int) $validated['trang_thai'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => $trangPhuc->trang_thai,
+            'message' => 'Đã cập nhật trạng thái sản phẩm.',
+        ]);
     }
 
     public function destroySanPham(TrangPhuc $trangPhuc)

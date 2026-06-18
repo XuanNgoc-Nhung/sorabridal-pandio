@@ -72,6 +72,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/san-pham', [AdminTrangPhuc::class, 'storeSanPham'])->name('trang-phuc.san-pham.store');
         Route::get('/san-pham/{trangPhuc}/kiem-tra', [AdminTrangPhuc::class, 'kiemTraSuDungSanPham'])->name('trang-phuc.san-pham.kiem-tra');
         Route::put('/san-pham/{trangPhuc}', [AdminTrangPhuc::class, 'updateSanPham'])->name('trang-phuc.san-pham.update');
+        Route::patch('/san-pham/{trangPhuc}/trang-thai', [AdminTrangPhuc::class, 'updateSanPhamTrangThai'])->name('trang-phuc.san-pham.update-trang-thai');
         Route::delete('/san-pham/{trangPhuc}', [AdminTrangPhuc::class, 'destroySanPham'])->name('trang-phuc.san-pham.destroy');
         Route::get('/hop-dong/tim-san-pham', [AdminTrangPhuc::class, 'timSanPhamHopDong'])->name('trang-phuc.hop-dong.tim-san-pham');
         Route::get('/hop-dong', [AdminTrangPhuc::class, 'hopDong'])->name('trang-phuc.hop-dong');

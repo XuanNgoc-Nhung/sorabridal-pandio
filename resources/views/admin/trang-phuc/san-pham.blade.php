@@ -40,7 +40,7 @@
                            id="tu_khoa"
                            name="tu_khoa"
                            value="{{ old('tu_khoa', $tuKhoaHienThi) }}"
-                           placeholder="Tên, mã, mô tả, ghi chú...">
+                           placeholder="Tên, mã, ghi chú...">
                     @error('tu_khoa')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -127,9 +127,8 @@
                         <th style="min-width: 110px;">Mã SP</th>
                         <th style="min-width: 180px;">Tên sản phẩm</th>
                         <th class="text-center" style="min-width: 120px;">Loại trang phục</th>
-                        <th style="min-width: 200px;">Mô tả</th>
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
-                        <th class="text-center" style="min-width: 100px;">Trạng thái</th>
+                        <th class="text-center" style="min-width: 100px;">Hiển thị</th>
                         <th style="min-width: 140px;">Ghi chú</th>
                         <th class="text-center" style="min-width: 96px;">Thao tác</th>
                     </tr>
@@ -141,7 +140,6 @@
                         $hasHinh = !empty($item->hinh_anh);
                         $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                         $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
-                        $moTaRutGon = filled($item->mo_ta) ? \Illuminate\Support\Str::limit(strip_tags($item->mo_ta), 80) : '—';
                         $ghiChuRutGon = filled($item->ghi_chu) ? \Illuminate\Support\Str::limit($item->ghi_chu, 40) : '—';
                         $loaiLabel = \App\Support\LoaiTrangPhuc::label($item->loai ?? \App\Support\LoaiTrangPhuc::CUOI);
                     @endphp
@@ -164,12 +162,17 @@
                         <td class="text-center">
                             <span class="badge bg-label-primary">{{ $loaiLabel }}</span>
                         </td>
-                        <td class="text-wrap small text-muted">{{ $moTaRutGon }}</td>
                         <td class="text-end text-nowrap">{{ $giaTriTxt }}</td>
                         <td class="text-center">
-                            <span class="badge {{ $isVisible ? 'bg-label-success' : 'bg-label-danger' }}">
-                                {{ $isVisible ? 'Hiển thị' : 'Ẩn' }}
-                            </span>
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input type="checkbox"
+                                       class="form-check-input switch-trang-thai-san-pham"
+                                       role="switch"
+                                       id="switch-trang-thai-san-pham-{{ $item->id }}"
+                                       data-url="{{ route('admin.trang-phuc.san-pham.update-trang-thai', $item) }}"
+                                       @checked($isVisible)
+                                       title="{{ $isVisible ? 'Hiển thị' : 'Ẩn' }}">
+                            </div>
                         </td>
                         <td class="text-wrap small">{{ $ghiChuRutGon }}</td>
                         <td class="text-center text-nowrap">
@@ -196,8 +199,6 @@
                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
-                                       data-mo-ta="{{ e($item->mo_ta ?? '') }}"
-                                       data-trang-thai="{{ e($item->trang_thai ?? 1) }}"
                                        data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
@@ -216,7 +217,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
+                        <td colspan="9" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -231,7 +232,6 @@
                     $hasHinh = !empty($item->hinh_anh);
                     $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                     $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
-                    $moTaRutGon = filled($item->mo_ta) ? \Illuminate\Support\Str::limit(strip_tags($item->mo_ta), 100) : null;
                     $loaiLabel = \App\Support\LoaiTrangPhuc::label($item->loai ?? \App\Support\LoaiTrangPhuc::CUOI);
                 @endphp
                 <div class="col">
@@ -275,8 +275,6 @@
                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
-                                       data-mo-ta="{{ e($item->mo_ta ?? '') }}"
-                                       data-trang-thai="{{ e($item->trang_thai ?? 1) }}"
                                        data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
@@ -295,13 +293,6 @@
                             <div class="mb-2">
                                 <span class="badge bg-label-primary">{{ $loaiLabel }}</span>
                             </div>
-                            <p class="san-pham-card__desc mb-2" title="{{ $moTaRutGon ? e(strip_tags($item->mo_ta)) : '' }}">
-                                @if($moTaRutGon)
-                                    {{ $moTaRutGon }}
-                                @else
-                                    <span class="text-muted fst-italic">Chưa có mô tả</span>
-                                @endif
-                            </p>
                             <div class="san-pham-card__info-row san-pham-card__info-row--icon d-flex align-items-center gap-1 border-top border-light pt-2 mt-auto"
                                  title="Giá trị: {{ e($giaTriTxt) }}">
                                 <span class="san-pham-card__info-icon text-muted" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
@@ -405,15 +396,15 @@
                         {{-- Cột phải: Thông tin --}}
                         <div class="col-12 col-lg-8">
                             <div class="row g-3">
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_ten_san_pham">Tên sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="them_ten_san_pham" name="ten_san_pham" value="{{ old('ten_san_pham') }}" placeholder="Nhập tên sản phẩm" required>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_ma_san_pham">Mã sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="them_ma_san_pham" name="ma_san_pham" value="{{ old('ma_san_pham') }}" placeholder="Ví dụ: TP001" required>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_loai">Loại trang phục <span class="text-danger">*</span></label>
                                     <select class="select2-admin form-select" id="them_loai" name="loai" required data-placeholder="Chọn loại">
                                         @foreach(\App\Support\LoaiTrangPhuc::LABELS as $value => $label)
@@ -421,24 +412,13 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                    <label class="form-label" for="them_trang_thai">Trạng thái</label>
-                                    <select class="select2-admin form-select" id="them_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
-                                        <option value="1" {{ old('trang_thai', '1') == '1' ? 'selected' : '' }}>Hiển thị</option>
-                                        <option value="0" {{ old('trang_thai') == '0' ? 'selected' : '' }}>Ẩn</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_gia_tri">Giá trị</label>
                                     <input type="number" class="form-control" id="them_gia_tri" name="gia_tri" value="{{ old('gia_tri') }}" placeholder="0" min="0" step="0.01">
                                 </div>
-                                <div class="col-12 col-sm-6">
-                                    <label class="form-label" for="them_mo_ta">Mô tả</label>
-                                    <input type="text" class="form-control" id="them_mo_ta" name="mo_ta" value="{{ old('mo_ta') }}" maxlength="500" placeholder="Mô tả ngắn ">
-                                </div>
-                                <div class="col-12 col-sm-6">
+                                <div class="col-12">
                                     <label class="form-label" for="them_ghi_chu">Ghi chú</label>
-                                    <input type="text" class="form-control" id="them_ghi_chu" name="ghi_chu" value="{{ old('ghi_chu') }}" maxlength="500" placeholder="Ghi chú ">
+                                    <textarea class="form-control" id="them_ghi_chu" name="ghi_chu" rows="3" maxlength="500" placeholder="Ghi chú...">{{ old('ghi_chu') }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -515,23 +495,12 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                                    <label class="form-label" for="sua_trang_thai">Trạng thái</label>
-                                    <select class="select2-admin form-select" id="sua_trang_thai" name="trang_thai" data-placeholder="Chọn trạng thái">
-                                        <option value="1">Hiển thị</option>
-                                        <option value="0">Ẩn</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                                     <label class="form-label" for="sua_gia_tri">Giá trị</label>
                                     <input type="number" class="form-control" id="sua_gia_tri" name="gia_tri" placeholder="0" min="0" step="0.01">
                                 </div>
-                                <div class="col-12 col-sm-6">
-                                    <label class="form-label" for="sua_mo_ta">Mô tả</label>
-                                    <input type="text" class="form-control" id="sua_mo_ta" name="mo_ta" maxlength="500" placeholder="Mô tả ngắn ">
-                                </div>
-                                <div class="col-12 col-sm-6">
+                                <div class="col-12">
                                     <label class="form-label" for="sua_ghi_chu">Ghi chú</label>
-                                    <input type="text" class="form-control" id="sua_ghi_chu" name="ghi_chu" maxlength="500" placeholder="Ghi chú ">
+                                    <textarea class="form-control" id="sua_ghi_chu" name="ghi_chu" rows="2" maxlength="500" placeholder="Ghi chú..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -665,15 +634,6 @@
     line-height: 1.3;
     font-size: 0.78rem;
 }
-.san-pham-card__desc {
-    font-size: 0.68rem;
-    line-height: 1.35;
-    color: var(--bs-secondary-color, #8a8d93);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
 .san-pham-card__info-row {
     font-size: 0.68rem;
     line-height: 1.25;
@@ -699,7 +659,6 @@
     .san-pham-card__title {
         font-size: 14px;
     }
-    .san-pham-card__desc,
     .san-pham-card__info-row {
         font-size: 0.7rem;
     }
@@ -766,6 +725,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tooltip
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+
+    var CSRF_TOKEN = @json(csrf_token());
+    var TRANG_THAI_HIEN_THI = {{ \App\Models\TrangPhuc::TRANG_THAI_ACTIVE }};
+
+    function capNhatTrangThaiSanPham(switchEl) {
+        if (!switchEl) return;
+
+        var url = switchEl.getAttribute('data-url');
+        if (!url) return;
+
+        var trangThai = switchEl.checked ? TRANG_THAI_HIEN_THI : 0;
+        var trangThaiCu = switchEl.checked ? 0 : TRANG_THAI_HIEN_THI;
+
+        switchEl.disabled = true;
+
+        fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ trang_thai: trangThai })
+        })
+            .then(function(res) {
+                if (!res.ok) throw new Error('update_failed');
+                return res.json();
+            })
+            .then(function(json) {
+                if (!json || !json.success) throw new Error('update_failed');
+                switchEl.title = switchEl.checked ? 'Hiển thị' : 'Ẩn';
+            })
+            .catch(function() {
+                switchEl.checked = trangThaiCu === TRANG_THAI_HIEN_THI;
+                alert('Không thể cập nhật trạng thái. Vui lòng thử lại.');
+            })
+            .finally(function() {
+                switchEl.disabled = false;
+            });
+    }
+
+    document.querySelectorAll('.switch-trang-thai-san-pham').forEach(function(switchEl) {
+        switchEl.addEventListener('change', function() {
+            capNhatTrangThaiSanPham(this);
+        });
+    });
 
     var modalThem = document.getElementById('modalThemSanPham');
 
@@ -936,9 +942,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (url) formSua.action = url;
             document.getElementById('sua_ten_san_pham').value = btn.getAttribute('data-ten') || '';
             document.getElementById('sua_ma_san_pham').value = btn.getAttribute('data-ma') || '';
-            document.getElementById('sua_mo_ta').value = btn.getAttribute('data-mo-ta') || '';
             document.getElementById('sua_loai').value = btn.getAttribute('data-loai') || '{{ \App\Support\LoaiTrangPhuc::CUOI }}';
-            document.getElementById('sua_trang_thai').value = btn.getAttribute('data-trang-thai') || '1';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_gia_tri').value = btn.getAttribute('data-gia-tri') || '';
 
