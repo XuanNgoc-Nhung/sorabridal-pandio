@@ -245,6 +245,10 @@ class KhachHangController extends Controller
      */
     public function capNhatDieuPhoiHopDongCuoi(Request $request, HopDongCuoi $hopDongCuoi)
     {
+        if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'buoi_chup' => 'nullable|in:sang,chieu,ca_ngay',
             'ngay_chup_thuc_te' => 'nullable|date',
@@ -348,6 +352,10 @@ class KhachHangController extends Controller
      */
     public function nhanVienChoDieuPhoiTheoNgayChup(Request $request, HopDongCuoi $hopDongCuoi): JsonResponse
     {
+        if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'ngay' => 'required|date',
             'ma_phong_ban' => ['required', 'string', Rule::in(PhongBan::MA_DIEU_PHOI_HOP_DONG)],

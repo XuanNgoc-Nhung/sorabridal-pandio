@@ -315,9 +315,9 @@ class NhanSuController extends Controller
     }
 
     /** @return \Illuminate\Support\Collection<int, array<string, mixed>> */
-    private function lichLamViecLayHopDongChuaPhanCong(?int $nhanVienId, bool $isAdmin, string $tz)
+    private function lichLamViecLayHopDongChuaPhanCong(?int $nhanVienId, bool $isAdmin, string $tz, bool $coQuyenDieuChinhHopDongCuoi = false)
     {
-        if (! $isAdmin) {
+        if (! $coQuyenDieuChinhHopDongCuoi) {
             return collect();
         }
 
@@ -344,7 +344,8 @@ class NhanSuController extends Controller
         }
 
         $tz = config('app.timezone');
-        $items = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz)->values();
+        $coQuyenDieuChinhHopDongCuoi = $user?->coQuyenDieuChinhHopDongCuoi() ?? false;
+        $items = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi)->values();
 
         return response()->json(['items' => $items]);
     }
@@ -887,7 +888,8 @@ class NhanSuController extends Controller
 
         $chuaPhanCongItems = collect();
         if (HopDongCuoiLocTienDoFilter::hasChuaPhanCong($locFilters)) {
-            $chuaPhanCongItems = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz);
+            $coQuyenDieuChinhHopDongCuoi = $user?->coQuyenDieuChinhHopDongCuoi() ?? false;
+            $chuaPhanCongItems = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi);
         }
 
         $total = $rows->count();
@@ -915,9 +917,7 @@ class NhanSuController extends Controller
 
     public function lichLamViecHopDongChuaPhanNgay(Request $request)
     {
-        $user = $request->user();
-        $isAdmin = $user?->isAdmin() ?? false;
-        if (! $isAdmin) {
+        if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
 
@@ -944,9 +944,7 @@ class NhanSuController extends Controller
 
     public function lichLamViecHopDongDieuPhoiData(Request $request, HopDongCuoi $hopDongCuoi)
     {
-        $user = $request->user();
-        $isAdmin = $user?->isAdmin() ?? false;
-        if (! $isAdmin) {
+        if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
 
@@ -1006,9 +1004,7 @@ class NhanSuController extends Controller
 
     public function lichLamViecTaoLich(Request $request)
     {
-        $user = $request->user();
-        $isAdmin = $user?->isAdmin() ?? false;
-        if (! $isAdmin) {
+        if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
 

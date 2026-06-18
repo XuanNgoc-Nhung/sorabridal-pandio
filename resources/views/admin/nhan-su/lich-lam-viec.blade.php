@@ -33,7 +33,7 @@
                         {{-- <div class="form-text mt-2 mb-0">Không chọn = hiển thị tất cả hợp đồng (trừ nháp). Chọn nhiều = hiển thị HĐ thỏa ít nhất một điều kiện.</div> --}}
                     </div>
                 @endif
-                @if(!empty($isAdmin))
+                @if($coQuyenDieuChinhHopDongCuoi ?? false)
                 <div id="wsLichChuaPhanCongPanel" class="ws-lich-chua-phan-cong border-bottom pb-3 mb-3 d-none" style="display: none;" aria-label="Hợp đồng chưa phân công">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                         <div class="text-muted small mb-0">Chưa phân công <span class="text-muted">(chưa phân chụp · make · edit, chưa có ngày trên lịch)</span></div>
@@ -122,7 +122,7 @@
                 <div class="text-muted small">Đang tải...</div>
             </div>
             <div class="modal-footer">
-                @if(!empty($isAdmin))
+                @if($coQuyenDieuChinhHopDongCuoi ?? false)
                 <button type="button" class="btn btn-primary" id="wsWorkDayAddBtn">
                     <i class="icon-base ti tabler-plus icon-sm me-1"></i> Thêm lịch
                 </button>
@@ -133,6 +133,7 @@
     </div>
 </div>
 
+@if($coQuyenDieuChinhHopDongCuoi ?? false)
 <div class="modal fade" id="wsAddWorkModal" tabindex="-1" aria-labelledby="wsAddWorkModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
@@ -221,6 +222,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <div class="modal fade" id="modalInBrief" tabindex="-1" aria-labelledby="modalInBriefLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -425,7 +427,7 @@
             }
 
             function syncChuaPhanCongPanel() {
-                if (!chuaPhanCongPanel || !isAdmin) return;
+                if (!chuaPhanCongPanel || !coQuyenDieuChinhHopDongCuoi) return;
                 if (locIncludesChuaPhanCong()) {
                     chuaPhanCongPanel.classList.remove('d-none');
                     loadChuaPhanCongPanel();
@@ -969,6 +971,7 @@
             }
 
             var isAdmin = @json(!empty($isAdmin));
+            var coQuyenDieuChinhHopDongCuoi = @json((bool) ($coQuyenDieuChinhHopDongCuoi ?? false));
             var todayStr = (function () {
                 var now = new Date();
                 return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
@@ -1017,7 +1020,7 @@
             }
 
             function buildDieuPhoiButtonHtml(contractItem) {
-                if (!isAdmin) return '';
+                if (!coQuyenDieuChinhHopDongCuoi) return '';
                 var hopId = contractItem && contractItem.id != null ? String(contractItem.id) : '';
                 if (!hopId) return '';
                 return '<button type="button" class="btn btn-sm btn-outline-primary btn-dieu-phoi" ' +
