@@ -771,7 +771,8 @@
             }
 
             function isNhapContract(contractItem) {
-                return String(contractItem && contractItem.trang_thai_hop_dong || '').toLowerCase() === 'nhap';
+                var status = String(contractItem && contractItem.trang_thai_hop_dong || '').toLowerCase();
+                return status === 'nhap' || status === 'da_huy';
             }
 
             function filterVisibleContracts(contracts) {

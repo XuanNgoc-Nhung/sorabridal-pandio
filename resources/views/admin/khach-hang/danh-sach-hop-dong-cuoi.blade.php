@@ -387,12 +387,18 @@
                                 @if($item->email_sdt_chu_re)
                                 <div>CR: {{ str($item->email_sdt_chu_re)->limit(42) }}</div>
                                 @endif
+                                @if($laPhongSuCuoi)
+                                <i style="padding-left: 0.5rem;"><small>
+                                    Đc: {{ $item->dia_chi_chu_re ? str($item->dia_chi_chu_re)->limit(42) : '—' }}
+                                </small></i>
+                                @endif
                                 @if($item->email_sdt_co_dau)
                                 <div>CD: {{ str($item->email_sdt_co_dau)->limit(42) }}</div>
                                 @endif
                                 @if($laPhongSuCuoi)
-                                <div>ĐC CR: {{ $item->dia_chi_chu_re ? str($item->dia_chi_chu_re)->limit(42) : '—' }}</div>
-                                <div>ĐC CD: {{ $item->dia_chi_co_dau ? str($item->dia_chi_co_dau)->limit(42) : '—' }}</div>
+                                <i style="padding-left: 0.5rem;"><small>
+                                    Đc: {{ $item->dia_chi_co_dau ? str($item->dia_chi_co_dau)->limit(42) : '—' }}
+                                </small></i>
                                 @endif
                                 @if(! $item->email_sdt_chu_re && ! $item->email_sdt_co_dau && ! $laPhongSuCuoi)
                                 <div>—</div>

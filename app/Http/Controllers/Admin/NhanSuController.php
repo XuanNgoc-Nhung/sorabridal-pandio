@@ -233,7 +233,7 @@ class NhanSuController extends Controller
 
     private function lichLamViecExcludeNhap($query): void
     {
-        $query->whereNotIn('trang_thai_hop_dong', ['nhap']);
+        $query->whereNotIn('trang_thai_hop_dong', ['nhap', 'da_huy']);
     }
 
     private function lichLamViecNgayLabel(string $dateStr, string $tz): string
@@ -365,7 +365,6 @@ class NhanSuController extends Controller
         $query = HopDongCuoi::query()
             ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
             ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
-            ->whereNotIn('trang_thai_hop_dong', ['da_huy'])
             ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q));
 
         if ($mode === self::LICH_MODE_SHOP) {
@@ -861,7 +860,7 @@ class NhanSuController extends Controller
 
         $events = $grouped->map(function ($group, $ngay) use ($nhanVienId, $isAdmin, $tz, $mode) {
             $contracts = $group
-                ->reject(fn (HopDongCuoi $hd) => ($hd->trang_thai_hop_dong ?? '') === 'nhap')
+                ->reject(fn (HopDongCuoi $hd) => in_array($hd->trang_thai_hop_dong ?? '', ['nhap', 'da_huy'], true))
                 ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz, $mode))
                 ->values()
                 ->all();
@@ -959,7 +958,7 @@ class NhanSuController extends Controller
             ->get();
 
         $rows = $hopDongs
-            ->reject(fn (HopDongCuoi $hd) => ($hd->trang_thai_hop_dong ?? '') === 'nhap')
+            ->reject(fn (HopDongCuoi $hd) => in_array($hd->trang_thai_hop_dong ?? '', ['nhap', 'da_huy'], true))
             ->map(function (HopDongCuoi $hd) use ($nhanVienId, $isAdmin, $tz, $mode) {
                 $ngay = $this->lichModeNgayValue($hd, $mode);
                 if (! $ngay) {
@@ -1022,7 +1021,7 @@ class NhanSuController extends Controller
         }
 
         $query = HopDongCuoi::query()
-            ->whereNotIn('trang_thai_hop_dong', ['nhap', 'da_huy'])
+            ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
             ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q));
 
         if ($mode === self::LICH_MODE_SHOP) {
