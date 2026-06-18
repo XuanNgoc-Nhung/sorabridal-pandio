@@ -39,7 +39,6 @@ class TrangPhucController extends Controller
             'search' => 'nullable|string|max:200',
             'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(TrangPhuc::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
-            'loai' => 'nullable|string|in:'.implode(',', LoaiTrangPhuc::values()),
         ]);
 
         $query = TrangPhuc::query();
@@ -50,18 +49,10 @@ class TrangPhucController extends Controller
             $query->where(function ($qb) use ($like) {
                 $qb->where('ten_san_pham', 'like', $like)
                     ->orWhere('ma_san_pham', 'like', $like)
+                    ->orWhere('loai', 'like', $like)
                     ->orWhere('mo_ta', 'like', $like)
                     ->orWhere('ghi_chu', 'like', $like);
             });
-        }
-
-        if (! empty($validated['loai'])) {
-            $loai = LoaiTrangPhuc::normalize($validated['loai']);
-            if ($loai === LoaiTrangPhuc::CHUP) {
-                $query->whereIn('loai', [LoaiTrangPhuc::CHUP, 'phong_su']);
-            } else {
-                $query->where('loai', $loai);
-            }
         }
 
         $sapXepTheo = $validated['sap_xep_theo'] ?? TrangPhuc::SAP_XEP_MAC_DINH;
@@ -92,7 +83,7 @@ class TrangPhucController extends Controller
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
-            'loai' => 'required|string|in:'.implode(',', LoaiTrangPhuc::values()),
+            'loai' => 'nullable|string|max:'.TrangPhuc::LOAI_MAX_LENGTH,
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
 
@@ -103,10 +94,12 @@ class TrangPhucController extends Controller
             $hinhAnhPath = $request->file('hinh_anh')->store('trang-phuc/san-pham', 'public');
         }
 
+        $loai = trim((string) ($validated['loai'] ?? ''));
+
         TrangPhuc::create([
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
-            'loai' => $validated['loai'],
+            'loai' => $loai !== '' ? $loai : null,
             'slug' => $slug,
             'hinh_anh' => $hinhAnhPath,
             'mo_ta' => $validated['mo_ta'] ?? null,
@@ -126,7 +119,6 @@ class TrangPhucController extends Controller
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'mo_ta' => 'nullable|string|max:500',
             'ghi_chu' => 'nullable|string|max:500',
-            'loai' => 'required|string|in:'.implode(',', LoaiTrangPhuc::values()),
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
 
@@ -137,7 +129,6 @@ class TrangPhucController extends Controller
             'ma_san_pham' => $validated['ma_san_pham'],
             'slug' => $slug,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
-            'loai' => $validated['loai'],
             'gia_tri' => $validated['gia_tri'] ?? 0,
         ];
 

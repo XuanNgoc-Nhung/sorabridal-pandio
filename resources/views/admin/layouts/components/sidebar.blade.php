@@ -59,6 +59,14 @@
                           break;
                       }
                   }
+                  if (! $isOpen && ! empty($item['routes'])) {
+                      foreach ($item['routes'] as $route) {
+                          if (request()->routeIs($route)) {
+                              $isOpen = true;
+                              break;
+                          }
+                      }
+                  }
                 @endphp
                 <li class="menu-item {{ $isOpen ? 'active open' : '' }}">
                   <a href="javascript:void(0);" class="menu-link menu-toggle">

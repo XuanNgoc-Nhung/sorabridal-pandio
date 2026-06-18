@@ -32,6 +32,9 @@ class TrangPhuc extends Model
 
     public const SAP_XEP_MAC_DINH = self::SAP_XEP_ID;
 
+    /** Độ dài tối đa cột loai (string tự do, không bắt buộc). */
+    public const LOAI_MAX_LENGTH = 100;
+
     /** @var array<string, string> */
     public const SAP_XEP_OPTIONS = [
         self::SAP_XEP_ID => 'Mới nhất',
