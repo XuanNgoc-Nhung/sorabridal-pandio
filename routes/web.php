@@ -97,6 +97,21 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/tao-lich', [AdminNhanSu::class, 'lichLamViecTaoLich'])->name('lich-chup.tao-lich');
     });
 
+    // Lịch shop (menu độc lập)
+    Route::group(['prefix' => 'lich-shop'], function () {
+        Route::get('/', [AdminNhanSu::class, 'lichShop'])->name('lich-shop');
+        Route::get('/data', [AdminNhanSu::class, 'lichShopData'])->name('lich-shop.data');
+        Route::get('/danh-sach', [AdminNhanSu::class, 'lichShopDanhSach'])->name('lich-shop.danh-sach');
+        Route::get('/chi-tiet-ngay', [AdminNhanSu::class, 'lichShopChiTietNgay'])->name('lich-shop.chi-tiet-ngay');
+        Route::get('/hop-dong-chua-phan-ngay', [AdminNhanSu::class, 'lichShopHopDongChuaPhanNgay'])
+            ->name('lich-shop.hop-dong-chua-phan-ngay');
+        Route::get('/chua-phan-cong', [AdminNhanSu::class, 'lichShopChuaPhanCong'])
+            ->name('lich-shop.chua-phan-cong');
+        Route::get('/hop-dong/{hopDongCuoi}/dieu-phoi-data', [AdminNhanSu::class, 'lichShopHopDongDieuPhoiData'])
+            ->name('lich-shop.hop-dong-dieu-phoi-data');
+        Route::post('/tao-lich', [AdminNhanSu::class, 'lichShopTaoLich'])->name('lich-shop.tao-lich');
+    });
+
     // Tư vấn
     Route::group(['prefix' => 'tu-van'], function () {
         Route::get('/danh-sach', [AdminTuVan::class, 'danhSach'])->name('tu-van.danh-sach');

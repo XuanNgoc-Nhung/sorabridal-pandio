@@ -47,6 +47,16 @@ class CheckRoute
             'admin.lich-chup.tao-lich',
             'admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay',
         ],
+        'admin.lich-shop' => [
+            'admin.lich-shop.data',
+            'admin.lich-shop.danh-sach',
+            'admin.lich-shop.chi-tiet-ngay',
+            'admin.lich-shop.hop-dong-chua-phan-ngay',
+            'admin.lich-shop.chua-phan-cong',
+            'admin.lich-shop.hop-dong-dieu-phoi-data',
+            'admin.lich-shop.tao-lich',
+            'admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay',
+        ],
         'admin.nhan-su.cong-viec-cua-toi' => [
             'admin.nhan-su.cong-viec-cua-toi.cap-nhat-link',
         ],

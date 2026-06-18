@@ -22,18 +22,59 @@ use Illuminate\Validation\ValidationException;
 
 class NhanSuController extends Controller
 {
-    private function lichLamViecStartAt(HopDongCuoi $hd, string $tz): ?Carbon
+    private const LICH_MODE_CHUP = 'chup';
+
+    private const LICH_MODE_SHOP = 'shop';
+
+    private function lichModeNgayExpr(string $mode): string
     {
-        $ngayChup = $hd->ngay_chup_thuc_te ?? $hd->ngay_chup_du_kien;
-        if (! $ngayChup) {
+        return $mode === self::LICH_MODE_SHOP
+            ? 'ngay_tra_link_demo_chinh_thuc'
+            : 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
+    }
+
+    private function lichModeNgayValue(HopDongCuoi $hd, string $mode): mixed
+    {
+        if ($mode === self::LICH_MODE_SHOP) {
+            return $hd->ngay_tra_link_demo_chinh_thuc;
+        }
+
+        return $hd->ngay_chup_thuc_te ?? $hd->ngay_chup_du_kien;
+    }
+
+    private function lichModeDaPhanNgay(HopDongCuoi $hd, string $mode): bool
+    {
+        if ($mode === self::LICH_MODE_SHOP) {
+            return (bool) $hd->ngay_tra_link_demo_chinh_thuc;
+        }
+
+        return (bool) ($hd->ngay_chup_thuc_te || $hd->ngay_chup_du_kien);
+    }
+
+    private function lichModeView(string $mode): string
+    {
+        return $mode === self::LICH_MODE_SHOP
+            ? 'admin.nhan-su.lich-shop'
+            : 'admin.nhan-su.lich-chup';
+    }
+
+    private function lichLamViecStartAt(HopDongCuoi $hd, string $tz, string $mode = self::LICH_MODE_CHUP): ?Carbon
+    {
+        $ngay = $this->lichModeNgayValue($hd, $mode);
+        if (! $ngay) {
             return null;
         }
 
-        $start = Carbon::parse($ngayChup, $tz)->startOfDay();
-        $gioChup = trim((string) ($hd->gio_chup ?? ''));
+        $start = Carbon::parse($ngay, $tz)->startOfDay();
 
-        if ($gioChup !== '' && preg_match('/^(?<hour>\d{1,2}):(?<minute>\d{2})/', $gioChup, $matches)) {
-            $start->setTime((int) $matches['hour'], (int) $matches['minute']);
+        if ($mode === self::LICH_MODE_CHUP) {
+            $gioChup = trim((string) ($hd->gio_chup ?? ''));
+
+            if ($gioChup !== '' && preg_match('/^(?<hour>\d{1,2}):(?<minute>\d{2})/', $gioChup, $matches)) {
+                $start->setTime((int) $matches['hour'], (int) $matches['minute']);
+            } else {
+                $start->setTime(8, 0);
+            }
         } else {
             $start->setTime(8, 0);
         }
@@ -276,9 +317,9 @@ class NhanSuController extends Controller
         ];
     }
 
-    private function lichLamViecHopDongSummary(HopDongCuoi $hd, ?int $nhanVienId, bool $isAdmin, string $tz): array
+    private function lichLamViecHopDongSummary(HopDongCuoi $hd, ?int $nhanVienId, bool $isAdmin, string $tz, string $mode = self::LICH_MODE_CHUP): array
     {
-        $start = $this->lichLamViecStartAt($hd, $tz);
+        $start = $this->lichLamViecStartAt($hd, $tz, $mode);
         $roleKeys = $this->lichLamViecRoleKeys($hd, $nhanVienId, $isAdmin);
         $tienDo = $this->lichLamViecTienDo($hd);
 
@@ -315,26 +356,43 @@ class NhanSuController extends Controller
     }
 
     /** @return \Illuminate\Support\Collection<int, array<string, mixed>> */
-    private function lichLamViecLayHopDongChuaPhanCong(?int $nhanVienId, bool $isAdmin, string $tz, bool $coQuyenDieuChinhHopDongCuoi = false)
+    private function lichLamViecLayHopDongChuaPhanCong(?int $nhanVienId, bool $isAdmin, string $tz, bool $coQuyenDieuChinhHopDongCuoi = false, string $mode = self::LICH_MODE_CHUP)
     {
         if (! $coQuyenDieuChinhHopDongCuoi) {
             return collect();
         }
 
-        return HopDongCuoi::query()
+        $query = HopDongCuoi::query()
             ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
             ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
             ->whereNotIn('trang_thai_hop_dong', ['da_huy'])
-            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q))
-            ->whereNull('ngay_chup_thuc_te')
-            ->whereNull('ngay_chup_du_kien')
+            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q));
+
+        if ($mode === self::LICH_MODE_SHOP) {
+            $query->whereNull('ngay_tra_link_demo_chinh_thuc');
+        } else {
+            $query->whereNull('ngay_chup_thuc_te')
+                ->whereNull('ngay_chup_du_kien');
+        }
+
+        return $query
             ->orderByDesc('id')
             ->limit(200)
             ->get()
-            ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz));
+            ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz, $mode));
     }
 
     public function lichLamViecChuaPhanCong(Request $request)
+    {
+        return $this->lichLamViecChuaPhanCongTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopChuaPhanCong(Request $request)
+    {
+        return $this->lichLamViecChuaPhanCongTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecChuaPhanCongTheoMode(Request $request, string $mode)
     {
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
@@ -345,7 +403,7 @@ class NhanSuController extends Controller
 
         $tz = config('app.timezone');
         $coQuyenDieuChinhHopDongCuoi = $user?->coQuyenDieuChinhHopDongCuoi() ?? false;
-        $items = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi)->values();
+        $items = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi, $mode)->values();
 
         return response()->json(['items' => $items]);
     }
@@ -672,10 +730,20 @@ class NhanSuController extends Controller
 
     public function lichLamViec()
     {
+        return $this->lichLamViecTheoMode(self::LICH_MODE_CHUP);
+    }
+
+    public function lichShop()
+    {
+        return $this->lichLamViecTheoMode(self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecTheoMode(string $mode)
+    {
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
-        $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
+        $ngayExpr = $this->lichModeNgayExpr($mode);
 
         $homNay = Carbon::now(config('app.timezone'));
         $batDauTuan = $homNay->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
@@ -690,8 +758,8 @@ class NhanSuController extends Controller
             $hopDongTrongTuan = HopDongCuoi::query()
                 ->with(['concept', 'thoChup', 'thoMake', 'thoEdit'])
                 ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
-                ->whereNotNull(DB::raw($ngayChupExpr))
-                ->whereBetween(DB::raw("DATE($ngayChupExpr)"), [$batDauTuan->toDateString(), $ketThucTuan->toDateString()])
+                ->whereNotNull(DB::raw($ngayExpr))
+                ->whereBetween(DB::raw("DATE($ngayExpr)"), [$batDauTuan->toDateString(), $ketThucTuan->toDateString()])
                 ->when(! $isAdmin, function ($q) use ($nhanVienId) {
                     $q->where(function ($qq) use ($nhanVienId) {
                         $qq->where('tho_chup_id', $nhanVienId)
@@ -699,7 +767,7 @@ class NhanSuController extends Controller
                             ->orWhere('tho_edit_id', $nhanVienId);
                     });
                 })
-                ->orderByRaw("DATE($ngayChupExpr)")
+                ->orderByRaw("DATE($ngayExpr)")
                 ->get();
         }
 
@@ -712,7 +780,7 @@ class NhanSuController extends Controller
         $tienDoLegend = config('lich_lam_viec.tien_do', []);
         $locTienDoFilters = config('lich_lam_viec.loc_tien_do', []);
 
-        return view('admin.nhan-su.lich-chup', compact(
+        return view($this->lichModeView($mode), compact(
             'batDauTuan',
             'ketThucTuan',
             'dsNgayTrongTuan',
@@ -727,10 +795,20 @@ class NhanSuController extends Controller
 
     public function lichLamViecData(Request $request)
     {
+        return $this->lichLamViecDataTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopData(Request $request)
+    {
+        return $this->lichLamViecDataTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecDataTheoMode(Request $request, string $mode)
+    {
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
-        $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
+        $ngayExpr = $this->lichModeNgayExpr($mode);
         if (! $isAdmin && ! $nhanVienId) {
             return response()->json([]);
         }
@@ -750,11 +828,16 @@ class NhanSuController extends Controller
         $startDate = $startDt->toDateString();
         $endDate = $endDtExclusive->copy()->subDay()->toDateString();
 
+        $orderBy = "DATE($ngayExpr)";
+        if ($mode === self::LICH_MODE_CHUP) {
+            $orderBy .= ', gio_chup';
+        }
+
         $hopDongs = HopDongCuoi::query()
             ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
             ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
-            ->whereNotNull(DB::raw($ngayChupExpr))
-            ->whereBetween(DB::raw("DATE($ngayChupExpr)"), [$startDate, $endDate])
+            ->whereNotNull(DB::raw($ngayExpr))
+            ->whereBetween(DB::raw("DATE($ngayExpr)"), [$startDate, $endDate])
             ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::apply($q, $locFilters))
             ->when(! $isAdmin, function ($q) use ($nhanVienId) {
                 $q->where(function ($qq) use ($nhanVienId) {
@@ -763,24 +846,23 @@ class NhanSuController extends Controller
                         ->orWhere('tho_edit_id', $nhanVienId);
                 });
             })
-            ->orderByRaw("DATE($ngayChupExpr)")
-            ->orderBy('gio_chup')
+            ->orderByRaw($orderBy)
             ->orderBy('id')
             ->get();
 
-        $grouped = $hopDongs->groupBy(function (HopDongCuoi $hd) use ($tz) {
-            $ngayChup = $hd->ngay_chup_thuc_te ?? $hd->ngay_chup_du_kien;
-            if (! $ngayChup) {
+        $grouped = $hopDongs->groupBy(function (HopDongCuoi $hd) use ($tz, $mode) {
+            $ngay = $this->lichModeNgayValue($hd, $mode);
+            if (! $ngay) {
                 return null;
             }
 
-            return Carbon::parse($ngayChup, $tz)->toDateString();
+            return Carbon::parse($ngay, $tz)->toDateString();
         })->filter(fn ($_, $key) => $key !== null && $key !== '');
 
-        $events = $grouped->map(function ($group, $ngay) use ($nhanVienId, $isAdmin, $tz) {
+        $events = $grouped->map(function ($group, $ngay) use ($nhanVienId, $isAdmin, $tz, $mode) {
             $contracts = $group
                 ->reject(fn (HopDongCuoi $hd) => ($hd->trang_thai_hop_dong ?? '') === 'nhap')
-                ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz))
+                ->map(fn (HopDongCuoi $hd) => $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz, $mode))
                 ->values()
                 ->all();
 
@@ -806,35 +888,39 @@ class NhanSuController extends Controller
 
     public function lichLamViecDanhSach(Request $request)
     {
+        return $this->lichLamViecDanhSachTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopDanhSach(Request $request)
+    {
+        return $this->lichLamViecDanhSachTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecDanhSachTheoMode(Request $request, string $mode)
+    {
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
-        $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
+        $ngayExpr = $this->lichModeNgayExpr($mode);
+
+        $emptyPagination = [
+            'items' => [],
+            'pagination' => [
+                'current_page' => 1,
+                'per_page' => 20,
+                'total' => 0,
+                'last_page' => 1,
+            ],
+        ];
 
         if (! $isAdmin && ! $nhanVienId) {
-            return response()->json([
-                'items' => [],
-                'pagination' => [
-                    'current_page' => 1,
-                    'per_page' => 20,
-                    'total' => 0,
-                    'last_page' => 1,
-                ],
-            ]);
+            return response()->json($emptyPagination);
         }
 
         $start = $request->query('start');
         $end = $request->query('end');
         if (! $start || ! $end) {
-            return response()->json([
-                'items' => [],
-                'pagination' => [
-                    'current_page' => 1,
-                    'per_page' => 20,
-                    'total' => 0,
-                    'last_page' => 1,
-                ],
-            ]);
+            return response()->json($emptyPagination);
         }
 
         $page = max(1, (int) $request->query('page', 1));
@@ -850,11 +936,16 @@ class NhanSuController extends Controller
         $endDate = $endDtExclusive->copy()->subDay()->toDateString();
         $locFilters = HopDongCuoiLocTienDoFilter::parseFromRequest($request);
 
+        $orderBy = "DATE($ngayExpr)";
+        if ($mode === self::LICH_MODE_CHUP) {
+            $orderBy .= ', gio_chup';
+        }
+
         $hopDongs = HopDongCuoi::query()
             ->with(['concept', 'nhomDichVu', 'thoChup.user', 'thoMake.user', 'thoEdit.user'])
             ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
-            ->whereNotNull(DB::raw($ngayChupExpr))
-            ->whereBetween(DB::raw("DATE($ngayChupExpr)"), [$startDate, $endDate])
+            ->whereNotNull(DB::raw($ngayExpr))
+            ->whereBetween(DB::raw("DATE($ngayExpr)"), [$startDate, $endDate])
             ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::apply($q, $locFilters))
             ->when(! $isAdmin, function ($q) use ($nhanVienId) {
                 $q->where(function ($qq) use ($nhanVienId) {
@@ -863,20 +954,19 @@ class NhanSuController extends Controller
                         ->orWhere('tho_edit_id', $nhanVienId);
                 });
             })
-            ->orderByRaw("DATE($ngayChupExpr)")
-            ->orderBy('gio_chup')
+            ->orderByRaw($orderBy)
             ->orderBy('id')
             ->get();
 
         $rows = $hopDongs
             ->reject(fn (HopDongCuoi $hd) => ($hd->trang_thai_hop_dong ?? '') === 'nhap')
-            ->map(function (HopDongCuoi $hd) use ($nhanVienId, $isAdmin, $tz) {
-                $ngayChup = $hd->ngay_chup_thuc_te ?? $hd->ngay_chup_du_kien;
-                if (! $ngayChup) {
+            ->map(function (HopDongCuoi $hd) use ($nhanVienId, $isAdmin, $tz, $mode) {
+                $ngay = $this->lichModeNgayValue($hd, $mode);
+                if (! $ngay) {
                     return null;
                 }
-                $ngay = Carbon::parse($ngayChup, $tz)->toDateString();
-                $summary = $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz);
+                $ngay = Carbon::parse($ngay, $tz)->toDateString();
+                $summary = $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz, $mode);
 
                 return array_merge($summary, [
                     'ngay' => $ngay,
@@ -889,7 +979,7 @@ class NhanSuController extends Controller
         $chuaPhanCongItems = collect();
         if (HopDongCuoiLocTienDoFilter::hasChuaPhanCong($locFilters)) {
             $coQuyenDieuChinhHopDongCuoi = $user?->coQuyenDieuChinhHopDongCuoi() ?? false;
-            $chuaPhanCongItems = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi);
+            $chuaPhanCongItems = $this->lichLamViecLayHopDongChuaPhanCong($nhanVienId, $isAdmin, $tz, $coQuyenDieuChinhHopDongCuoi, $mode);
         }
 
         $total = $rows->count();
@@ -917,15 +1007,32 @@ class NhanSuController extends Controller
 
     public function lichLamViecHopDongChuaPhanNgay(Request $request)
     {
+        return $this->lichLamViecHopDongChuaPhanNgayTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopHopDongChuaPhanNgay(Request $request)
+    {
+        return $this->lichLamViecHopDongChuaPhanNgayTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecHopDongChuaPhanNgayTheoMode(Request $request, string $mode)
+    {
         if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
 
-        $items = HopDongCuoi::query()
+        $query = HopDongCuoi::query()
             ->whereNotIn('trang_thai_hop_dong', ['nhap', 'da_huy'])
-            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q))
-            ->whereNull('ngay_chup_thuc_te')
-            ->whereNull('ngay_chup_du_kien')
+            ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::applyChuaPhanCong($q));
+
+        if ($mode === self::LICH_MODE_SHOP) {
+            $query->whereNull('ngay_tra_link_demo_chinh_thuc');
+        } else {
+            $query->whereNull('ngay_chup_thuc_te')
+                ->whereNull('ngay_chup_du_kien');
+        }
+
+        $items = $query
             ->orderByDesc('id')
             ->limit(200)
             ->get()
@@ -944,6 +1051,16 @@ class NhanSuController extends Controller
 
     public function lichLamViecHopDongDieuPhoiData(Request $request, HopDongCuoi $hopDongCuoi)
     {
+        return $this->lichLamViecHopDongDieuPhoiDataTheoMode($request, $hopDongCuoi, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopHopDongDieuPhoiData(Request $request, HopDongCuoi $hopDongCuoi)
+    {
+        return $this->lichLamViecHopDongDieuPhoiDataTheoMode($request, $hopDongCuoi, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecHopDongDieuPhoiDataTheoMode(Request $request, HopDongCuoi $hopDongCuoi, string $mode)
+    {
         if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
@@ -952,8 +1069,12 @@ class NhanSuController extends Controller
             return response()->json(['message' => 'Hợp đồng nháp hoặc đã huỷ nên không thể phân lịch.'], 422);
         }
         $capNhat = $request->boolean('cap_nhat');
-        if (! $capNhat && ($hopDongCuoi->ngay_chup_thuc_te || $hopDongCuoi->ngay_chup_du_kien)) {
-            return response()->json(['message' => 'Hợp đồng đã được phân ngày chụp trước đó.'], 422);
+        if (! $capNhat && $this->lichModeDaPhanNgay($hopDongCuoi, $mode)) {
+            $message = $mode === self::LICH_MODE_SHOP
+                ? 'Hợp đồng đã được phân ngày trả link demo trước đó.'
+                : 'Hợp đồng đã được phân ngày chụp trước đó.';
+
+            return response()->json(['message' => $message], 422);
         }
 
         $gioChup = $hopDongCuoi->gio_chup ? substr((string) $hopDongCuoi->gio_chup, 0, 5) : null;
@@ -1004,13 +1125,22 @@ class NhanSuController extends Controller
 
     public function lichLamViecTaoLich(Request $request)
     {
+        return $this->lichLamViecTaoLichTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopTaoLich(Request $request)
+    {
+        return $this->lichLamViecTaoLichTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecTaoLichTheoMode(Request $request, string $mode)
+    {
         if (! ($request->user()?->coQuyenDieuChinhHopDongCuoi() ?? false)) {
             abort(403);
         }
 
-        $validated = $request->validate([
+        $rules = [
             'hop_dong_id' => ['required', 'integer', 'exists:hop_dong_cuoi,id'],
-            'ngay_chup_thuc_te' => ['required', 'date'],
             'gio_chup' => ['nullable', 'date_format:H:i'],
             'ngay_cuoi_chinh_thuc' => ['nullable', 'date'],
             'dia_diem_chup' => ['nullable', 'string'],
@@ -1020,25 +1150,41 @@ class NhanSuController extends Controller
             'tho_make_id' => ['nullable', 'integer', 'exists:nhan_vien,id'],
             'tho_edit_id' => ['nullable', 'integer', 'exists:nhan_vien,id'],
             'ghi_chu_sale' => ['nullable', 'string'],
-        ], [
+        ];
+
+        $messages = [
             'hop_dong_id.required' => 'Vui lòng chọn hợp đồng.',
             'hop_dong_id.exists' => 'Hợp đồng không tồn tại.',
-            'ngay_chup_thuc_te.required' => 'Thiếu ngày chụp chính thức.',
-        ]);
+        ];
 
-        $ngayChup = Carbon::parse($validated['ngay_chup_thuc_te'])->toDateString();
+        if ($mode === self::LICH_MODE_SHOP) {
+            $rules['ngay_tra_link_demo_chinh_thuc'] = ['required', 'date'];
+            $rules['ngay_chup_thuc_te'] = ['nullable', 'date'];
+            $messages['ngay_tra_link_demo_chinh_thuc.required'] = 'Thiếu ngày trả link demo chính thức.';
+        } else {
+            $rules['ngay_chup_thuc_te'] = ['required', 'date'];
+            $messages['ngay_chup_thuc_te.required'] = 'Thiếu ngày chụp chính thức.';
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        $ngayChup = ! empty($validated['ngay_chup_thuc_te'])
+            ? Carbon::parse($validated['ngay_chup_thuc_te'])->toDateString()
+            : null;
         $hopDongId = (int) $validated['hop_dong_id'];
 
-        $banIds = $this->layTapIdNhanVienBanChoNgayChupThucTe($ngayChup, $hopDongId);
-        $messages = [];
-        if (! empty($validated['tho_chup_id']) && isset($banIds[(int) $validated['tho_chup_id']])) {
-            $messages['tho_chup_id'] = 'Người chụp đã có lịch chụp/make khác vào ngày này.';
-        }
-        if (! empty($validated['tho_make_id']) && isset($banIds[(int) $validated['tho_make_id']])) {
-            $messages['tho_make_id'] = 'Người make đã có lịch chụp/make khác vào ngày này.';
-        }
-        if ($messages !== []) {
-            throw ValidationException::withMessages($messages);
+        if ($ngayChup) {
+            $banIds = $this->layTapIdNhanVienBanChoNgayChupThucTe($ngayChup, $hopDongId);
+            $conflictMessages = [];
+            if (! empty($validated['tho_chup_id']) && isset($banIds[(int) $validated['tho_chup_id']])) {
+                $conflictMessages['tho_chup_id'] = 'Người chụp đã có lịch chụp/make khác vào ngày này.';
+            }
+            if (! empty($validated['tho_make_id']) && isset($banIds[(int) $validated['tho_make_id']])) {
+                $conflictMessages['tho_make_id'] = 'Người make đã có lịch chụp/make khác vào ngày này.';
+            }
+            if ($conflictMessages !== []) {
+                throw ValidationException::withMessages($conflictMessages);
+            }
         }
 
         if (! empty($validated['gio_chup'])) {
@@ -1047,15 +1193,19 @@ class NhanSuController extends Controller
 
         unset($validated['hop_dong_id']);
 
-        return DB::transaction(function () use ($validated, $hopDongId) {
+        return DB::transaction(function () use ($validated, $hopDongId, $mode) {
             /** @var HopDongCuoi $hd */
             $hd = HopDongCuoi::query()->lockForUpdate()->findOrFail($hopDongId);
 
             if (in_array($hd->trang_thai_hop_dong ?? '', ['nhap', 'da_huy'], true)) {
                 return response()->json(['message' => 'Hợp đồng nháp hoặc đã huỷ nên không thể phân lịch.'], 422);
             }
-            if ($hd->ngay_chup_thuc_te || $hd->ngay_chup_du_kien) {
-                return response()->json(['message' => 'Hợp đồng đã được phân ngày chụp trước đó.'], 422);
+            if ($this->lichModeDaPhanNgay($hd, $mode)) {
+                $message = $mode === self::LICH_MODE_SHOP
+                    ? 'Hợp đồng đã được phân ngày trả link demo trước đó.'
+                    : 'Hợp đồng đã được phân ngày chụp trước đó.';
+
+                return response()->json(['message' => $message], 422);
             }
 
             $hd->fill($validated);
@@ -1067,10 +1217,20 @@ class NhanSuController extends Controller
 
     public function lichLamViecChiTietNgay(Request $request)
     {
+        return $this->lichLamViecChiTietNgayTheoMode($request, self::LICH_MODE_CHUP);
+    }
+
+    public function lichShopChiTietNgay(Request $request)
+    {
+        return $this->lichLamViecChiTietNgayTheoMode($request, self::LICH_MODE_SHOP);
+    }
+
+    private function lichLamViecChiTietNgayTheoMode(Request $request, string $mode)
+    {
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $nhanVienId = $user?->nhanVien?->id;
-        $ngayChupExpr = 'COALESCE(ngay_chup_thuc_te, ngay_chup_du_kien)';
+        $ngayExpr = $this->lichModeNgayExpr($mode);
         if (! $isAdmin && ! $nhanVienId) {
             return response()->json(['date' => null, 'items' => []]);
         }
@@ -1089,6 +1249,11 @@ class NhanSuController extends Controller
 
         $locFilters = HopDongCuoiLocTienDoFilter::parseFromRequest($request);
 
+        $orderBy = "DATE($ngayExpr)";
+        if ($mode === self::LICH_MODE_CHUP) {
+            $orderBy .= ', gio_chup';
+        }
+
         $items = HopDongCuoi::query()
             ->with([
                 'concept',
@@ -1099,8 +1264,8 @@ class NhanSuController extends Controller
                 'hopDongCuoiTrangPhuc.trangPhuc',
             ])
             ->tap(fn ($q) => $this->lichLamViecExcludeNhap($q))
-            ->whereNotNull(DB::raw($ngayChupExpr))
-            ->whereRaw("DATE($ngayChupExpr) = ?", [$day])
+            ->whereNotNull(DB::raw($ngayExpr))
+            ->whereRaw("DATE($ngayExpr) = ?", [$day])
             ->tap(fn ($q) => HopDongCuoiLocTienDoFilter::apply($q, $locFilters))
             ->when(! $isAdmin, function ($q) use ($nhanVienId) {
                 $q->where(function ($qq) use ($nhanVienId) {
@@ -1109,11 +1274,11 @@ class NhanSuController extends Controller
                         ->orWhere('tho_edit_id', $nhanVienId);
                 });
             })
-            ->orderByRaw("DATE($ngayChupExpr)")
-            ->orderBy('gio_chup')
+            ->orderByRaw($orderBy)
+            ->orderBy('id')
             ->get()
-            ->map(function (HopDongCuoi $hd) use ($nhanVienId, $tz, $isAdmin) {
-                return $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz);
+            ->map(function (HopDongCuoi $hd) use ($nhanVienId, $tz, $isAdmin, $mode) {
+                return $this->lichLamViecHopDongSummary($hd, $nhanVienId, $isAdmin, $tz, $mode);
             })
             ->values();
 
