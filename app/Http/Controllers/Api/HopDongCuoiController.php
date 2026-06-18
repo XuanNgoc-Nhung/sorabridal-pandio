@@ -32,17 +32,17 @@ class HopDongCuoiController extends Controller
                 'concept',
                 'nhomDichVu',
                 'thoChup.user',
-                'thoChup.phongBans',
+                'thoChup.phongBan',
                 'thoMake.user',
-                'thoMake.phongBans',
+                'thoMake.phongBan',
                 'thoEdit.user',
-                'thoEdit.phongBans',
+                'thoEdit.phongBan',
                 'hopDongCuoiNhomDichVu.dichVuLe.phongBan',
                 'hopDongCuoiNhomDichVu.nhomDichVu',
                 'hopDongCuoiDichVuLe.dichVuLe.phongBan',
                 'hopDongCuoiTrangPhuc.trangPhuc',
                 'thanhVienHopDongCuis.nhanVien.user',
-                'thanhVienHopDongCuis.nhanVien.phongBans',
+                'thanhVienHopDongCuis.nhanVien.phongBan',
             ])
             ->where('trang_thai_hop_dong', '!=', 'nhap');
 
@@ -193,7 +193,8 @@ class HopDongCuoiController extends Controller
                 ->map(static function ($r): array {
                     $nv = $r->nhanVien;
                     $tenGoc = $nv?->user?->name;
-                    $phongBans = $nv?->phongBans?->pluck('ten_phong_ban')?->all() ?? [];
+                    $tenPhongBan = $nv?->phongBan?->ten_phong_ban;
+                    $phongBans = $tenPhongBan ? [$tenPhongBan] : [];
                     $ten = null;
                     if (is_string($tenGoc) && trim($tenGoc) !== '') {
                         $nhomStr = collect($phongBans)
@@ -216,15 +217,15 @@ class HopDongCuoiController extends Controller
 
             $thoChupTen = $formatTenNhomNhieu(
                 $hop->thoChup?->user?->name,
-                $hop->thoChup?->phongBans?->pluck('ten_phong_ban')?->all() ?? []
+                ($pb = $hop->thoChup?->phongBan?->ten_phong_ban) ? [$pb] : []
             );
             $thoMakeTen = $formatTenNhomNhieu(
                 $hop->thoMake?->user?->name,
-                $hop->thoMake?->phongBans?->pluck('ten_phong_ban')?->all() ?? []
+                ($pb = $hop->thoMake?->phongBan?->ten_phong_ban) ? [$pb] : []
             );
             $thoEditTen = $formatTenNhomNhieu(
                 $hop->thoEdit?->user?->name,
-                $hop->thoEdit?->phongBans?->pluck('ten_phong_ban')?->all() ?? []
+                ($pb = $hop->thoEdit?->phongBan?->ten_phong_ban) ? [$pb] : []
             );
 
             $dichVuText = collect([

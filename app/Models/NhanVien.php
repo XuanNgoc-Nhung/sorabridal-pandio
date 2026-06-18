@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class NhanVien extends Model
 {
@@ -60,11 +59,11 @@ class NhanVien extends Model
     }
 
     /**
-     * Liên kết nhiều-nhiều với phòng ban (một nhân viên có thể trực thuộc nhiều phòng ban).
+     * Liên kết với phòng ban qua mã phòng ban.
      */
-    public function phongBans(): BelongsToMany
+    public function phongBan(): BelongsTo
     {
-        return $this->belongsToMany(PhongBan::class, 'nhan_vien_phong_ban')->withTimestamps();
+        return $this->belongsTo(PhongBan::class, 'phong_ban', 'ma_phong_ban');
     }
 
     /**
@@ -72,6 +71,6 @@ class NhanVien extends Model
      */
     public function scopeThuocMaPhongBan($query, string $maPhongBan)
     {
-        return $query->whereHas('phongBans', fn ($q) => $q->where('ma_phong_ban', $maPhongBan));
+        return $query->where('phong_ban', $maPhongBan);
     }
 }

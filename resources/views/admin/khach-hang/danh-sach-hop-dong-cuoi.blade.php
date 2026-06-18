@@ -1088,7 +1088,7 @@
                             </div>
                             <div class="dpc-staff-field" data-dpc-role="chup">
                                 <div class="dpc-staff-select-wrap">
-                                    <select id="dpc_tho_chup_id" name="tho_chup_id" class="select2-admin form-select" data-placeholder="Chọn người chụp" style="width: 100%;" disabled>
+                                    <select id="dpc_tho_chup_id" name="tho_chup_id" class="form-select dpc-staff-select" data-placeholder="Chọn người chụp" style="width: 100%;">
                                         <option value="">—</option>
                                     </select>
                                 </div>
@@ -1113,7 +1113,7 @@
                             </div>
                             <div class="dpc-staff-field" data-dpc-role="make">
                                 <div class="dpc-staff-select-wrap">
-                                    <select id="dpc_tho_make_id" name="tho_make_id" class="select2-admin form-select" data-placeholder="Chọn người make" style="width: 100%;" disabled>
+                                    <select id="dpc_tho_make_id" name="tho_make_id" class="form-select dpc-staff-select" data-placeholder="Chọn người make" style="width: 100%;">
                                         <option value="">—</option>
                                     </select>
                                 </div>
@@ -1138,11 +1138,8 @@
                             </div>
                             <div class="dpc-staff-field" data-dpc-role="edit">
                                 <div class="dpc-staff-select-wrap">
-                                    <select id="dpc_tho_edit_id" name="tho_edit_id" class="select2-admin form-select" data-placeholder="Chọn người edit" style="width: 100%;">
+                                    <select id="dpc_tho_edit_id" name="tho_edit_id" class="form-select dpc-staff-select" data-placeholder="Chọn người edit" style="width: 100%;">
                                         <option value="">—</option>
-                                        @foreach($danhSachNhanVienEdit ?? [] as $nv)
-                                        <option value="{{ $nv->id }}">{{ $nv->user?->name ?? 'Nhân viên #' . $nv->id }}</option>
-                                        @endforeach
                                     </select>
                                 </div>
                                 <input type="text"
@@ -1539,22 +1536,42 @@ document.addEventListener('DOMContentLoaded', function () {
         var isFreelancer = this.checked;
         var currentFreelancer = dpcStaffFreelancerInput(role).val();
         dpcSetNvNgoaiMode(role, isFreelancer, isFreelancer ? currentFreelancer : '');
-        if (role === 'chup' || role === 'make') {
-            var nChup = document.getElementById('dpc_ngay_chup_thuc_te');
-            var ymd = (nChup && nChup.value ? nChup.value : '').trim();
-            dpcSetChupMakeDisabled(!ymd || !dpcHopId);
-        } else if (!isFreelancer) {
-            dpcStaffSelect(role).prop('disabled', false);
+        if (!isFreelancer && (role === 'chup' || role === 'make' || role === 'edit')) {
+            dpcSyncStaffTheoNgay(dpcGetNgayChupYmd());
         }
     });
 
     var DPC_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
     var DPC_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
     var DPC_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
+    var DPC_MA_PHONG_BAN_EDIT = @json(\App\Models\PhongBan::MA_EDIT);
     var dpcHopId = null;
 
     function dpcNvUrl(hopId) {
         return DPC_NV_URL_TMPL.split('__HDC__').join(String(hopId));
+    }
+
+    function dpcNormalizeYmd(raw) {
+        var v = (raw || '').trim();
+        if (!v) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+        var m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+            return m[3] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+        }
+        return v;
+    }
+
+    function dpcGetNgayChupYmd() {
+        var el = document.getElementById('dpc_ngay_chup_thuc_te');
+        if (!el) return '';
+        if (el._flatpickr && el._flatpickr.selectedDates && el._flatpickr.selectedDates.length) {
+            var d = el._flatpickr.selectedDates[0];
+            return d.getFullYear() + '-'
+                + String(d.getMonth() + 1).padStart(2, '0') + '-'
+                + String(d.getDate()).padStart(2, '0');
+        }
+        return dpcNormalizeYmd(el.value);
     }
 
     function dpcBindSelect2($sel, placeholder) {
@@ -1621,9 +1638,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             $wrap.removeClass('d-none');
             $inp.addClass('d-none').prop('disabled', true).val('');
-            if (role === 'edit') {
-                $sel.prop('disabled', false);
-            }
+            $sel.prop('disabled', false);
         }
     }
 
@@ -1633,15 +1648,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function dpcSetStaffSelectDisabled(role, disabled) {
+        if (dpcIsNvNgoai(role)) return;
+        var $sel = dpcStaffSelect(role);
+        $sel.prop('disabled', !!disabled);
+        if ($sel.data('select2')) {
+            $sel.trigger('change.select2');
+        }
+    }
+
     function dpcSetChupMakeDisabled(disabled) {
-        ['chup', 'make'].forEach(function (role) {
-            if (dpcIsNvNgoai(role)) return;
-            dpcStaffSelect(role).prop('disabled', disabled);
-        });
-        var hint = 'Chọn ngày chụp chính thức để phân nhân sự.';
-        var busyHint = 'Nhân viên đã có lịch cùng ngày vẫn chọn được (có cờ "Bận").';
-        // $('#dpc_tho_chup_hint').text(disabled ? hint : busyHint);
-        // $('#dpc_tho_make_hint').text(disabled ? hint : busyHint);
+        dpcSetStaffSelectDisabled('chup', disabled);
+        dpcSetStaffSelectDisabled('make', disabled);
     }
 
     function dpcRebuildSelect($sel, items, ph, want) {
@@ -1649,6 +1667,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if ($sel.data('select2')) {
             $sel.select2('destroy');
         }
+        $sel.prop('disabled', false);
         $sel.empty().append(new Option('—', '', false, false));
         (items || []).forEach(function (it) {
             var o = new Option(it.ten, String(it.id), false, false);
@@ -1660,15 +1679,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         var pick = $match.length ? prev : '';
         dpcBindSelect2($sel, ph);
+        $sel.prop('disabled', false);
         $sel.val(pick || null).trigger('change');
     }
 
-    function dpcRebuildChupMake(chupItems, makeItems, wantChup, wantMake) {
+    function dpcRebuildStaff(chupItems, makeItems, editItems, wantChup, wantMake, wantEdit) {
         if (!dpcIsNvNgoai('chup')) {
             dpcRebuildSelect($('#dpc_tho_chup_id'), chupItems, 'Chọn người chụp', wantChup);
         }
         if (!dpcIsNvNgoai('make')) {
             dpcRebuildSelect($('#dpc_tho_make_id'), makeItems, 'Chọn người make', wantMake);
+        }
+        if (!dpcIsNvNgoai('edit')) {
+            dpcRebuildSelect($('#dpc_tho_edit_id'), editItems, 'Chọn người edit', wantEdit);
         }
     }
 
@@ -1686,53 +1709,71 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    function dpcFetchChupMake(ymd, wantChup, wantMake) {
-        if (!dpcHopId || !ymd) {
-            dpcLog('7a dpcFetchChupMake: bỏ qua (thiếu hopId hoặc ngày)', { dpcHopId: dpcHopId, ymd: ymd });
+    function dpcFetchStaff(ymd, wantChup, wantMake, wantEdit) {
+        if (!dpcHopId) {
+            dpcLog('7a dpcFetchStaff: bỏ qua (thiếu hopId)', { dpcHopId: dpcHopId });
             dpcSetChupMakeDisabled(true);
-            dpcRebuildChupMake([], [], '', '');
+            dpcRebuildStaff([], [], [], '', '', '');
             return;
         }
-        dpcLog('7b dpcFetchChupMake: bắt đầu fetch', {
+        ymd = dpcNormalizeYmd(ymd);
+        var ngayApi = ymd;
+        if (!ngayApi) {
+            ngayApi = new Date().toISOString().slice(0, 10);
+        }
+        dpcLog('7b dpcFetchStaff: bắt đầu fetch', {
             ymd: ymd,
+            ngayApi: ngayApi,
             wantChup: wantChup,
             wantMake: wantMake,
+            wantEdit: wantEdit,
             maChup: DPC_MA_PHONG_BAN_CHUP,
-            maMake: DPC_MA_PHONG_BAN_MAKE
+            maMake: DPC_MA_PHONG_BAN_MAKE,
+            maEdit: DPC_MA_PHONG_BAN_EDIT
         });
         Promise.all([
-            dpcFetchNhanVienTheoNgayVaPhongBan(ymd, DPC_MA_PHONG_BAN_CHUP),
-            dpcFetchNhanVienTheoNgayVaPhongBan(ymd, DPC_MA_PHONG_BAN_MAKE)
+            dpcFetchNhanVienTheoNgayVaPhongBan(ngayApi, DPC_MA_PHONG_BAN_CHUP),
+            dpcFetchNhanVienTheoNgayVaPhongBan(ngayApi, DPC_MA_PHONG_BAN_MAKE),
+            dpcFetchNhanVienTheoNgayVaPhongBan(ngayApi, DPC_MA_PHONG_BAN_EDIT)
         ])
             .then(function (results) {
-                dpcLog('7d dpcFetchChupMake: JSON OK', {
+                dpcLog('7d dpcFetchStaff: JSON OK', {
                     soChup: (results[0].items || []).length,
-                    soMake: (results[1].items || []).length
+                    soMake: (results[1].items || []).length,
+                    soEdit: (results[2].items || []).length
                 });
                 dpcSetChupMakeDisabled(false);
-                dpcRebuildChupMake(results[0].items || [], results[1].items || [], wantChup, wantMake);
+                dpcRebuildStaff(
+                    results[0].items || [],
+                    results[1].items || [],
+                    results[2].items || [],
+                    wantChup,
+                    wantMake,
+                    wantEdit
+                );
             })
             .catch(function (err) {
-                console.error('[DPC] 7e dpcFetchChupMake: lỗi', err);
+                console.error('[DPC] 7e dpcFetchStaff: lỗi', err);
                 dpcSetChupMakeDisabled(true);
-                dpcRebuildChupMake([], [], '', '');
+                dpcRebuildStaff([], [], [], '', '', '');
             });
     }
 
-    function dpcSyncChupMakeTheoNgay(ymd, wantChup, wantMake) {
+    function dpcSyncStaffTheoNgay(ymd, wantChup, wantMake, wantEdit) {
         var argsN = arguments.length;
-        ymd = (ymd || '').trim();
-        dpcLog('6 dpcSyncChupMakeTheoNgay: vào hàm', {
+        ymd = dpcNormalizeYmd(ymd);
+        dpcLog('6 dpcSyncStaffTheoNgay: vào hàm', {
             ymd: ymd,
             dpcHopId: dpcHopId,
             argsCount: argsN,
             wantChupArg: argsN >= 2 ? wantChup : '(lấy từ select)',
-            wantMakeArg: argsN >= 3 ? wantMake : '(lấy từ select)'
+            wantMakeArg: argsN >= 3 ? wantMake : '(lấy từ select)',
+            wantEditArg: argsN >= 4 ? wantEdit : '(lấy từ select)'
         });
-        if (!ymd || !dpcHopId) {
-            dpcLog('6a dpcSyncChupMakeTheoNgay: dừng — chưa có ngày hoặc chưa có hop_dong_cuoi_id', { ymd: ymd, dpcHopId: dpcHopId });
+        if (!dpcHopId) {
+            dpcLog('6a dpcSyncStaffTheoNgay: dừng — chưa có hop_dong_cuoi_id', { dpcHopId: dpcHopId });
             dpcSetChupMakeDisabled(true);
-            dpcRebuildChupMake([], [], '', '');
+            dpcRebuildStaff([], [], [], '', '', '');
             return;
         }
         if (arguments.length < 2) {
@@ -1741,8 +1782,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (arguments.length < 3) {
             wantMake = $('#dpc_tho_make_id').val();
         }
-        dpcLog('6b dpcSyncChupMakeTheoNgay: gọi fetch', { wantChup: wantChup, wantMake: wantMake });
-        dpcFetchChupMake(ymd, wantChup, wantMake);
+        if (arguments.length < 4) {
+            wantEdit = $('#dpc_tho_edit_id').val();
+        }
+        dpcLog('6b dpcSyncStaffTheoNgay: gọi fetch', { wantChup: wantChup, wantMake: wantMake, wantEdit: wantEdit });
+        dpcFetchStaff(ymd, wantChup, wantMake, wantEdit);
     }
 
     /**
@@ -1773,8 +1817,8 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(deb);
             deb = setTimeout(function () {
                 deb = null;
-                dpcLog('5 scheduleSync debounce 20ms: gọi dpcSyncChupMakeTheoNgay', (el.value || '').trim());
-                dpcSyncChupMakeTheoNgay((el.value || '').trim());
+                dpcLog('5 scheduleSync debounce 20ms: gọi dpcSyncStaffTheoNgay', dpcGetNgayChupYmd());
+                dpcSyncStaffTheoNgay(dpcGetNgayChupYmd());
             }, 20);
         }
         el.addEventListener('change', scheduleSync);
@@ -1817,19 +1861,23 @@ document.addEventListener('DOMContentLoaded', function () {
             dpcLog('8e Đã gán dpcHopId', dpcHopId);
             var maEl = document.getElementById('dpc-modal-ma');
             if (maEl) maEl.textContent = p.ma_hop_dong ? '(' + p.ma_hop_dong + ')' : '—';
-            function setFp(id, ymd) {
+            function setFp(id, ymdVal) {
+                if (window.setAdminDateInput) {
+                    window.setAdminDateInput(id, ymdVal || '');
+                    return;
+                }
                 var el = document.getElementById(id);
                 if (!el) {
                     dpcLog('8f setFp: không có element', id);
                     return;
                 }
                 if (el._flatpickr) {
-                    dpcLog('8f setFp: flatpickr.setDate/clear', { id: id, ymd: ymd || '(clear)' });
-                    if (ymd) el._flatpickr.setDate(ymd, false);
+                    dpcLog('8f setFp: flatpickr.setDate/clear', { id: id, ymd: ymdVal || '(clear)' });
+                    if (ymdVal) el._flatpickr.setDate(ymdVal, false);
                     else el._flatpickr.clear();
                 } else {
-                    dpcLog('8f setFp: không có _flatpickr, gán value thủ công', { id: id, ymd: ymd });
-                    el.value = ymd || '';
+                    dpcLog('8f setFp: không có _flatpickr, gán value thủ công', { id: id, ymd: ymdVal });
+                    el.value = ymdVal || '';
                 }
             }
             setFp('dpc_ngay_chup_thuc_te', p.ngay_chup_thuc_te || '');
@@ -1844,9 +1892,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var diaDiemChupEl = document.getElementById('dpc_dia_diem_chup');
             if (diaDiemChupEl) diaDiemChupEl.value = p.dia_diem_chup != null ? String(p.dia_diem_chup) : '';
 
-            var nChup = document.getElementById('dpc_ngay_chup_thuc_te');
-            var ymd = (nChup && nChup.value ? nChup.value : '').trim();
-            dpcLog('8g Sau setFp ngày chụp: value input', { ymd: ymd, nChupExists: !!nChup });
+            var ymd = dpcNormalizeYmd(p.ngay_chup_thuc_te || '') || dpcGetNgayChupYmd();
+            dpcLog('8g Sau setFp ngày chụp', { ymd: ymd, payloadNgay: p.ngay_chup_thuc_te || '' });
 
             dpcSetNvNgoaiMode('chup', !!(p.tho_chup_freelancer && String(p.tho_chup_freelancer).trim()), p.tho_chup_freelancer || '');
             dpcSetNvNgoaiMode('make', !!(p.tho_make_freelancer && String(p.tho_make_freelancer).trim()), p.tho_make_freelancer || '');
@@ -1854,11 +1901,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var wantChup = dpcIsNvNgoai('chup') ? '' : p.tho_chup_id;
             var wantMake = dpcIsNvNgoai('make') ? '' : p.tho_make_id;
-            dpcSyncChupMakeTheoNgay(ymd, wantChup, wantMake);
+            var wantEdit = dpcIsNvNgoai('edit') ? '' : p.tho_edit_id;
+            dpcSyncStaffTheoNgay(ymd, wantChup, wantMake, wantEdit);
 
-            if (!dpcIsNvNgoai('edit')) {
-                $('#dpc_tho_edit_id').val(p.tho_edit_id != null && p.tho_edit_id !== '' ? String(p.tho_edit_id) : '').trigger('change');
-            }
             var gc = document.getElementById('dpc_ghi_chu_sale');
             if (gc) gc.value = p.ghi_chu_sale != null ? String(p.ghi_chu_sale) : '';
             dpcLog('8h shown.bs.modal: xong một vòng');

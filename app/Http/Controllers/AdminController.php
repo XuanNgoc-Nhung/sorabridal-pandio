@@ -26,7 +26,7 @@ class AdminController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->load(['nhanVien.phongBans', 'vaiTro']);
+        $user = $request->user()->load(['nhanVien.phongBan', 'vaiTro']);
         $role = (string) ($user->role ?? '');
 
         if (VaiTro::isAdminMa($role)) {
@@ -84,7 +84,9 @@ class AdminController extends Controller
             ->get();
 
         $soNhanVienChuaGanPhongBan = NhanVien::query()
-            ->whereDoesntHave('phongBans')
+            ->where(function ($q) {
+                $q->whereNull('phong_ban')->orWhere('phong_ban', '');
+            })
             ->count();
 
         $doanhThuCuoiTrongKy = (float) HopDongThanhToan::query()
@@ -389,7 +391,7 @@ class AdminController extends Controller
             ->pluck('so_luong', 'tt')
             ->all();
 
-        $tenPhongBan = $nhanVien?->phongBans?->pluck('ten_phong_ban')->filter()->implode(', ') ?: null;
+        $tenPhongBan = $nhanVien?->phongBan?->ten_phong_ban;
         $linksNhanh = $this->buildLinksNhanh($user);
 
         return view('admin.tong-quan-nhan-vien', compact(

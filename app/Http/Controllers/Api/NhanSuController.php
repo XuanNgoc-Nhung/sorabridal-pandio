@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Models\NhanVien;
+use App\Models\PhongBan;
 use App\Models\User;
 use App\Models\VaiTro;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,7 @@ class NhanSuController extends Controller
 
         $query = User::query()
             ->where('role', '!=', '99')
-            ->with(['nhanVien', 'nhanVien.phongBans', 'vaiTro'])
+            ->with(['nhanVien', 'nhanVien.phongBan', 'vaiTro'])
             ->orderBy('id');
 
         $tuKhoa = $this->trimmedTuKhoa($validated);
@@ -49,7 +50,7 @@ class NhanSuController extends Controller
 
         $phongBanId = $validated['phong_ban_id'] ?? null;
         if ($phongBanId !== null) {
-            $query->whereHas('nhanVien.phongBans', fn ($pb) => $pb->where('id', (int) $phongBanId));
+            $query->whereHas('nhanVien.phongBan', fn ($pb) => $pb->whereKey((int) $phongBanId));
         }
 
         $sapXepTheo = $validated['sap_xep_theo'] ?? User::SAP_XEP_MAC_DINH;
@@ -97,8 +98,7 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong' => 'nullable|date',
             'luong_co_ban' => 'nullable|integer|min:0',
             'luong_tang_ca' => 'nullable|integer|min:0',
-            'phong_ban_ids' => 'required|array|min:1',
-            'phong_ban_ids.*' => 'exists:phong_ban,id',
+            'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ]);
 
@@ -120,6 +120,7 @@ class NhanSuController extends Controller
             $nhanVien = NhanVien::create([
                 'user_id' => $user->id,
                 'hinh_anh' => $hinhAnhPath,
+                'phong_ban' => PhongBan::maFromId((int) $request->input('phong_ban_id')),
                 'gioi_tinh' => $request->input('gioi_tinh'),
                 'ngay_sinh' => $request->input('ngay_sinh'),
                 'cccd' => $request->input('cccd'),
@@ -129,11 +130,10 @@ class NhanSuController extends Controller
                 'luong_co_ban' => $request->input('luong_co_ban', 50000),
                 'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
             ]);
-            $nhanVien->phongBans()->sync($request->input('phong_ban_ids', []));
 
             DB::commit();
 
-            $user->load(['nhanVien', 'nhanVien.phongBans']);
+            $user->load(['nhanVien', 'nhanVien.phongBan']);
 
             return $this->apiSuccess(
                 ['item' => $this->formatNhanSu($user)],
@@ -159,8 +159,7 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong' => 'nullable|date',
             'luong_co_ban' => 'nullable|integer|min:0',
             'luong_tang_ca' => 'nullable|integer|min:0',
-            'phong_ban_ids' => 'required|array|min:1',
-            'phong_ban_ids.*' => 'exists:phong_ban,id',
+            'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ]);
 
@@ -182,9 +181,9 @@ class NhanSuController extends Controller
             }
 
             if ($nhanVien) {
-                $nhanVien->phongBans()->sync($request->input('phong_ban_ids', []));
                 $nhanVien->update([
                     'hinh_anh' => $hinhAnhPath,
+                    'phong_ban' => PhongBan::maFromId((int) $request->input('phong_ban_id')),
                     'gioi_tinh' => $request->input('gioi_tinh'),
                     'ngay_sinh' => $request->input('ngay_sinh'),
                     'cccd' => $request->input('cccd'),
@@ -198,6 +197,7 @@ class NhanSuController extends Controller
                 $nhanVien = NhanVien::create([
                     'user_id' => $user->id,
                     'hinh_anh' => $hinhAnhPath,
+                    'phong_ban' => PhongBan::maFromId((int) $request->input('phong_ban_id')),
                     'gioi_tinh' => $request->input('gioi_tinh'),
                     'ngay_sinh' => $request->input('ngay_sinh'),
                     'cccd' => $request->input('cccd'),
@@ -207,12 +207,11 @@ class NhanSuController extends Controller
                     'luong_co_ban' => $request->input('luong_co_ban', 50000),
                     'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
                 ]);
-                $nhanVien->phongBans()->sync($request->input('phong_ban_ids', []));
             }
 
             DB::commit();
 
-            $user->load(['nhanVien', 'nhanVien.phongBans']);
+            $user->load(['nhanVien', 'nhanVien.phongBan']);
 
             return $this->apiSuccess(
                 ['item' => $this->formatNhanSu($user)],
@@ -279,11 +278,11 @@ class NhanSuController extends Controller
                 'ngay_ky_hop_dong' => $nv->ngay_ky_hop_dong?->format('Y-m-d'),
                 'luong_co_ban' => (int) ($nv->luong_co_ban ?? 0),
                 'luong_tang_ca' => (int) ($nv->luong_tang_ca ?? 0),
-                'phong_bans' => $nv->phongBans?->map(fn ($pb) => [
-                    'id' => (int) $pb->id,
-                    'ten_phong_ban' => $pb->ten_phong_ban,
-                    'ma_phong_ban' => $pb->ma_phong_ban,
-                ])->values()->all() ?? [],
+                'phong_ban' => $nv->phongBan ? [
+                    'id' => (int) $nv->phongBan->id,
+                    'ten_phong_ban' => $nv->phongBan->ten_phong_ban,
+                    'ma_phong_ban' => $nv->phongBan->ma_phong_ban,
+                ] : null,
             ] : null,
         ];
     }

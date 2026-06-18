@@ -10,7 +10,6 @@ use Database\Seeders\Demo\HopDongCuoiNhomDichVuSeeder;
 use Database\Seeders\Demo\HopDongCuoiSeeder;
 use Database\Seeders\Demo\HopDongCuoiThanhVienSaleSeeder;
 use Database\Seeders\Demo\NganHangThanhToanSeeder;
-use Database\Seeders\Demo\NhanVienPhongBanSeeder;
 use Database\Seeders\Demo\NhanVienSeeder;
 use Database\Seeders\Demo\NhomDichVuDichVuLeSeeder;
 use Database\Seeders\Demo\NhomDichVuSeeder;
@@ -39,7 +38,6 @@ class SqlDemoSeeder extends Seeder
                 UsersSeeder::class,
                 PhongBanSeeder::class,
                 NhanVienSeeder::class,
-                NhanVienPhongBanSeeder::class,
                 NganHangThanhToanSeeder::class,
                 DichVuLeSeeder::class,
                 NhomDichVuSeeder::class,

@@ -123,17 +123,10 @@ class KhachHangController extends Controller
 
         $hopDongCuois = $query->paginate(AdminPagination::perPage())->withQueryString();
 
-        $danhSachNhanVienEdit = NhanVien::query()
-            ->with('user')
-            ->thuocMaPhongBan(PhongBan::MA_EDIT)
-            ->orderBy('id')
-            ->get();
-
         $locTienDoFilters = HopDongCuoiLocTienDoFilter::options();
 
         return view('admin.khach-hang.danh-sach-hop-dong-cuoi', compact(
             'hopDongCuois',
-            'danhSachNhanVienEdit',
             'locTienDoFilters',
             'locFilters',
         ));

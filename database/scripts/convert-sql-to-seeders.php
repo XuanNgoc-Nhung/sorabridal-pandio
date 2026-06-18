@@ -15,7 +15,6 @@ $seedOrder = [
     'users',
     'phong_ban',
     'nhan_vien',
-    'nhan_vien_phong_ban',
     'ngan_hang_thanh_toan',
     'dich_vu_le',
     'nhom_dich_vu',

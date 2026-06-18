@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PhongBan extends Model
@@ -51,11 +50,16 @@ class PhongBan extends Model
     ];
 
     /**
-     * Danh sách nhân viên thuộc phòng ban (nhiều-nhiều).
+     * Danh sách nhân viên thuộc phòng ban (liên kết qua nhan_vien.phong_ban = ma_phong_ban).
      */
-    public function nhanViens(): BelongsToMany
+    public function nhanViens(): HasMany
     {
-        return $this->belongsToMany(NhanVien::class, 'nhan_vien_phong_ban')->withTimestamps();
+        return $this->hasMany(NhanVien::class, 'phong_ban', 'ma_phong_ban');
+    }
+
+    public static function maFromId(int $id): ?string
+    {
+        return static::query()->whereKey($id)->value('ma_phong_ban');
     }
 
     /**

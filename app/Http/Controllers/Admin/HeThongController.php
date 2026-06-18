@@ -292,14 +292,12 @@ class HeThongController extends Controller
     public function nguoiDungVaiTro(VaiTro $vaiTro): JsonResponse
     {
         $items = $vaiTro->users()
-            ->with(['nhanVien.phongBans'])
+            ->with(['nhanVien.phongBan'])
             ->orderBy('id')
             ->get()
             ->map(static function (User $user) use ($vaiTro) {
                 $nv = $user->nhanVien;
-                $phongBan = $nv?->phongBans
-                    ? $nv->phongBans->pluck('ten_phong_ban')->filter()->implode(', ')
-                    : '';
+                $phongBan = $nv?->phongBan?->ten_phong_ban ?? '';
 
                 return [
                     'id' => (int) $user->id,
