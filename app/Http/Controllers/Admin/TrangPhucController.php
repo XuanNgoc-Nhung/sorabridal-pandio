@@ -14,6 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class TrangPhucController extends Controller
 {
@@ -37,6 +39,7 @@ class TrangPhucController extends Controller
             'search' => 'nullable|string|max:200',
             'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(TrangPhuc::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
+            'loc_hinh_anh' => ['nullable', 'string', Rule::in(array_keys(TrangPhuc::LOC_HINH_ANH_OPTIONS))],
         ]);
 
         $query = TrangPhuc::query();
@@ -49,6 +52,15 @@ class TrangPhucController extends Controller
                     ->orWhere('ma_san_pham', 'like', $like)
                     ->orWhere('ngay_nhap', 'like', $like)
                     ->orWhere('ghi_chu', 'like', $like);
+            });
+        }
+
+        $locHinhAnh = $validated['loc_hinh_anh'] ?? '';
+        if ($locHinhAnh === TrangPhuc::LOC_HINH_ANH_CO) {
+            $query->whereNotNull('hinh_anh')->where('hinh_anh', '<>', '');
+        } elseif ($locHinhAnh === TrangPhuc::LOC_HINH_ANH_CHUA) {
+            $query->where(function ($qb): void {
+                $qb->whereNull('hinh_anh')->orWhere('hinh_anh', '');
             });
         }
 
@@ -67,7 +79,7 @@ class TrangPhucController extends Controller
             default => $query->orderBy('id', $thuTu),
         };
 
-        $danhSach = $query->paginate(AdminPagination::perPage())->withQueryString();
+        $danhSach = $query->paginate(TrangPhuc::perPageSanPham($request))->withQueryString();
 
         return view('admin.trang-phuc.san-pham', compact('danhSach'));
     }
@@ -103,12 +115,135 @@ class TrangPhucController extends Controller
         return redirect()->route('admin.trang-phuc.san-pham')->with('success', 'Đã thêm sản phẩm trang phục thành công.');
     }
 
+    /**
+     * Import hàng loạt sản phẩm trang phục từ mảng JSON.
+     *
+     * @return JsonResponse
+     */
+    public function importSanPhamJson(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*' => 'required|array',
+        ], [
+            'items.required' => 'Vui lòng gửi mảng dữ liệu import.',
+            'items.array' => 'Dữ liệu import phải là mảng JSON.',
+            'items.min' => 'Mảng import phải có ít nhất 1 phần tử.',
+        ]);
+
+        $importThanhCong = [];
+        $importThatBai = [];
+
+        $maSanPhamDaTonTai = TrangPhuc::query()
+            ->whereNotNull('ma_san_pham')
+            ->pluck('ma_san_pham')
+            ->map(static fn ($ma): string => mb_strtolower(trim((string) $ma)))
+            ->flip()
+            ->all();
+
+        $maSanPhamTrongBatch = [];
+
+        foreach ($validated['items'] as $index => $item) {
+            if (! is_array($item)) {
+                $importThatBai[] = [
+                    'index' => $index,
+                    'data' => $item,
+                    'errors' => ['Phần tử phải là object JSON.'],
+                ];
+
+                continue;
+            }
+
+            $itemValidator = Validator::make($item, [
+                'ma_san_pham' => 'required|string|max:255',
+                'ten_san_pham' => 'required|string|max:255',
+                'gia_tri' => 'nullable|numeric|min:0',
+                'hinh_anh' => 'nullable|string|max:500',
+                'ghi_chu' => 'nullable|string|max:500',
+                'ngay_nhap' => 'nullable|string|max:255',
+                'trang_thai' => 'nullable|integer|in:0,1',
+            ], [
+                'ma_san_pham.required' => 'Mã sản phẩm là bắt buộc.',
+                'ten_san_pham.required' => 'Tên sản phẩm là bắt buộc.',
+                'gia_tri.numeric' => 'Giá trị phải là số.',
+                'gia_tri.min' => 'Giá trị không được âm.',
+                'trang_thai.in' => 'Trạng thái chỉ được 0 hoặc 1.',
+            ]);
+
+            if ($itemValidator->fails()) {
+                $importThatBai[] = [
+                    'index' => $index,
+                    'data' => $item,
+                    'errors' => $itemValidator->errors()->all(),
+                ];
+
+                continue;
+            }
+
+            $row = $itemValidator->validated();
+            $maSanPham = trim((string) $row['ma_san_pham']);
+            $maKey = mb_strtolower($maSanPham);
+
+            if (isset($maSanPhamDaTonTai[$maKey]) || isset($maSanPhamTrongBatch[$maKey])) {
+                $importThatBai[] = [
+                    'index' => $index,
+                    'data' => $item,
+                    'errors' => ['Mã sản phẩm đã tồn tại hoặc trùng trong danh sách import.'],
+                ];
+
+                continue;
+            }
+
+            $maSanPhamTrongBatch[$maKey] = true;
+
+            $ngayNhap = trim((string) ($row['ngay_nhap'] ?? ''));
+            $hinhAnh = trim((string) ($row['hinh_anh'] ?? ''));
+
+            try {
+                $sanPham = TrangPhuc::create([
+                    'ten_san_pham' => trim((string) $row['ten_san_pham']),
+                    'ma_san_pham' => $maSanPham,
+                    'ngay_nhap' => $ngayNhap !== '' ? $ngayNhap : null,
+                    'hinh_anh' => $hinhAnh !== '' ? $hinhAnh : null,
+                    'ghi_chu' => filled($row['ghi_chu'] ?? null) ? trim((string) $row['ghi_chu']) : null,
+                    'trang_thai' => array_key_exists('trang_thai', $row)
+                        ? (int) $row['trang_thai']
+                        : TrangPhuc::TRANG_THAI_ACTIVE,
+                    'gia_tri' => $row['gia_tri'] ?? 0,
+                ]);
+
+                $maSanPhamDaTonTai[$maKey] = true;
+
+                $importThanhCong[] = [
+                    'index' => $index,
+                    'id' => (int) $sanPham->id,
+                    'ma_san_pham' => (string) $sanPham->ma_san_pham,
+                    'ten_san_pham' => (string) $sanPham->ten_san_pham,
+                ];
+            } catch (\Throwable $e) {
+                $importThatBai[] = [
+                    'index' => $index,
+                    'data' => $item,
+                    'errors' => ['Không thể lưu dữ liệu: '.$e->getMessage()],
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'import_thanh_cong' => $importThanhCong,
+            'import_that_bai' => $importThatBai,
+            'tong' => count($validated['items']),
+        ]);
+    }
+
     public function updateSanPham(Request $request, TrangPhuc $trangPhuc)
     {
         $validated = $request->validate([
             'ten_san_pham' => 'required|string|max:255',
             'ma_san_pham' => 'required|string|max:255|unique:trang_phuc,ma_san_pham,'.$trangPhuc->id,
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
+            'hinh_anh_duong_dan' => 'nullable|string|max:500',
             'ngay_nhap' => 'nullable|string|max:255',
             'ghi_chu' => 'nullable|string|max:500',
             'gia_tri' => 'nullable|numeric|min:0',
@@ -131,6 +266,9 @@ class TrangPhucController extends Controller
             if (! empty($trangPhuc->hinh_anh) && Storage::disk('public')->exists($trangPhuc->hinh_anh)) {
                 Storage::disk('public')->delete($trangPhuc->hinh_anh);
             }
+        } else {
+            $duongDanHinhAnh = trim((string) ($validated['hinh_anh_duong_dan'] ?? ''));
+            $updateData['hinh_anh'] = $duongDanHinhAnh !== '' ? $duongDanHinhAnh : null;
         }
 
         $trangPhuc->update($updateData);

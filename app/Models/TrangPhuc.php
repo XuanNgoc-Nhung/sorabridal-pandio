@@ -32,6 +32,22 @@ class TrangPhuc extends Model
 
     public const SAP_XEP_MAC_DINH = self::SAP_XEP_ID;
 
+    /** @var list<int> */
+    public const PHAN_TRANG_OPTIONS = [24, 48, 96, 192];
+
+    public const PHAN_TRANG_MAC_DINH = 48;
+
+    public const LOC_HINH_ANH_CO = 'co';
+
+    public const LOC_HINH_ANH_CHUA = 'chua';
+
+    /** @var array<string, string> */
+    public const LOC_HINH_ANH_OPTIONS = [
+        '' => 'Tất cả',
+        self::LOC_HINH_ANH_CO => 'Đã có ảnh',
+        self::LOC_HINH_ANH_CHUA => 'Chưa có ảnh',
+    ];
+
     /** @var array<string, string> */
     public const SAP_XEP_OPTIONS = [
         self::SAP_XEP_ID => 'Mới nhất',
@@ -76,5 +92,13 @@ class TrangPhuc extends Model
     public function sanPhamChoThue(): HasMany
     {
         return $this->hasMany(SanPhamChoThue::class, 'san_pham_id', 'id');
+    }
+
+    public static function perPageSanPham(?\Illuminate\Http\Request $request = null): int
+    {
+        $request ??= request();
+        $perPage = (int) $request->query('per_page', self::PHAN_TRANG_MAC_DINH);
+
+        return in_array($perPage, self::PHAN_TRANG_OPTIONS, true) ? $perPage : self::PHAN_TRANG_MAC_DINH;
     }
 }

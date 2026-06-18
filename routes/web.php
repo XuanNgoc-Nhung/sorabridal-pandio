@@ -70,6 +70,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
     Route::group(['prefix' => 'trang-phuc'], function () {
         Route::get('/san-pham', [AdminTrangPhuc::class, 'sanPham'])->name('trang-phuc.san-pham');
         Route::post('/san-pham', [AdminTrangPhuc::class, 'storeSanPham'])->name('trang-phuc.san-pham.store');
+        Route::post('/san-pham/import-json', [AdminTrangPhuc::class, 'importSanPhamJson'])->name('trang-phuc.san-pham.import-json');
         Route::get('/san-pham/{trangPhuc}/kiem-tra', [AdminTrangPhuc::class, 'kiemTraSuDungSanPham'])->name('trang-phuc.san-pham.kiem-tra');
         Route::put('/san-pham/{trangPhuc}', [AdminTrangPhuc::class, 'updateSanPham'])->name('trang-phuc.san-pham.update');
         Route::patch('/san-pham/{trangPhuc}/trang-thai', [AdminTrangPhuc::class, 'updateSanPhamTrangThai'])->name('trang-phuc.san-pham.update-trang-thai');

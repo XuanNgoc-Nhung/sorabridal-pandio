@@ -1,11 +1,12 @@
 @props([
     'paginator',
     'label' => 'bản ghi',
+    'perPageOptions' => null,
 ])
 
 @php
     use App\Support\AdminPagination;
-    $perPageOptions = AdminPagination::OPTIONS;
+    $perPageOptions = $perPageOptions ?? AdminPagination::OPTIONS;
 @endphp
 
 @if(isset($paginator))

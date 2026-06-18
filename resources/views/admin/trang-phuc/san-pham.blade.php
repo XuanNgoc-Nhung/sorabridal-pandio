@@ -6,10 +6,16 @@
     $sapXepTheo = request('sap_xep_theo', $sapXepTheoMacDinh);
     $thuTu = request('thu_tu', 'desc');
     $tuKhoaHienThi = request('tu_khoa', request('search'));
+    $locHinhAnh = request('loc_hinh_anh', '');
+    if (! array_key_exists($locHinhAnh, \App\Models\TrangPhuc::LOC_HINH_ANH_OPTIONS)) {
+        $locHinhAnh = '';
+    }
     $hasFilter = request()->filled('tu_khoa')
         || request()->filled('search')
+        || $locHinhAnh !== ''
         || $sapXepTheo !== $sapXepTheoMacDinh
-        || $thuTu !== 'desc';
+        || $thuTu !== 'desc'
+        || (int) request('per_page', \App\Models\TrangPhuc::PHAN_TRANG_MAC_DINH) !== \App\Models\TrangPhuc::PHAN_TRANG_MAC_DINH;
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))
@@ -43,6 +49,14 @@
                     @error('tu_khoa')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label" for="loc_hinh_anh">Hình ảnh</label>
+                    <select class="select2-admin form-select" id="loc_hinh_anh" name="loc_hinh_anh">
+                        @foreach(\App\Models\TrangPhuc::LOC_HINH_ANH_OPTIONS as $value => $label)
+                            <option value="{{ $value }}" @selected($locHinhAnh === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-6 col-md-3 col-lg-2">
                     <label class="form-label" for="sap_xep_theo">Sắp xếp theo</label>
@@ -85,6 +99,14 @@
                             data-bs-toggle="modal"
                             data-bs-target="#modalThemSanPham">
                         <i class="fa-solid fa-plus me-1"></i> Thêm mới
+                    </button>
+                </span>
+                <span data-bs-toggle="tooltip" title="Import danh sách sản phẩm từ JSON">
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm text-nowrap"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalNhapJsonSanPham">
+                        <i class="fa-solid fa-file-import me-1"></i> Nhập JSON
                     </button>
                 </span>
                 <div class="btn-group btn-group-sm" role="group" aria-label="Bảng hoặc lưới">
@@ -188,6 +210,7 @@
                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
                                        data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
+                                       data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
@@ -272,6 +295,7 @@
                                         data-ma="{{ e($item->ma_san_pham ?? '') }}"
                                         data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                         data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
+                                        data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
                                         data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                         data-gia-tri="{{ $item->gia_tri ?? '' }}"
                                         title="Sửa">
@@ -311,7 +335,119 @@
                 @endforelse
             </div>
         </div>
-        <x-pagination-info :paginator="$danhSach ?? null" label="sản phẩm" />
+        <x-pagination-info
+            :paginator="$danhSach ?? null"
+            label="sản phẩm"
+            :per-page-options="\App\Models\TrangPhuc::PHAN_TRANG_OPTIONS"
+        />
+        </div>
+    </div>
+</div>
+
+{{-- Modal Nhập JSON sản phẩm --}}
+<div class="modal fade" id="modalNhapJsonSanPham" tabindex="-1" aria-labelledby="modalNhapJsonSanPhamLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNhapJsonSanPhamLabel">Nhập sản phẩm từ JSON</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                {{-- <p class="text-muted small mb-2">
+                    Dán mảng JSON gồm các object với các trường:
+                    <code>ma_san_pham</code>, <code>ten_san_pham</code>, <code>gia_tri</code>,
+                    <code>hinh_anh</code>, <code>ghi_chu</code>, <code>ngay_nhap</code>, <code>trang_thai</code>.
+                </p> --}}
+                <label class="form-label" for="spImportJson">Dữ liệu JSON</label>
+                <textarea id="spImportJson"
+                          class="form-control sp-import-json-input font-monospace"
+                          rows="12"
+                          placeholder='[
+  {
+    "ma_san_pham": "C07",
+    "ten_san_pham": "Váy chụp C07",
+    "gia_tri": 1500000,
+    "hinh_anh": "trang-phuc/san-pham/C07.jpeg",
+    "ghi_chu": "",
+    "ngay_nhap": "",
+    "trang_thai": 1
+  }
+]'></textarea>
+                <div id="spImportJsonError" class="alert alert-danger mt-3 mb-0 d-none" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnSpSubmitImportJson">
+                    <i class="fa-solid fa-file-import me-1"></i> Nhập liệu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Kết quả import JSON --}}
+<div class="modal fade" id="modalKetQuaImportSanPham" tabindex="-1" aria-labelledby="modalKetQuaImportSanPhamLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-ket-qua-import">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalKetQuaImportSanPhamLabel">Kết quả import sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body modal-ket-qua-import__body">
+                <div id="spImportSummary" class="alert alert-secondary mb-3" role="status"></div>
+
+                <div class="row g-4">
+                    <div class="col-12 col-xl-6">
+                        <div class="h-100">
+                            <h6 class="text-success mb-2">
+                                <i class="fa-solid fa-circle-check me-1"></i>
+                                Import thành công (<span id="spImportSuccessCount">0</span>)
+                            </h6>
+                            <div class="table-responsive modal-ket-qua-import__table-wrap" id="spImportSuccessWrap">
+                                <table class="table table-sm table-bordered mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 48px;">#</th>
+                                            <th style="min-width: 100px;">Mã SP</th>
+                                            <th>Tên sản phẩm</th>
+                                            <th class="text-center" style="width: 72px;">ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="spImportSuccessBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="h-100">
+                            <h6 class="text-danger mb-2">
+                                <i class="fa-solid fa-circle-xmark me-1"></i>
+                                Import thất bại (<span id="spImportFailedCount">0</span>)
+                            </h6>
+                            <div class="table-responsive modal-ket-qua-import__table-wrap" id="spImportFailedWrap">
+                                <table class="table table-sm table-bordered mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 48px;">#</th>
+                                            <th style="min-width: 100px;">Mã SP</th>
+                                            <th style="min-width: 140px;">Tên sản phẩm</th>
+                                            <th style="min-width: 200px;">Lỗi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="spImportFailedBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary d-none" id="btnSpImportReload">
+                    <i class="fa-solid fa-rotate-right me-1"></i> Tải lại trang
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -467,6 +603,14 @@
                                 </div>
                                 <input type="file" class="form-control" id="sua_sp_hinh_anh" name="hinh_anh" accept="image/jpeg,image/png,image/gif,image/webp">
                                 <small class="text-muted d-block mt-1">JPEG, PNG, GIF, WebP — tối đa 5MB</small>
+                                {{-- <label class="form-label mt-3 mb-1" for="sua_hinh_anh_duong_dan">Địa chỉ hình ảnh</label> --}}
+                                <input type="text"
+                                       class="form-control font-monospace"
+                                       id="sua_hinh_anh_duong_dan"
+                                       name="hinh_anh_duong_dan"
+                                       placeholder="trang-phuc/san-pham/C07.jpeg"
+                                       autocomplete="off">
+                                {{-- <small class="text-muted d-block mt-1">Đường dẫn trong storage hoặc URL — ưu tiên thấp hơn khi chọn file tải lên.</small> --}}
                                 <div id="sua_sp_hinh_anh_error" class="alert alert-danger mt-2 d-none" role="alert"></div>
                             </div>
                         </div>
@@ -553,7 +697,7 @@
 .san-pham-table-thumb {
     width: 72px;
     height: 50px;
-    object-fit: cover;
+    object-fit: fill;
     border-radius: 0.25rem;
     display: block;
 }
@@ -727,6 +871,23 @@
 .ktsp-day-list {
     padding: 0 12px !important;
 }
+.sp-import-json-input {
+    font-size: 13px;
+    resize: vertical;
+    min-height: 220px;
+}
+#modalKetQuaImportSanPham .modal-ket-qua-import {
+    max-width: 96vw;
+    width: 1200px;
+}
+#modalKetQuaImportSanPham .modal-ket-qua-import__body {
+    max-height: min(78vh, 820px);
+    overflow-y: auto;
+}
+#modalKetQuaImportSanPham .modal-ket-qua-import__table-wrap {
+    max-height: min(52vh, 560px);
+    overflow: auto;
+}
 </style>
 @endpush
 
@@ -780,6 +941,221 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var CSRF_TOKEN = @json(csrf_token());
     var TRANG_THAI_HIEN_THI = {{ \App\Models\TrangPhuc::TRANG_THAI_ACTIVE }};
+    var SP_IMPORT_JSON_URL = @json(route('admin.trang-phuc.san-pham.import-json'));
+
+    (function initSpImportJson() {
+        var textarea = document.getElementById('spImportJson');
+        var btnSubmit = document.getElementById('btnSpSubmitImportJson');
+        var modalInputEl = document.getElementById('modalNhapJsonSanPham');
+        var modalEl = document.getElementById('modalKetQuaImportSanPham');
+        var errorEl = document.getElementById('spImportJsonError');
+        var summaryEl = document.getElementById('spImportSummary');
+        var successCountEl = document.getElementById('spImportSuccessCount');
+        var failedCountEl = document.getElementById('spImportFailedCount');
+        var successBodyEl = document.getElementById('spImportSuccessBody');
+        var failedBodyEl = document.getElementById('spImportFailedBody');
+        var btnReload = document.getElementById('btnSpImportReload');
+
+        if (!textarea || !btnSubmit || !modalInputEl || !modalEl) return;
+
+        function hideImportError() {
+            if (!errorEl) return;
+            errorEl.textContent = '';
+            errorEl.classList.add('d-none');
+        }
+
+        function showImportError(message) {
+            if (!errorEl) {
+                alert(message);
+                return;
+            }
+            errorEl.textContent = message;
+            errorEl.classList.remove('d-none');
+        }
+
+        function appendImportEmptyRow(tbodyEl, colSpan) {
+            if (!tbodyEl) return;
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="' + colSpan + '" class="text-center text-muted small py-3">Không có bản ghi nào.</td>';
+            tbodyEl.appendChild(tr);
+        }
+
+        function resetResultModal() {
+            if (summaryEl) summaryEl.textContent = '';
+            if (successCountEl) successCountEl.textContent = '0';
+            if (failedCountEl) failedCountEl.textContent = '0';
+            if (successBodyEl) successBodyEl.innerHTML = '';
+            if (failedBodyEl) failedBodyEl.innerHTML = '';
+            if (btnReload) btnReload.classList.add('d-none');
+        }
+
+        function renderResult(data) {
+            resetResultModal();
+
+            var successItems = Array.isArray(data.import_thanh_cong) ? data.import_thanh_cong : [];
+            var failedItems = Array.isArray(data.import_that_bai) ? data.import_that_bai : [];
+            var tong = typeof data.tong === 'number' ? data.tong : (successItems.length + failedItems.length);
+
+            if (summaryEl) {
+                summaryEl.textContent = 'Đã xử lý ' + tong + ' bản ghi: ' + successItems.length + ' thành công, ' + failedItems.length + ' thất bại.';
+                summaryEl.classList.remove('alert-danger', 'alert-success', 'alert-secondary');
+                if (failedItems.length === 0 && successItems.length > 0) {
+                    summaryEl.classList.add('alert-success');
+                } else if (successItems.length === 0 && failedItems.length > 0) {
+                    summaryEl.classList.add('alert-danger');
+                } else {
+                    summaryEl.classList.add('alert-secondary');
+                }
+            }
+
+            if (successCountEl) successCountEl.textContent = String(successItems.length);
+            if (failedCountEl) failedCountEl.textContent = String(failedItems.length);
+
+            successItems.forEach(function (row, idx) {
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td class="text-center">' + escHtml((row.index ?? idx) + 1) + '</td>' +
+                    '<td>' + escHtml(row.ma_san_pham || '—') + '</td>' +
+                    '<td>' + escHtml(row.ten_san_pham || '—') + '</td>' +
+                    '<td class="text-center">' + escHtml(row.id ?? '—') + '</td>';
+                if (successBodyEl) successBodyEl.appendChild(tr);
+            });
+            if (!successItems.length) {
+                appendImportEmptyRow(successBodyEl, 4);
+            }
+
+            failedItems.forEach(function (row, idx) {
+                var dataRow = row.data || {};
+                var errors = Array.isArray(row.errors) ? row.errors : ['Lỗi không xác định.'];
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td class="text-center">' + escHtml((row.index ?? idx) + 1) + '</td>' +
+                    '<td>' + escHtml(dataRow.ma_san_pham || '—') + '</td>' +
+                    '<td>' + escHtml(dataRow.ten_san_pham || '—') + '</td>' +
+                    '<td class="text-danger small">' + escHtml(errors.join('; ')) + '</td>';
+                if (failedBodyEl) failedBodyEl.appendChild(tr);
+            });
+            if (!failedItems.length) {
+                appendImportEmptyRow(failedBodyEl, 4);
+            }
+
+            if (btnReload && successItems.length > 0) {
+                btnReload.classList.remove('d-none');
+            }
+
+            function openResultModal() {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+
+            var inputModal = bootstrap.Modal.getInstance(modalInputEl);
+            if (inputModal && modalInputEl.classList.contains('show')) {
+                modalInputEl.addEventListener('hidden.bs.modal', openResultModal, { once: true });
+                inputModal.hide();
+            } else {
+                openResultModal();
+            }
+        }
+
+        function parseImportJson(raw) {
+            var text = (raw || '').trim();
+            if (!text) {
+                throw new Error('Vui lòng nhập mảng JSON.');
+            }
+
+            var parsed;
+            try {
+                parsed = JSON.parse(text);
+            } catch (e) {
+                throw new Error('JSON không hợp lệ. Vui lòng kiểm tra cú pháp.');
+            }
+
+            if (!Array.isArray(parsed)) {
+                throw new Error('Dữ liệu phải là mảng JSON (array).');
+            }
+
+            if (!parsed.length) {
+                throw new Error('Mảng import phải có ít nhất 1 phần tử.');
+            }
+
+            parsed.forEach(function (item, index) {
+                if (!item || typeof item !== 'object' || Array.isArray(item)) {
+                    throw new Error('Phần tử #' + (index + 1) + ' phải là object JSON.');
+                }
+            });
+
+            return parsed;
+        }
+
+        btnSubmit.addEventListener('click', function () {
+            hideImportError();
+
+            var items;
+            try {
+                items = parseImportJson(textarea.value);
+            } catch (err) {
+                showImportError(err && err.message ? err.message : 'Dữ liệu JSON không hợp lệ.');
+                return;
+            }
+
+            var originalHtml = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang import...';
+
+            fetch(SP_IMPORT_JSON_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ items: items })
+            })
+                .then(function (res) {
+                    return res.json().then(function (json) {
+                        if (!res.ok) {
+                            var msg = 'Import thất bại.';
+                            if (json && json.message) msg = json.message;
+                            if (json && json.errors) {
+                                var errs = Object.values(json.errors).flat();
+                                if (errs.length) msg = errs.join('; ');
+                            }
+                            throw new Error(msg);
+                        }
+                        return json;
+                    });
+                })
+                .then(function (json) {
+                    renderResult(json);
+                })
+                .catch(function (err) {
+                    showImportError(err && err.message ? err.message : 'Không thể import dữ liệu.');
+                })
+                .finally(function () {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalHtml;
+                });
+        });
+
+        if (btnReload) {
+            btnReload.addEventListener('click', function () {
+                window.location.reload();
+            });
+        }
+
+        modalInputEl.addEventListener('show.bs.modal', function () {
+            hideImportError();
+        });
+
+        [modalInputEl, modalEl].forEach(function (modalNode) {
+            modalNode.addEventListener('hidden.bs.modal', function () {
+                document.querySelectorAll('.modal-backdrop').forEach(function (el) { el.remove(); });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            });
+        });
+    })();
 
     function capNhatMaTagTheoSwitch(switchEl) {
         var card = switchEl.closest('.san-pham-card');
@@ -935,10 +1311,34 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalSua = document.getElementById('modalSuaSanPham');
     var formSua = document.getElementById('formSuaSanPham');
     var suaInputHinhAnh = document.getElementById('sua_sp_hinh_anh');
+    var suaInputHinhAnhDuongDan = document.getElementById('sua_hinh_anh_duong_dan');
     var suaPlaceholder = document.getElementById('sua_sp_hinh_anh_placeholder');
     var suaPreviewImg = document.getElementById('sua_sp_hinh_anh_preview');
     var suaErrorDiv = document.getElementById('sua_sp_hinh_anh_error');
     var suaObjectUrl = null;
+
+    function suaPreviewUrlFromPath(path) {
+        var raw = (path || '').trim();
+        if (!raw) return '';
+        if (/^https?:\/\//i.test(raw)) return raw;
+        return '/storage/' + raw.replace(/^\/+/, '');
+    }
+
+    function suaUpdatePreviewFromPathInput() {
+        if (!suaInputHinhAnhDuongDan || !suaPreviewImg) return;
+        if (suaObjectUrl) return;
+
+        var previewUrl = suaPreviewUrlFromPath(suaInputHinhAnhDuongDan.value);
+        if (previewUrl) {
+            suaPreviewImg.src = previewUrl;
+            suaPreviewImg.classList.remove('d-none');
+            if (suaPlaceholder) suaPlaceholder.classList.add('d-none');
+        } else {
+            suaPreviewImg.src = '';
+            suaPreviewImg.classList.add('d-none');
+            if (suaPlaceholder) suaPlaceholder.classList.remove('d-none');
+        }
+    }
 
     function suaClearPreview(keepExistingImage) {
         if (suaObjectUrl) {
@@ -950,6 +1350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             suaErrorDiv.textContent = '';
         }
         if (suaInputHinhAnh) suaInputHinhAnh.value = '';
+        if (!keepExistingImage && suaInputHinhAnhDuongDan) suaInputHinhAnhDuongDan.value = '';
 
         if (keepExistingImage && suaPreviewImg && suaPreviewImg.dataset.existingSrc) {
             suaPreviewImg.src = suaPreviewImg.dataset.existingSrc;
@@ -1014,8 +1415,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_gia_tri').value = btn.getAttribute('data-gia-tri') || '';
 
+            var duongDanHinhAnh = btn.getAttribute('data-hinh-anh-duong-dan') || '';
+            if (suaInputHinhAnhDuongDan) suaInputHinhAnhDuongDan.value = duongDanHinhAnh;
+
             // Ảnh hiện tại
-            var existingImg = btn.getAttribute('data-hinh-anh') || '';
+            var existingImg = btn.getAttribute('data-hinh-anh') || suaPreviewUrlFromPath(duongDanHinhAnh);
             if (suaPreviewImg) suaPreviewImg.dataset.existingSrc = existingImg;
             suaClearPreview(true);
         });
@@ -1033,6 +1437,17 @@ document.addEventListener('DOMContentLoaded', function() {
         suaInputHinhAnh.addEventListener('change', function() {
             var file = this.files && this.files[0];
             suaProcessFile(file);
+        });
+    }
+
+    if (suaInputHinhAnhDuongDan) {
+        suaInputHinhAnhDuongDan.addEventListener('input', function() {
+            if (suaObjectUrl) {
+                URL.revokeObjectURL(suaObjectUrl);
+                suaObjectUrl = null;
+            }
+            if (suaInputHinhAnh) suaInputHinhAnh.value = '';
+            suaUpdatePreviewFromPathInput();
         });
     }
 
