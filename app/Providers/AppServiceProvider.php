@@ -23,6 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('admin.*', function ($view) {
+            $view->with(
+                'coQuyenDieuChinhHopDongCuoi',
+                (bool) auth()->user()?->coQuyenDieuChinhHopDongCuoi()
+            );
+        });
+
         View::composer(['admin.layouts.app', 'admin.layouts.components.sidebar'], function ($view) {
             // Log::debug('[Sidebar] View composer bắt đầu', ['view' => $view->name()]);
 

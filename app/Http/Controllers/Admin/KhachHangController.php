@@ -485,8 +485,7 @@ class KhachHangController extends Controller
             ->orderBy('id')
             ->get();
 
-        $coQuyenDieuChinhHopDongCuoi = $this->coQuyenDieuChinhHopDongCuoi();
-        $gioiHanChinhSuaHopDong = $laManChinhSuaHopDong && ! $coQuyenDieuChinhHopDongCuoi;
+        $gioiHanChinhSuaHopDong = $laManChinhSuaHopDong && ! (auth()->user()?->coQuyenDieuChinhHopDongCuoi() ?? false);
 
         return view('admin.khach-hang.tao-hop-dong', compact(
             'hopDongCuoi',
@@ -497,7 +496,6 @@ class KhachHangController extends Controller
             'concepts',
             'danhSachNhanVien',
             'laManChinhSuaHopDong',
-            'coQuyenDieuChinhHopDongCuoi',
             'gioiHanChinhSuaHopDong'
         ));
     }
@@ -1197,19 +1195,12 @@ class KhachHangController extends Controller
         ];
     }
 
-    private function coQuyenDieuChinhHopDongCuoi(?\Illuminate\Contracts\Auth\Authenticatable $user = null): bool
-    {
-        $user = $user ?? request()->user();
-
-        return (bool) ($user?->vaiTro?->dieu_chinh_hop_dong_cuoi ?? false);
-    }
-
     private function gioiHanChinhSuaHopDongCuoi(Request $request): bool
     {
         if (! $request->boolean('chinh_sua')) {
             return false;
         }
 
-        return ! $this->coQuyenDieuChinhHopDongCuoi($request->user());
+        return ! (auth()->user()?->coQuyenDieuChinhHopDongCuoi() ?? false);
     }
 }

@@ -133,7 +133,6 @@
     };
     $routeTtGet = route('admin.khach-hang.hop-dong-cuoi.thanh-toan', ['hopDongCuoi' => 999999999]);
     $routeTtPost = route('admin.khach-hang.hop-dong-cuoi.thanh-toan.luu', ['hopDongCuoi' => 999999999]);
-    $coQuyenDieuChinhHopDongCuoi = (bool) (auth()->user()?->vaiTro?->dieu_chinh_hop_dong_cuoi ?? false);
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))

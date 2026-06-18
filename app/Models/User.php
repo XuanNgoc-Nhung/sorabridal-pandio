@@ -108,6 +108,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Quyền điều chỉnh hợp đồng cưới (từ vai_tro.dieu_chinh_hop_dong_cuoi).
+     */
+    public function coQuyenDieuChinhHopDongCuoi(): bool
+    {
+        return (bool) ($this->vaiTro?->dieu_chinh_hop_dong_cuoi ?? false);
+    }
+
+    /**
      * Vai trò hệ thống (menu sidebar) — user.role khớp vai_tro.ma_vai_tro.
      */
     public function vaiTro(): HasOne
