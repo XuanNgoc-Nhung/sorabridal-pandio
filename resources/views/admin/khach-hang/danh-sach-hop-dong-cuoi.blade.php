@@ -302,8 +302,9 @@
                     @forelse($hopDongCuois as $index => $item)
                     @php
                         $tt = $item->trang_thai_hop_dong ?? 'nhap';
-                        $ngayChupHien = $item->ngay_chup_thuc_te ?? $item->ngay_chup_du_kien;
-                        $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc ?? $item->ngay_cuoi_du_kien;
+                        $ngayChupHien = $item->ngay_chup_thuc_te;
+                        $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc;
+                        $laPhongSuCuoi = $item->loai_hop_dong === 'phong_su_cuoi';
                         $gioChupTxt = $item->gio_chup ? substr((string) $item->gio_chup, 0, 5) : '';
                         $dpcEkipRow = static function (?string $nvName, ?string $freelancer): array {
                             if ($nvName !== null && $nvName !== '') {
@@ -390,7 +391,11 @@
                                 @if($item->email_sdt_co_dau)
                                 <div>CD: {{ str($item->email_sdt_co_dau)->limit(42) }}</div>
                                 @endif
-                                @if(! $item->email_sdt_chu_re && ! $item->email_sdt_co_dau)
+                                @if($laPhongSuCuoi)
+                                <div>ĐC CR: {{ $item->dia_chi_chu_re ? str($item->dia_chi_chu_re)->limit(42) : '—' }}</div>
+                                <div>ĐC CD: {{ $item->dia_chi_co_dau ? str($item->dia_chi_co_dau)->limit(42) : '—' }}</div>
+                                @endif
+                                @if(! $item->email_sdt_chu_re && ! $item->email_sdt_co_dau && ! $laPhongSuCuoi)
                                 <div>—</div>
                                 @endif
                             </div>
@@ -632,8 +637,9 @@
                     @foreach($hopDongCuois as $index => $item)
                     @php
                         $tt = $item->trang_thai_hop_dong ?? 'nhap';
-                        $ngayChupHien = $item->ngay_chup_thuc_te ?? $item->ngay_chup_du_kien;
-                        $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc ?? $item->ngay_cuoi_du_kien;
+                        $ngayChupHien = $item->ngay_chup_thuc_te;
+                        $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc;
+                        $laPhongSuCuoi = $item->loai_hop_dong === 'phong_su_cuoi';
                         $gioChupTxt = $item->gio_chup ? substr((string) $item->gio_chup, 0, 5) : '';
                         $dpcEkipRow = static function (?string $nvName, ?string $freelancer): array {
                             if ($nvName !== null && $nvName !== '') {
@@ -662,9 +668,6 @@
                         $ngayChupTxt = $ngayChupHien ? $ngayChupHien->format('d/m/Y') : '—';
                         $ngayCuoiTxt = $ngayCuoiHien ? $ngayCuoiHien->format('d/m/Y') : '—';
                         $ngayCuoiTitle = $ngayCuoiHien ? $ngayCuoiHien->format('d/m/Y') : 'Chưa có ngày cưới';
-                        if ($item->ngay_cuoi_chinh_thuc && $item->ngay_cuoi_du_kien && $item->ngay_cuoi_chinh_thuc->format('Y-m-d') !== $item->ngay_cuoi_du_kien->format('Y-m-d')) {
-                            $ngayCuoiTitle .= ' (DK ' . $item->ngay_cuoi_du_kien->format('d/m/Y') . ')';
-                        }
                         $tenCr = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_chu_re);
                         $tenCd = \App\Support\LichLamViecTenRutGon::hoTenHienThi($item->ten_co_dau);
                         $coupleTitle = trim(
@@ -860,6 +863,16 @@
                                             <span class="text-heading fw-medium">CD: </span>
                                             <span>{{ $lienHeCd }}</span>
                                         </p>
+                                        @if($laPhongSuCuoi)
+                                        <p class="mb-1">
+                                            <span class="text-heading fw-medium">ĐC CR: </span>
+                                            <span>{{ $item->dia_chi_chu_re ?: '—' }}</span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <span class="text-heading fw-medium">ĐC CD: </span>
+                                            <span>{{ $item->dia_chi_co_dau ?: '—' }}</span>
+                                        </p>
+                                        @endif
                                     </div>
                                     <div class="dpc-date-col small mb-4" style="min-width: 0;">
                                         <div class="dpc-date-row dpc-date-row--chup d-flex align-items-center gap-2 mb-1">
