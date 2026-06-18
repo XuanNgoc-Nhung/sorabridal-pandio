@@ -221,29 +221,31 @@
                                                     data-gia="{{ is_numeric($nhomDichVu->gia_tien) ? (float) $nhomDichVu->gia_tien : 0 }}"
                                                     @checked($isChecked)>
                                                 <div class="combo-service-card-body">
-                                                    <label class="combo-service-selectable" for="{{ $radioId }}">
-                                                        <span class="combo-service-card-head">
-                                                            <span class="combo-service-title-wrap">
-                                                                <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
-                                                                <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
+                                                    <div class="combo-service-card-main">
+                                                        <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
+                                                        <label class="combo-service-selectable" for="{{ $radioId }}">
+                                                            <span class="combo-service-card-head">
+                                                                <span class="combo-service-title-wrap">
+                                                                    <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
+                                                                </span>
+                                                                @if ($giaTien)
+                                                                    <span class="combo-service-price">{{ $giaTien }}đ</span>
+                                                                @endif
                                                             </span>
-                                                            @if ($giaTien)
-                                                                <span class="combo-service-price">{{ $giaTien }}đ</span>
+                                                            <span class="combo-service-meta">
+                                                                {{ $nhomDichVu->dich_vu_le_count ?? 0 }} dịch vụ
+                                                                @if (!empty($nhomDichVu->the))
+                                                                    • {{ $nhomDichVu->the }}
+                                                                @endif
+                                                            </span>
+                                                            @if (!empty($nhomDichVu->mo_ta))
+                                                                <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
+                                                            @elseif (!empty($nhomDichVu->ghi_chu))
+                                                                <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
+                                                            @else
                                                             @endif
-                                                        </span>
-                                                        <span class="combo-service-meta">
-                                                            {{ $nhomDichVu->dich_vu_le_count ?? 0 }} dịch vụ
-                                                            @if (!empty($nhomDichVu->the))
-                                                                • {{ $nhomDichVu->the }}
-                                                            @endif
-                                                        </span>
-                                                        @if (!empty($nhomDichVu->mo_ta))
-                                                            <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
-                                                        @elseif (!empty($nhomDichVu->ghi_chu))
-                                                            <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
-                                                        @else
-                                                        @endif
-                                                    </label>
+                                                        </label>
+                                                    </div>
                                                     <div class="combo-service-footer">
                                                         <button
                                                             type="button"
@@ -379,7 +381,7 @@
                                             $radioIdNc = 'wizard_combo_nang_cap_' . $nhomDichVu->id;
                                         @endphp
                                         <div
-                                            class="col-12 col-md-6 col-xl-4 js-combo-item-nang-cap"
+                                            class="col-6 col-md-4 col-xl-3 js-combo-item-nang-cap"
                                             data-loai-dich-vu="{{ e($nhomDichVu->loai ?? \App\Support\LoaiCuoiPhongSu::CUOI) }}"
                                             data-search-text="{{ mb_strtolower(trim(($nhomDichVu->ten_nhom ?? '') . ' ' . ($nhomDichVu->the ?? '') . ' ' . ($nhomDichVu->mo_ta ?? '') . ' ' . ($nhomDichVu->ghi_chu ?? ''))) }}">
                                             <div class="combo-service-card h-100 w-100">
@@ -392,30 +394,31 @@
                                                     data-gia="{{ is_numeric($nhomDichVu->gia_tien) ? (float) $nhomDichVu->gia_tien : 0 }}"
                                                     @checked($isChecked)>
                                                 <div class="combo-service-card-body">
-                                                    <label class="combo-service-selectable" for="{{ $radioIdNc }}">
-                                                        <span class="combo-service-card-head">
-                                                            <span class="combo-service-title-wrap">
-                                                                <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
-                                                                <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
+                                                    <div class="combo-service-card-main">
+                                                        <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
+                                                        <label class="combo-service-selectable" for="{{ $radioIdNc }}">
+                                                            <span class="combo-service-card-head">
+                                                                <span class="combo-service-title-wrap">
+                                                                    <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
+                                                                </span>
+                                                                @if ($giaTien)
+                                                                    <span class="combo-service-price">{{ $giaTien }}đ</span>
+                                                                @endif
                                                             </span>
-                                                            @if ($giaTien)
-                                                                <span class="combo-service-price">{{ $giaTien }}đ</span>
+                                                            <span class="combo-service-meta">
+                                                                {{ $nhomDichVu->dich_vu_le_count ?? 0 }} dịch vụ
+                                                                @if (!empty($nhomDichVu->the))
+                                                                    • {{ $nhomDichVu->the }}
+                                                                @endif
+                                                            </span>
+                                                            @if (!empty($nhomDichVu->mo_ta))
+                                                                <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
+                                                            @elseif (!empty($nhomDichVu->ghi_chu))
+                                                                <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
+                                                            @else
                                                             @endif
-                                                        </span>
-                                                        <span class="combo-service-meta">
-                                                            {{ $nhomDichVu->dich_vu_le_count ?? 0 }} dịch vụ
-                                                            @if (!empty($nhomDichVu->the))
-                                                                • {{ $nhomDichVu->the }}
-                                                            @endif
-                                                        </span>
-                                                        @if (!empty($nhomDichVu->mo_ta))
-                                                            <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
-                                                        @elseif (!empty($nhomDichVu->ghi_chu))
-                                                            <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
-                                                        @else
-                                                            <span class="combo-service-desc text-muted">-</span>
-                                                        @endif
-                                                    </label>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -538,7 +541,7 @@
                 </div>
 
                 <div class="row g-3 mt-1">
-                    <div class="col-12 col-lg-4">
+                    <div class="col-12 col-lg-3">
                         <label class="form-label" for="wizard_tong_tien_dich_vu_hien_thi">Tổng số tiền dịch vụ</label>
                         <input type="hidden" id="wizard_tong_tien_dich_vu" value="{{ (int) round((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0)) }}">
                         <input type="text" class="form-control text-end" id="wizard_tong_tien_dich_vu_hien_thi" value="{{ number_format((float) old('tong_tien', $hopDongCuoi->tong_tien ?? 0), 0, ',', '.') }}" inputmode="numeric" autocomplete="off" placeholder="0">
@@ -970,7 +973,6 @@
 .tao-hop-dong-wizard .wizard-service-pills .nav-link {
     border: 1px solid var(--bs-border-color);
     color: var(--bs-body-color);
-    font-weight: 600;
     padding: 0.6rem 0.75rem;
     transition: all 0.15s ease;
 }
@@ -1011,10 +1013,17 @@
     background: var(--bs-body-bg);
     transition: all 0.15s ease;
 }
+.tao-hop-dong-wizard .combo-service-card-main {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
 .tao-hop-dong-wizard .combo-service-selectable {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 0.45rem;
+    min-width: 0;
     cursor: pointer;
 }
 .tao-hop-dong-wizard .combo-service-card-head {
@@ -1024,20 +1033,20 @@
     gap: 0.5rem;
 }
 .tao-hop-dong-wizard .combo-service-title-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+    display: block;
+    min-width: 0;
 }
 .tao-hop-dong-wizard .combo-service-checkbox {
-    margin-top: 0.1rem;
+    flex-shrink: 0;
+    margin: 0;
+    align-self: center;
 }
 .tao-hop-dong-wizard .combo-service-title {
-    font-weight: 600;
-    color: var(--bs-body-color);
+    font-weight: 500;
+    color: var(--bs-primary);
 }
 .tao-hop-dong-wizard .combo-service-price {
     color: var(--bs-primary);
-    font-weight: 700;
     white-space: nowrap;
 }
 .tao-hop-dong-wizard .combo-service-meta {
@@ -1077,7 +1086,6 @@
     padding: 0.2rem 0;
     color: var(--bs-primary);
     font-size: 0.825rem;
-    font-weight: 600;
 }
 .tao-hop-dong-wizard .combo-service-toggle-icon {
     transition: transform 0.15s ease;
@@ -1115,12 +1123,17 @@
 }
 .tao-hop-dong-wizard .dich-vu-le-list {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.6rem;
 }
 @media (min-width: 768px) {
     .tao-hop-dong-wizard .dich-vu-le-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@media (min-width: 1200px) {
+    .tao-hop-dong-wizard .dich-vu-le-list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 .tao-hop-dong-wizard .dich-vu-le-item {
@@ -1154,8 +1167,8 @@
     min-width: 0;
 }
 .tao-hop-dong-wizard .dich-vu-le-title {
-    font-weight: 600;
     font-size: 0.9rem;
+    color: var(--bs-primary);
 }
 .tao-hop-dong-wizard .dich-vu-le-sub {
     color: var(--bs-secondary-color);
@@ -1163,8 +1176,7 @@
     line-height: 1.25;
 }
 .tao-hop-dong-wizard .dich-vu-le-price {
-    color: #6b74d6;
-    font-weight: 700;
+    color: var(--bs-primary);
     font-size: 0.9rem;
     white-space: nowrap;
 }
@@ -2730,7 +2742,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    var WIZARD_LIST_PER_PAGE = 6;
+    var WIZARD_LIST_PER_PAGE = 8;
     var wizardPaginators = {};
 
     function createWizardListPaginator(cfg) {
