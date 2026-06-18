@@ -166,7 +166,7 @@
                           <span class="dropdown-shortcuts-icon rounded-circle mb-3">
                             <i class="icon-base ti tabler-calendar icon-26px text-heading"></i>
                           </span>
-                          <a href="{{ route('admin.lich-lam-viec') }}" class="stretched-link">Lịch làm việc</a>
+                          <a href="{{ route('admin.lich-chup') }}" class="stretched-link">Lịch chụp</a>
                           <small>Nhân sự</small>
                         </div>
                         <div class="dropdown-shortcuts-item col">

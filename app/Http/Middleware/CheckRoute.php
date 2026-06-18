@@ -37,13 +37,14 @@ class CheckRoute
             'admin.khach-hang.tao-hop-dong.cap-nhat-buoc-3',
             'admin.khach-hang.tao-hop-dong.kiem-tra-ma-giam-gia',
         ],
-        'admin.lich-lam-viec' => [
-            'admin.lich-lam-viec.data',
-            'admin.lich-lam-viec.danh-sach',
-            'admin.lich-lam-viec.chi-tiet-ngay',
-            'admin.lich-lam-viec.hop-dong-chua-phan-ngay',
-            'admin.lich-lam-viec.hop-dong-dieu-phoi-data',
-            'admin.lich-lam-viec.tao-lich',
+        'admin.lich-chup' => [
+            'admin.lich-chup.data',
+            'admin.lich-chup.danh-sach',
+            'admin.lich-chup.chi-tiet-ngay',
+            'admin.lich-chup.hop-dong-chua-phan-ngay',
+            'admin.lich-chup.chua-phan-cong',
+            'admin.lich-chup.hop-dong-dieu-phoi-data',
+            'admin.lich-chup.tao-lich',
             'admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay',
         ],
         'admin.nhan-su.cong-viec-cua-toi' => [
@@ -204,7 +205,8 @@ class CheckRoute
     private static function normalizeDsMenu(array $ds_menu): array
     {
         $aliases = [
-            'admin.nhan-su.lich-lam-viec' => 'admin.lich-lam-viec',
+            'admin.nhan-su.lich-lam-viec' => 'admin.lich-chup',
+            'admin.lich-lam-viec' => 'admin.lich-chup',
             'admin.bao-cao-ads' => 'admin.bao-cao.ads',
         ];
 

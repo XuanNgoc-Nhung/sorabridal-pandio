@@ -712,7 +712,7 @@ class NhanSuController extends Controller
         $tienDoLegend = config('lich_lam_viec.tien_do', []);
         $locTienDoFilters = config('lich_lam_viec.loc_tien_do', []);
 
-        return view('admin.nhan-su.lich-lam-viec', compact(
+        return view('admin.nhan-su.lich-chup', compact(
             'batDauTuan',
             'ketThucTuan',
             'dsNgayTrongTuan',

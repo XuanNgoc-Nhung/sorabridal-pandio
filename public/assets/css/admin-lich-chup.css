@@ -1,5 +1,5 @@
 /**
- * Admin — Lịch làm việc (nhan-su/lich-lam-viec)
+ * Admin — Lịch chụp (nhan-su/lich-chup)
  */
 .admin-work-calendar .fc .fc-daygrid-day-number {
     padding: 6px 8px;
@@ -41,7 +41,7 @@
     font-size: .68rem;
     cursor: pointer;
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
+#ws-lich-chup .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
     background: #f8f7ff;
     border-left-color: #7367f0;
 }
@@ -85,98 +85,98 @@
     width: 1rem;
     height: 1rem;
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--chua_phan_cong,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--chua_phan_cong,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--chua_phan_cong,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--chua_phan_cong {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--chua_phan_cong,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--chua_phan_cong,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--chua_phan_cong,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--chua_phan_cong {
     background: #f3f4f6;
     border-left-color: var(--ws-td-chua_phan_cong-border, #9ca3af);
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_chup,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_chup {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--phan_chup,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_chup,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_chup,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_chup {
     background: #ffe4e8;
     border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_make,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_make {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--phan_make,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_make,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_make,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_make {
     background: #ede9fe;
     border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_edit,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_edit {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--phan_edit,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_edit,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_edit,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_edit {
     background: #dbeafe;
     border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--up_link_demo,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_demo {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--up_link_demo,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--up_link_demo,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--up_link_demo,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_demo {
     background: #d1fae5;
     border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
-#ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in,
-#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--up_link_in,
-#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_in {
+#ws-lich-chup .admin-work-calendar .ws-day-contract--up_link_in,
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--up_link_in,
+#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--up_link_in,
+#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_in {
     background: #fef3c7;
     border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
-#ws-lich-lam-viec .ws-lich-list-card:not([class*='ws-lich-list-card--']) {
+#ws-lich-chup .ws-lich-list-card:not([class*='ws-lich-list-card--']) {
     border-left-color: #7367f0;
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract:not([class*='ws-day-contract--']) {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
     border-left-color: #7367f0;
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--chua_phan_cong,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--chua_phan_cong,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--chua_phan_cong,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--chua_phan_cong {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--chua_phan_cong,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--chua_phan_cong,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--chua_phan_cong,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--chua_phan_cong {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #9ca3af 12%);
     border-left-color: var(--ws-td-chua_phan_cong-border, #9ca3af);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_chup,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_chup,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_chup,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_chup {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--phan_chup,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_chup,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_chup,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_chup {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #e53e3e 12%);
     border-left-color: var(--ws-td-phan_chup-border, #e53e3e);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_make,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_make,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_make,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_make {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--phan_make,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_make,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_make,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_make {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #7c3aed 12%);
     border-left-color: var(--ws-td-phan_make-border, #7c3aed);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--phan_edit,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--phan_edit,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--phan_edit,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_edit {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--phan_edit,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--phan_edit,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--phan_edit,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--phan_edit {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #2563eb 12%);
     border-left-color: var(--ws-td-phan_edit-border, #2563eb);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_demo,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_demo,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--up_link_demo,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_demo {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--up_link_demo,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--up_link_demo,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--up_link_demo,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_demo {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #059669 12%);
     border-left-color: var(--ws-td-up_link_demo-border, #059669);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .admin-work-calendar .ws-day-contract--up_link_in,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract--up_link_in,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--up_link_in,
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_in {
+[data-bs-theme='dark'] #ws-lich-chup .admin-work-calendar .ws-day-contract--up_link_in,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract--up_link_in,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card.ws-lich-list-card--up_link_in,
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--up_link_in {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #d97706 12%);
     border-left-color: var(--ws-td-up_link_in-border, #d97706);
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-list-card:not([class*='ws-lich-list-card--']) {
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-list-card:not([class*='ws-lich-list-card--']) {
     border-left-color: #7367f0;
 }
 .ws-lich-legend__item {
@@ -326,7 +326,7 @@ input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px soli
     width: 100% !important;
     max-width: 100%;
 }
-#ws-lich-lam-viec.is-list-mode .fc-view-harness {
+#ws-lich-chup.is-list-mode .fc-view-harness {
     display: none !important;
 }
 .ws-lich-list-view {
@@ -499,13 +499,13 @@ input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px soli
 
 /* Mobile — xem theo tháng/tuần: bảng dọc Thứ / Ngày / Công việc */
 @media (max-width: 767.98px) {
-    #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .fc-view-harness {
+    #ws-lich-chup.is-mobile-month:not(.is-list-mode) .fc-view-harness {
         display: none !important;
     }
-    #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .ws-lich-mobile-month {
+    #ws-lich-chup.is-mobile-month:not(.is-list-mode) .ws-lich-mobile-month {
         display: block !important;
     }
-    #ws-lich-lam-viec.is-mobile-month:not(.is-list-mode) .fc-header-toolbar {
+    #ws-lich-chup.is-mobile-month:not(.is-list-mode) .fc-header-toolbar {
         margin-bottom: .75rem;
     }
 }
@@ -583,11 +583,11 @@ input.ws-lich-legend__swatch.ws-day-contract--up_link_in { border-left: 3px soli
     color: var(--admin-text-body);
     cursor: pointer;
 }
-#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
+#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
     background: #f8f7ff;
     border-left-color: #7367f0;
 }
-[data-bs-theme='dark'] #ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
+[data-bs-theme='dark'] #ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract:not([class*='ws-day-contract--']) {
     background: color-mix(in srgb, var(--bs-card-bg) 88%, #7367f0 12%);
     border-left-color: #7367f0;
 }

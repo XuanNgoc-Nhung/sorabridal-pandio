@@ -158,7 +158,8 @@ class AppServiceProvider extends ServiceProvider
     private static function normalizeDsMenu(array $ds_menu): array
     {
         $aliases = [
-            'admin.nhan-su.lich-lam-viec' => 'admin.lich-lam-viec',
+            'admin.nhan-su.lich-lam-viec' => 'admin.lich-chup',
+            'admin.lich-lam-viec' => 'admin.lich-chup',
             'admin.bao-cao-ads' => 'admin.bao-cao.ads',
         ];
 

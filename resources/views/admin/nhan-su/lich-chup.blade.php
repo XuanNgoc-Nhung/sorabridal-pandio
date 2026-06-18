@@ -10,7 +10,7 @@
         </div>
     </div>
 @else
-    <div class="card app-calendar-wrapper" id="ws-lich-lam-viec">
+    <div class="card app-calendar-wrapper" id="ws-lich-chup">
         <div class="card shadow-none border-0">
             <div class="card-body pb-0">
                 @if(!empty($locTienDoFilters) && is_array($locTienDoFilters))
@@ -287,7 +287,7 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/fullcalendar/fullcalendar.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/app-calendar.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/admin-lich-lam-viec.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-lich-chup.css') }}" />
 @endpush
 
 @push('scripts')
@@ -313,7 +313,7 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var root = document.getElementById('ws-lich-lam-viec');
+            var root = document.getElementById('ws-lich-chup');
             var calendarEl = document.getElementById('calendar');
             if (!root || !calendarEl) return;
 
@@ -333,8 +333,8 @@
             var listModeActive = false;
             var listCurrentPage = 1;
             var calendarViewBeforeList = 'dayGridMonth';
-            var listDanhSachUrl = @json(route('admin.lich-lam-viec.danh-sach'));
-            var chuaPhanCongUrl = @json(route('admin.lich-lam-viec.chua-phan-cong'));
+            var listDanhSachUrl = @json(route('admin.lich-chup.danh-sach'));
+            var chuaPhanCongUrl = @json(route('admin.lich-chup.chua-phan-cong'));
             var trangThaiHopDongClass = @json($trangThaiHopDongClass);
             var chuaPhanCongPanel = document.getElementById('wsLichChuaPhanCongPanel');
             var chuaPhanCongBody = document.getElementById('wsLichChuaPhanCongBody');
@@ -493,7 +493,7 @@
 
             var tienDoKeys = @json(array_keys(is_array($tienDoLegend ?? null) ? $tienDoLegend : []));
             var tienDoColorDefaults = @json($tienDoColorDefaults);
-            var TIEN_DO_COLORS_LS = 'ws-lich-lam-viec-tien-do-colors';
+            var TIEN_DO_COLORS_LS = 'ws-lich-chup-tien-do-colors';
 
             function normalizeHexColor(value) {
                 var s = String(value || '').trim();
@@ -587,10 +587,10 @@
                     var customBorder = getCustomTienDoBorder(key);
                     if (!customBorder) return;
                     var selector = [
-                        '#ws-lich-lam-viec .admin-work-calendar .ws-day-contract.ws-day-contract--' + key,
-                        '#ws-lich-lam-viec .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key,
-                        '#ws-lich-lam-viec .ws-lich-list-card.ws-lich-list-card--' + key,
-                        '#ws-lich-lam-viec .ws-lich-chua-phan-cong__card.ws-lich-list-card--' + key
+                        '#ws-lich-chup .admin-work-calendar .ws-day-contract.ws-day-contract--' + key,
+                        '#ws-lich-chup .ws-lich-mobile-month__work .ws-day-contract.ws-day-contract--' + key,
+                        '#ws-lich-chup .ws-lich-list-card.ws-lich-list-card--' + key,
+                        '#ws-lich-chup .ws-lich-chua-phan-cong__card.ws-lich-list-card--' + key
                     ].join(',');
                     rules.push(selector + '{border-left-color:' + customBorder + ' !important}');
                 });
@@ -1334,7 +1334,7 @@
                     return { domNodes: [wrap] };
                 },
                 events: function (info, successCallback, failureCallback) {
-                    var baseUrl = @json(route('admin.lich-lam-viec.data'));
+                    var baseUrl = @json(route('admin.lich-chup.data'));
                     var params = new URLSearchParams({
                         start: info.startStr,
                         end: info.endStr
@@ -1492,7 +1492,7 @@
                     modalEl.style.display = 'block';
                 }
 
-                var detailUrl = @json(route('admin.lich-lam-viec.chi-tiet-ngay'));
+                var detailUrl = @json(route('admin.lich-chup.chi-tiet-ngay'));
                 var params = new URLSearchParams({ date: dateStr });
                 appendLocParams(params);
                 fetch(detailUrl + '?' + params.toString(), { method: 'GET' })
@@ -1564,7 +1564,7 @@
             var WS_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
             var WS_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
             var WS_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
-            var WS_DIEU_PHOI_DATA_TMPL = @json(route('admin.lich-lam-viec.hop-dong-dieu-phoi-data', ['hopDongCuoi' => '__HDC__']));
+            var WS_DIEU_PHOI_DATA_TMPL = @json(route('admin.lich-chup.hop-dong-dieu-phoi-data', ['hopDongCuoi' => '__HDC__']));
             var WS_DIEU_PHOI_PUT_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi', ['hopDongCuoi' => '__HDC__']));
             var wsAddWorkHopId = null;
 
@@ -1914,7 +1914,7 @@
                     $(hopDongEl).val('').trigger('change');
                 }
 
-                var listUrl = @json(route('admin.lich-lam-viec.hop-dong-chua-phan-ngay'));
+                var listUrl = @json(route('admin.lich-chup.hop-dong-chua-phan-ngay'));
                 fetch(listUrl, { method: 'GET' })
                     .then(function (r) { return r.json(); })
                     .then(function (payload) {
@@ -2049,7 +2049,7 @@
 
                     var fd = new FormData(formEl);
                     var isEdit = modalEl && modalEl.dataset.wsMode === 'edit';
-                    var fetchUrl = @json(route('admin.lich-lam-viec.tao-lich'));
+                    var fetchUrl = @json(route('admin.lich-chup.tao-lich'));
                     var fetchOpts = {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': @json(csrf_token()) },

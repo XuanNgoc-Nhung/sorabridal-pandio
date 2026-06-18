@@ -37,8 +37,8 @@ return [
     [
         'stt' => 5,
         'type' => 'single',
-        'route' => 'admin.lich-lam-viec',
-        'label' => 'Lịch làm việc',
+        'route' => 'admin.lich-chup',
+        'label' => 'Lịch chụp',
         'icon' => 'ti tabler-calendar',
     ],
     [

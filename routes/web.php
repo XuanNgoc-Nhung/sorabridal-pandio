@@ -82,19 +82,19 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::delete('/hop-dong/{hopDong}', [AdminTrangPhuc::class, 'destroyHopDong'])->name('trang-phuc.destroy-hop-dong');
     });
 
-    // Lịch làm việc (menu độc lập)
-    Route::group(['prefix' => 'lich-lam-viec'], function () {
-        Route::get('/', [AdminNhanSu::class, 'lichLamViec'])->name('lich-lam-viec');
-        Route::get('/data', [AdminNhanSu::class, 'lichLamViecData'])->name('lich-lam-viec.data');
-        Route::get('/danh-sach', [AdminNhanSu::class, 'lichLamViecDanhSach'])->name('lich-lam-viec.danh-sach');
-        Route::get('/chi-tiet-ngay', [AdminNhanSu::class, 'lichLamViecChiTietNgay'])->name('lich-lam-viec.chi-tiet-ngay');
+    // Lịch chụp (menu độc lập)
+    Route::group(['prefix' => 'lich-chup'], function () {
+        Route::get('/', [AdminNhanSu::class, 'lichLamViec'])->name('lich-chup');
+        Route::get('/data', [AdminNhanSu::class, 'lichLamViecData'])->name('lich-chup.data');
+        Route::get('/danh-sach', [AdminNhanSu::class, 'lichLamViecDanhSach'])->name('lich-chup.danh-sach');
+        Route::get('/chi-tiet-ngay', [AdminNhanSu::class, 'lichLamViecChiTietNgay'])->name('lich-chup.chi-tiet-ngay');
         Route::get('/hop-dong-chua-phan-ngay', [AdminNhanSu::class, 'lichLamViecHopDongChuaPhanNgay'])
-            ->name('lich-lam-viec.hop-dong-chua-phan-ngay');
+            ->name('lich-chup.hop-dong-chua-phan-ngay');
         Route::get('/chua-phan-cong', [AdminNhanSu::class, 'lichLamViecChuaPhanCong'])
-            ->name('lich-lam-viec.chua-phan-cong');
+            ->name('lich-chup.chua-phan-cong');
         Route::get('/hop-dong/{hopDongCuoi}/dieu-phoi-data', [AdminNhanSu::class, 'lichLamViecHopDongDieuPhoiData'])
-            ->name('lich-lam-viec.hop-dong-dieu-phoi-data');
-        Route::post('/tao-lich', [AdminNhanSu::class, 'lichLamViecTaoLich'])->name('lich-lam-viec.tao-lich');
+            ->name('lich-chup.hop-dong-dieu-phoi-data');
+        Route::post('/tao-lich', [AdminNhanSu::class, 'lichLamViecTaoLich'])->name('lich-chup.tao-lich');
     });
 
     // Tư vấn
