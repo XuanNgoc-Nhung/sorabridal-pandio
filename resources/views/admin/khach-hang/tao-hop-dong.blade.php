@@ -695,7 +695,7 @@
                                         <tr>
                                             <th style="width: 56px;">Ảnh</th>
                                             <th>Tên</th>
-                                            <th>Loại</th>
+                                            <th>Ngày nhập</th>
                                             <th>Mã</th>
                                             <th style="width: 70px;" class="text-center">Xóa</th>
                                         </tr>
@@ -1725,10 +1725,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function wizardTpLoaiLabel(p) {
-        if (p && p.loai_label) return String(p.loai_label);
-        if (p && p.loai === 'chup') return 'Trang phục chụp';
-        if (p && p.loai === 'cuoi') return 'Trang phục cưới';
+    function wizardTpNgayNhapLabel(p) {
+        if (p && p.ngay_nhap) return String(p.ngay_nhap);
         return '—';
     }
 
@@ -1770,9 +1768,9 @@ document.addEventListener('DOMContentLoaded', function() {
             tdTen.className = 'text-break';
             tdTen.textContent = ten;
 
-            var tdLoai = document.createElement('td');
-            tdLoai.className = 'text-muted small';
-            tdLoai.textContent = wizardTpLoaiLabel(p);
+            var tdNgayNhap = document.createElement('td');
+            tdNgayNhap.className = 'text-muted small';
+            tdNgayNhap.textContent = wizardTpNgayNhapLabel(p);
 
             var tdMa = document.createElement('td');
             tdMa.className = 'text-muted small';
@@ -1791,7 +1789,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             tr.appendChild(tdImg);
             tr.appendChild(tdTen);
-            tr.appendChild(tdLoai);
+            tr.appendChild(tdNgayNhap);
             tr.appendChild(tdMa);
             tr.appendChild(tdAct);
             wizardTpState.daChon.appendChild(tr);

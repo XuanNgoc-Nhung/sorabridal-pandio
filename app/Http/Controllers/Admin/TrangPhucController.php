@@ -9,13 +9,11 @@ use App\Models\HopDongCuoiTrangPhuc;
 use App\Models\SanPhamChoThue;
 use App\Models\TrangPhuc;
 use App\Support\AdminPagination;
-use App\Support\LoaiTrangPhuc;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class TrangPhucController extends Controller
 {
@@ -49,8 +47,7 @@ class TrangPhucController extends Controller
             $query->where(function ($qb) use ($like) {
                 $qb->where('ten_san_pham', 'like', $like)
                     ->orWhere('ma_san_pham', 'like', $like)
-                    ->orWhere('loai', 'like', $like)
-                    ->orWhere('mo_ta', 'like', $like)
+                    ->orWhere('ngay_nhap', 'like', $like)
                     ->orWhere('ghi_chu', 'like', $like);
             });
         }
@@ -81,28 +78,23 @@ class TrangPhucController extends Controller
             'ten_san_pham' => 'required|string|max:255',
             'ma_san_pham' => 'required|string|max:255|unique:trang_phuc,ma_san_pham',
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
-            'mo_ta' => 'nullable|string|max:500',
+            'ngay_nhap' => 'nullable|string|max:255',
             'ghi_chu' => 'nullable|string|max:500',
-            'loai' => 'nullable|string|max:'.TrangPhuc::LOAI_MAX_LENGTH,
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
-
-        $slug = $this->uniqueSlug(Str::slug($validated['ten_san_pham']));
 
         $hinhAnhPath = null;
         if ($request->hasFile('hinh_anh')) {
             $hinhAnhPath = $request->file('hinh_anh')->store('trang-phuc/san-pham', 'public');
         }
 
-        $loai = trim((string) ($validated['loai'] ?? ''));
+        $ngayNhap = trim((string) ($validated['ngay_nhap'] ?? ''));
 
         TrangPhuc::create([
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
-            'loai' => $loai !== '' ? $loai : null,
-            'slug' => $slug,
+            'ngay_nhap' => $ngayNhap !== '' ? $ngayNhap : null,
             'hinh_anh' => $hinhAnhPath,
-            'mo_ta' => $validated['mo_ta'] ?? null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'trang_thai' => TrangPhuc::TRANG_THAI_ACTIVE,
             'gia_tri' => $validated['gia_tri'] ?? 0,
@@ -117,17 +109,17 @@ class TrangPhucController extends Controller
             'ten_san_pham' => 'required|string|max:255',
             'ma_san_pham' => 'required|string|max:255|unique:trang_phuc,ma_san_pham,'.$trangPhuc->id,
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
-            'mo_ta' => 'nullable|string|max:500',
+            'ngay_nhap' => 'nullable|string|max:255',
             'ghi_chu' => 'nullable|string|max:500',
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
 
-        $slug = $this->uniqueSlug(Str::slug($validated['ten_san_pham']), $trangPhuc->id);
+        $ngayNhap = trim((string) ($validated['ngay_nhap'] ?? ''));
 
         $updateData = [
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
-            'slug' => $slug,
+            'ngay_nhap' => $ngayNhap !== '' ? $ngayNhap : null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'gia_tri' => $validated['gia_tri'] ?? 0,
         ];
@@ -247,26 +239,6 @@ class TrangPhucController extends Controller
         ]);
     }
 
-    private function uniqueSlug(string $slug, ?int $ignoreId = null): string
-    {
-        $base = $slug;
-        $i = 2;
-
-        $exists = function (string $candidate) use ($ignoreId): bool {
-            return TrangPhuc::query()
-                ->when($ignoreId, fn ($q) => $q->where('id', '<>', $ignoreId))
-                ->where('slug', $candidate)
-                ->exists();
-        };
-
-        while ($exists($slug)) {
-            $slug = $base.'-'.$i;
-            $i++;
-        }
-
-        return $slug;
-    }
-
     /**
      * Tìm sản phẩm trang phục (JSON) cho modal thêm hợp đồng thuê.
      */
@@ -274,25 +246,14 @@ class TrangPhucController extends Controller
     {
         $validated = $request->validate([
             'q' => 'nullable|string|max:255',
-            'loai' => 'nullable|string|in:'.implode(',', LoaiTrangPhuc::values()),
-            'dung_chung' => 'nullable|boolean',
         ]);
 
         $needle = trim((string) ($validated['q'] ?? ''));
-        $dungChung = filter_var($validated['dung_chung'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $query = TrangPhuc::query()
             ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
             ->orderByDesc('id')
             ->limit(80);
-
-        if (! $dungChung && ! empty($validated['loai'])) {
-            if ($validated['loai'] === LoaiTrangPhuc::CHUP) {
-                $query->whereIn('loai', [LoaiTrangPhuc::CHUP, 'phong_su']);
-            } else {
-                $query->where('loai', LoaiTrangPhuc::CUOI);
-            }
-        }
 
         if ($needle !== '') {
             $query->where(function ($qb) use ($needle) {
@@ -301,7 +262,7 @@ class TrangPhucController extends Controller
             });
         }
 
-        $rows = $query->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'loai']);
+        $rows = $query->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'ngay_nhap']);
         $coLichSuIds = $this->cacSanPhamIdCoLichSuSuDung(
             $rows->pluck('id')->map(static fn ($id): int => (int) $id)->all()
         );
@@ -324,7 +285,7 @@ class TrangPhucController extends Controller
         $items = TrangPhuc::query()
             ->where('trang_thai', TrangPhuc::TRANG_THAI_ACTIVE)
             ->orderBy('ten_san_pham')
-            ->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'loai']);
+            ->get(['id', 'ten_san_pham', 'ma_san_pham', 'hinh_anh', 'gia_tri', 'ngay_nhap']);
 
         $chup = [];
         $cuoi = [];
@@ -334,14 +295,8 @@ class TrangPhucController extends Controller
 
         foreach ($items as $sp) {
             $entry = $this->buildSanPhamCatalogEntry($sp, isset($coLichSuIds[(int) $sp->id]));
-            if ($dungChungTrangPhuc) {
-                $chup[] = $entry;
-                $cuoi[] = $entry;
-            } elseif (LoaiTrangPhuc::normalize($sp->loai) === LoaiTrangPhuc::CHUP) {
-                $chup[] = $entry;
-            } else {
-                $cuoi[] = $entry;
-            }
+            $chup[] = $entry;
+            $cuoi[] = $entry;
         }
 
         return ['chup' => $chup, 'cuoi' => $cuoi];
@@ -359,8 +314,7 @@ class TrangPhucController extends Controller
             'id' => $id,
             'ten' => (string) ($sp->ten_san_pham ?? ''),
             'ma' => (string) ($sp->ma_san_pham ?? ''),
-            'loai' => LoaiTrangPhuc::normalize($sp->loai),
-            'loai_label' => LoaiTrangPhuc::label($sp->loai),
+            'ngay_nhap' => filled($sp->ngay_nhap) ? (string) $sp->ngay_nhap : null,
             'hinh_anh_url' => $hinhPath ? '/storage/'.ltrim($hinhPath, '/') : '',
             'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
             'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),

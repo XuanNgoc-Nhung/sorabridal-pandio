@@ -39,7 +39,7 @@
                            id="tu_khoa"
                            name="tu_khoa"
                            value="{{ old('tu_khoa', $tuKhoaHienThi) }}"
-                           placeholder="Tên, mã, loại, ghi chú...">
+                           placeholder="Tên, mã, ngày nhập, ghi chú...">
                     @error('tu_khoa')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -116,6 +116,7 @@
                         <th style="width: 64px;">Ảnh</th>
                         <th style="min-width: 110px;">Mã SP</th>
                         <th style="min-width: 180px;">Tên sản phẩm</th>
+                        <th style="min-width: 120px;">Ngày nhập</th>
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
                         <th class="text-center" style="min-width: 100px;">Hiển thị</th>
                         <th style="min-width: 140px;">Ghi chú</th>
@@ -129,6 +130,7 @@
                         $hasHinh = !empty($item->hinh_anh);
                         $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                         $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
+                        $ngayNhapHienThi = filled($item->ngay_nhap) ? $item->ngay_nhap : '—';
                         $ghiChuRutGon = filled($item->ghi_chu) ? \Illuminate\Support\Str::limit($item->ghi_chu, 40) : '—';
                     @endphp
                     <tr>
@@ -147,6 +149,7 @@
                         </td>
                         <td><span class="fw-medium">{{ $maHienThi }}</span></td>
                         <td class="text-wrap"><span class="fw-medium">{{ $item->ten_san_pham ?? '—' }}</span></td>
+                        <td class="text-nowrap">{{ $ngayNhapHienThi }}</td>
                         <td class="text-end text-nowrap">{{ $giaTriTxt }}</td>
                         <td class="text-center">
                             <div class="form-check form-switch d-flex justify-content-center mb-0">
@@ -183,6 +186,7 @@
                                        data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                       data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                        data-gia-tri="{{ $item->gia_tri ?? '' }}">
@@ -201,7 +205,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
+                        <td colspan="9" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -216,7 +220,7 @@
                     $hasHinh = !empty($item->hinh_anh);
                     $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                     $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
-                    $ghiChuHienThi = filled($item->ghi_chu) ? $item->ghi_chu : null;
+                    $ngayNhapHienThi = filled($item->ngay_nhap) ? $item->ngay_nhap : '—';
                 @endphp
                 <div class="col">
                     <div class="card h-100 san-pham-card border shadow-sm">
@@ -266,6 +270,7 @@
                                         data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
                                         data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                         data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                        data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                         data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                         data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
                                         data-gia-tri="{{ $item->gia_tri ?? '' }}"
@@ -291,16 +296,14 @@
                             <div class="san-pham-card__info-row d-flex align-items-center justify-content-between gap-2 border-top border-light pt-1 mt-auto w-100">
                                 <span class="visually-hidden">Giá trị:</span>
                                 <span class="san-pham-card__gia-tri text-body fw-medium text-start">{{ $giaTriTxt }}</span>
-                                @if($ghiChuHienThi)
-                                <span class="san-pham-card__ghi-chu text-muted text-end"
-                                      title="{{ e($ghiChuHienThi) }}">{{ $ghiChuHienThi }}</span>
-                                @endif
+                                <span class="san-pham-card__ngay-nhap text-muted text-end"
+                                      title="Ngày nhập">{{ $ngayNhapHienThi }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 @empty
-                <div class="col-12">
+                <div class="col-12 mx-auto">
                     <div class="text-center py-5 px-3 rounded border bg-label-secondary bg-opacity-10 text-muted">
                         Chưa có dữ liệu sản phẩm trang phục.
                     </div>
@@ -402,6 +405,10 @@
                                     <input type="text" class="form-control" id="them_ma_san_pham" name="ma_san_pham" value="{{ old('ma_san_pham') }}" placeholder="Ví dụ: TP001" required>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
+                                    <label class="form-label" for="them_ngay_nhap">Ngày nhập</label>
+                                    <input type="text" class="form-control" id="them_ngay_nhap" name="ngay_nhap" value="{{ old('ngay_nhap') }}" placeholder="Ví dụ: 18/06/2026">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_gia_tri">Giá trị</label>
                                     <input type="number" class="form-control" id="them_gia_tri" name="gia_tri" value="{{ old('gia_tri') }}" placeholder="0" min="0" step="0.01">
                                 </div>
@@ -467,15 +474,19 @@
                         {{-- Cột phải: Thông tin --}}
                         <div class="col-12 col-lg-8">
                             <div class="row g-3">
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-4">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="sua_ten_san_pham">Tên sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="sua_ten_san_pham" name="ten_san_pham" placeholder="Nhập tên sản phẩm" required>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-4">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="sua_ma_san_pham">Mã sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="sua_ma_san_pham" name="ma_san_pham" placeholder="Ví dụ: TP001" required>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4 col-xl-4">
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
+                                    <label class="form-label" for="sua_ngay_nhap">Ngày nhập</label>
+                                    <input type="text" class="form-control" id="sua_ngay_nhap" name="ngay_nhap" placeholder="Ví dụ: 18/06/2026">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="sua_gia_tri">Giá trị</label>
                                     <input type="number" class="form-control" id="sua_gia_tri" name="gia_tri" placeholder="0" min="0" step="0.01">
                                 </div>
@@ -675,8 +686,8 @@
     min-width: 0;
     white-space: nowrap;
 }
-.san-pham-card__ghi-chu {
-    font-size: 0.65rem;
+.san-pham-card__ngay-nhap {
+    font-size: 12px;
     font-style: italic;
     line-height: 1.35;
     flex: 1 1 auto;
@@ -684,6 +695,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding: 4px
 }
 .san-pham-card__info-icon {
     flex-shrink: 0;
@@ -697,10 +709,10 @@
         font-size: 14px;
     }
     .san-pham-card__info-row {
-        font-size: 12px;
+        font-size: 14px;
     }
-    .san-pham-card__ghi-chu {
-        font-size: 0.62rem;
+    .san-pham-card__ngay-nhap {
+        font-size: 12px;
     }
 }
 #modalThemSanPham .modal-san-pham,
@@ -998,6 +1010,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (url) formSua.action = url;
             document.getElementById('sua_ten_san_pham').value = btn.getAttribute('data-ten') || '';
             document.getElementById('sua_ma_san_pham').value = btn.getAttribute('data-ma') || '';
+            document.getElementById('sua_ngay_nhap').value = btn.getAttribute('data-ngay-nhap') || '';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_gia_tri').value = btn.getAttribute('data-gia-tri') || '';
 

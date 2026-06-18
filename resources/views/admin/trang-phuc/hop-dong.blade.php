@@ -356,8 +356,7 @@
                                         'id' => (int) $sp->id,
                                         'ten' => (string) ($sp->ten_san_pham ?? ''),
                                         'ma' => (string) ($sp->ma_san_pham ?? ''),
-                                        'loai' => \App\Support\LoaiTrangPhuc::normalize($sp->loai),
-                                        'loai_label' => \App\Support\LoaiTrangPhuc::label($sp->loai),
+                                        'ngay_nhap' => filled($sp->ngay_nhap) ? (string) $sp->ngay_nhap : null,
                                         'hinh_anh_url' => $hinhPath ? ('/storage/' . ltrim($hinhPath, '/')) : '',
                                         'gia_tri' => $sp->gia_tri !== null ? (float) $sp->gia_tri : null,
                                         'kiem_tra_url' => route('admin.trang-phuc.san-pham.kiem-tra', $sp),
@@ -384,7 +383,7 @@
                                             <tr>
                                                 <th style="width: 56px;">Ảnh</th>
                                                 <th>Tên</th>
-                                                <th style="width: 140px;">Loại</th>
+                                                <th style="width: 140px;">Ngày nhập</th>
                                                 <th style="width: 120px;">Mã</th>
                                                 <th style="width: 70px;" class="text-end">Xóa</th>
                                             </tr>
@@ -508,7 +507,7 @@
                                             <tr>
                                                 <th style="width: 56px;">Ảnh</th>
                                                 <th>Tên</th>
-                                                <th style="width: 140px;">Loại</th>
+                                                <th style="width: 140px;">Ngày nhập</th>
                                                 <th style="width: 120px;">Mã</th>
                                                 <th style="width: 70px;" class="text-end">Xóa</th>
                                             </tr>
@@ -1348,10 +1347,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isNaN(n)) return '—';
         return n.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' đ';
     }
-    function hopDongSpLoaiLabel(p) {
-        if (p && p.loai_label) return String(p.loai_label);
-        if (p && p.loai === 'chup') return 'Trang phục chụp';
-        if (p && p.loai === 'cuoi') return 'Trang phục cưới';
+    function hopDongSpNgayNhapLabel(p) {
+        if (p && p.ngay_nhap) return String(p.ngay_nhap);
         return '—';
     }
     function hopDongSpCoSuDung(p) {
@@ -1413,9 +1410,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tdTen.className = 'text-break';
         tdTen.textContent = ten;
 
-        var tdLoai = document.createElement('td');
-        tdLoai.className = 'text-muted small';
-        tdLoai.textContent = hopDongSpLoaiLabel(p);
+        var tdNgayNhap = document.createElement('td');
+        tdNgayNhap.className = 'text-muted small';
+        tdNgayNhap.textContent = hopDongSpNgayNhapLabel(p);
 
         var tdMa = document.createElement('td');
         tdMa.className = 'text-muted small';
@@ -1433,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tr.appendChild(tdImg);
         tr.appendChild(tdTen);
-        tr.appendChild(tdLoai);
+        tr.appendChild(tdNgayNhap);
         tr.appendChild(tdMa);
         tr.appendChild(tdAct);
         return tr;
