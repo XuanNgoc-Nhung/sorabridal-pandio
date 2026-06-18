@@ -142,7 +142,7 @@
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
                         <th class="text-center" style="min-width: 100px;">Hiển thị</th>
                         <th style="min-width: 140px;">Ghi chú</th>
-                        <th class="text-center" style="min-width: 96px;">Thao tác</th>
+                        <th class="text-center" style="min-width: 110px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -186,44 +186,50 @@
                         </td>
                         <td class="text-wrap small">{{ $ghiChuRutGon }}</td>
                         <td class="text-center text-nowrap">
-                            <div class="dropdown">
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Thao tác">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end">
+                            <div class="san-pham-table-actions d-inline-flex align-items-center justify-content-center gap-2" role="toolbar" aria-label="Thao tác sản phẩm">
+                                <span data-bs-toggle="tooltip" title="Kiểm tra">
                                     <button type="button"
-                                            class="dropdown-item btn-kiem-tra-san-pham"
+                                            class="san-pham-action-icon btn-kiem-tra-san-pham"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalKiemTraSanPham"
                                             data-id="{{ (int) $item->id }}"
                                             data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                             data-ma="{{ e($item->ma_san_pham ?? '') }}"
                                             data-url="{{ route('admin.trang-phuc.san-pham.kiem-tra', $item) }}">
-                                        <i class="fa-solid fa-calendar-check me-2"></i> Kiểm tra
+                                        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Kiểm tra</span>
                                     </button>
-                                    <a class="dropdown-item btn-sua-san-pham"
-                                       href="javascript:void(0);"
-                                       data-bs-toggle="modal"
-                                       data-bs-target="#modalSuaSanPham"
-                                       data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
-                                       data-ten="{{ e($item->ten_san_pham ?? '') }}"
-                                       data-ma="{{ e($item->ma_san_pham ?? '') }}"
-                                       data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
-                                       data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
-                                       data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
-                                       data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
-                                       data-gia-tri="{{ $item->gia_tri ?? '' }}">
-                                        <i class="fa-solid fa-pen me-2"></i> Sửa
-                                    </a>
-                                    <form id="form-xoa-sp-table-{{ $item->id }}" action="{{ route('admin.trang-phuc.san-pham.destroy', $item) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                    <button type="button" class="dropdown-item text-danger btn-xoa-san-pham" data-form-id="form-xoa-sp-table-{{ $item->id }}">
-                                        <i class="fa-solid fa-trash me-2"></i> Xoá
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Sửa">
+                                    <button type="button"
+                                            class="san-pham-action-icon btn-sua-san-pham"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalSuaSanPham"
+                                            data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
+                                            data-ten="{{ e($item->ten_san_pham ?? '') }}"
+                                            data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                            data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
+                                            data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
+                                            data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
+                                            data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
+                                            data-gia-tri="{{ $item->gia_tri ?? '' }}">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Sửa</span>
                                     </button>
-                                </div>
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Xoá">
+                                    <button type="button"
+                                            class="san-pham-action-icon san-pham-action-icon--danger btn-xoa-san-pham"
+                                            data-form-id="form-xoa-sp-table-{{ $item->id }}">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Xoá</span>
+                                    </button>
+                                </span>
                             </div>
+                            <form id="form-xoa-sp-table-{{ $item->id }}" action="{{ route('admin.trang-phuc.san-pham.destroy', $item) }}" method="POST" class="d-none">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                         </td>
                     </tr>
                     @empty
@@ -274,41 +280,44 @@
                                 </div>
                             @endif
                             <div class="san-pham-card__actions" role="toolbar" aria-label="Thao tác sản phẩm">
-                                <button type="button"
-                                        class="san-pham-card__action-icon btn-kiem-tra-san-pham"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalKiemTraSanPham"
-                                        data-id="{{ (int) $item->id }}"
-                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
-                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
-                                        data-url="{{ route('admin.trang-phuc.san-pham.kiem-tra', $item) }}"
-                                        title="Kiểm tra">
-                                    <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Kiểm tra</span>
-                                </button>
-                                <button type="button"
-                                        class="san-pham-card__action-icon btn-sua-san-pham"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalSuaSanPham"
-                                        data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
-                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
-                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
-                                        data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
-                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
-                                        data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
-                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
-                                        data-gia-tri="{{ $item->gia_tri ?? '' }}"
-                                        title="Sửa">
-                                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Sửa</span>
-                                </button>
-                                <button type="button"
-                                        class="san-pham-card__action-icon san-pham-card__action-icon--danger btn-xoa-san-pham"
-                                        data-form-id="form-xoa-sp-{{ $item->id }}"
-                                        title="Xoá">
-                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Xoá</span>
-                                </button>
+                                <span data-bs-toggle="tooltip" title="Kiểm tra">
+                                    <button type="button"
+                                            class="san-pham-action-icon btn-kiem-tra-san-pham"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalKiemTraSanPham"
+                                            data-id="{{ (int) $item->id }}"
+                                            data-ten="{{ e($item->ten_san_pham ?? '') }}"
+                                            data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                            data-url="{{ route('admin.trang-phuc.san-pham.kiem-tra', $item) }}">
+                                        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Kiểm tra</span>
+                                    </button>
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Sửa">
+                                    <button type="button"
+                                            class="san-pham-action-icon btn-sua-san-pham"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalSuaSanPham"
+                                            data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
+                                            data-ten="{{ e($item->ten_san_pham ?? '') }}"
+                                            data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                            data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
+                                            data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
+                                            data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
+                                            data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
+                                            data-gia-tri="{{ $item->gia_tri ?? '' }}">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Sửa</span>
+                                    </button>
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Xoá">
+                                    <button type="button"
+                                            class="san-pham-action-icon san-pham-action-icon--danger btn-xoa-san-pham"
+                                            data-form-id="form-xoa-sp-{{ $item->id }}">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Xoá</span>
+                                    </button>
+                                </span>
                             </div>
                         </div>
                         <div class="card-body d-flex flex-column san-pham-card__body">
@@ -521,7 +530,7 @@
                                     <div id="them_sp_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
                                         <span class="small">Vui lòng chọn ảnh sản phẩm</span>
                                     </div>
-                                    <img id="them_sp_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: cover;">
+                                    <img id="them_sp_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: contain;">
                                 </div>
                                 <input type="file" class="form-control" id="them_sp_hinh_anh" name="hinh_anh" accept="image/jpeg,image/png,image/gif,image/webp">
                                 <small class="text-muted d-block mt-1">JPEG, PNG, GIF, WebP — tối đa 5MB</small>
@@ -594,23 +603,24 @@
                         {{-- Cột trái: Hình ảnh --}}
                         <div class="col-12 col-lg-4">
                             <div class="sticky-lg-top">
+                                <label class="form-label" for="sua_hinh_anh_duong_dan">Địa chỉ hình ảnh</label>
+                                <input type="text"
+                                       class="form-control font-monospace mb-2"
+                                       id="sua_hinh_anh_duong_dan"
+                                       name="hinh_anh_duong_dan"
+                                       placeholder="trang-phuc/san-pham/C07.jpeg"
+                                       autocomplete="off">
+                                {{-- <small class="text-muted d-block mb-3">Đường dẫn trong storage hoặc URL — ưu tiên thấp hơn khi chọn file tải lên.</small> --}}
+
                                 <label class="form-label" for="sua_sp_hinh_anh">Hình ảnh</label>
                                 <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2" style="min-height: 210px;">
                                     <div id="sua_sp_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
                                         <span class="small">Ảnh hiện tại hoặc chọn ảnh mới</span>
                                     </div>
-                                    <img id="sua_sp_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: cover;">
+                                    <img id="sua_sp_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: contain;">
                                 </div>
                                 <input type="file" class="form-control" id="sua_sp_hinh_anh" name="hinh_anh" accept="image/jpeg,image/png,image/gif,image/webp">
                                 <small class="text-muted d-block mt-1">JPEG, PNG, GIF, WebP — tối đa 5MB</small>
-                                {{-- <label class="form-label mt-3 mb-1" for="sua_hinh_anh_duong_dan">Địa chỉ hình ảnh</label> --}}
-                                <input type="text"
-                                       class="form-control font-monospace"
-                                       id="sua_hinh_anh_duong_dan"
-                                       name="hinh_anh_duong_dan"
-                                       placeholder="trang-phuc/san-pham/C07.jpeg"
-                                       autocomplete="off">
-                                {{-- <small class="text-muted d-block mt-1">Đường dẫn trong storage hoặc URL — ưu tiên thấp hơn khi chọn file tải lên.</small> --}}
                                 <div id="sua_sp_hinh_anh_error" class="alert alert-danger mt-2 d-none" role="alert"></div>
                             </div>
                         </div>
@@ -788,29 +798,48 @@
     z-index: 3;
     display: flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: 0.75rem;
     padding: 0.4rem 0.5rem;
-    /* background: linear-gradient(to top, rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0)); */
 }
-.san-pham-card__action-icon {
+.san-pham-table-actions {
+    gap: 0.5rem;
+}
+.san-pham-action-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 0;
     background: transparent;
-    color: rgba(255, 255, 255, 0.92);
-    font-size: 0.82rem;
-    padding: 0.1rem;
+    color: var(--bs-primary);
+    font-size: 1.15rem;
+    padding: 0.15rem;
     line-height: 1;
     cursor: pointer;
-    transition: color 0.15s ease, transform 0.15s ease;
+    transition: color 0.15s ease, transform 0.15s ease, filter 0.15s ease;
 }
-.san-pham-card__action-icon:hover {
-    color: #fff;
+.san-pham-card__actions .san-pham-action-icon {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.san-pham-action-icon i {
+    font-weight: 900;
+}
+.san-pham-action-icon:hover {
+    color: color-mix(in srgb, var(--bs-primary) 82%, #000);
     transform: scale(1.12);
 }
-.san-pham-card__action-icon--danger:hover {
-    color: #ff6b6b;
+.san-pham-card__actions .san-pham-action-icon:hover {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+.san-pham-action-icon--danger {
+    color: var(--bs-danger);
+}
+.san-pham-action-icon--danger:hover {
+    color: color-mix(in srgb, var(--bs-danger) 82%, #000);
+}
+.san-pham-card__actions [data-bs-toggle="tooltip"],
+.san-pham-table-actions [data-bs-toggle="tooltip"] {
+    display: inline-flex;
+    line-height: 0;
 }
 .san-pham-card__title {
     display: -webkit-box;
