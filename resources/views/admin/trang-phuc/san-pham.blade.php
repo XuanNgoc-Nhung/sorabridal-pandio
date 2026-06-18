@@ -168,7 +168,7 @@
                                 <input type="checkbox"
                                        class="form-check-input switch-trang-thai-san-pham"
                                        role="switch"
-                                       id="switch-trang-thai-san-pham-{{ $item->id }}"
+                                       id="switch-trang-thai-san-pham-table-{{ $item->id }}"
                                        data-url="{{ route('admin.trang-phuc.san-pham.update-trang-thai', $item) }}"
                                        @checked($isVisible)
                                        title="{{ $isVisible ? 'Hiển thị' : 'Ẩn' }}">
@@ -225,7 +225,7 @@
         </div>
 
         <div id="sp-view-grid-wrap" class="san-pham-card-grid">
-            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 row-cols-xl-5 g-2 g-sm-3">
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-2 g-sm-3">
                 @forelse($danhSach ?? [] as $index => $item)
                 @php
                     $isVisible = (int)($item->trang_thai ?? 0) === 1;
@@ -233,12 +233,27 @@
                     $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                     $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                     $loaiLabel = \App\Support\LoaiTrangPhuc::label($item->loai ?? \App\Support\LoaiTrangPhuc::CUOI);
+                    $ghiChuHienThi = filled($item->ghi_chu) ? $item->ghi_chu : null;
                 @endphp
                 <div class="col">
                     <div class="card h-100 san-pham-card border shadow-sm">
                         <div class="position-relative san-pham-card__media-wrap">
-                            <span class="position-absolute top-0 start-0 m-1 badge rounded-2 border-0 san-pham-card__ma-tag {{ $isVisible ? 'bg-success' : 'bg-danger' }} text-white"
-                                  title="{{ $isVisible ? 'Đang hiển thị' : 'Đang ẩn' }}">{{ $maHienThi }}</span>
+                            <div class="san-pham-card__top-start position-absolute top-0 start-0 m-1 d-flex align-items-center gap-1 flex-wrap">
+                                <div class="form-check form-switch san-pham-card__status-switch mb-0"
+                                     title="{{ $isVisible ? 'Đang hiển thị' : 'Đang ẩn' }}">
+                                    <input type="checkbox"
+                                           class="form-check-input switch-trang-thai-san-pham"
+                                           role="switch"
+                                           id="switch-trang-thai-san-pham-grid-{{ $item->id }}"
+                                           data-url="{{ route('admin.trang-phuc.san-pham.update-trang-thai', $item) }}"
+                                           @checked($isVisible)
+                                           aria-label="Thay đổi trạng thái hiển thị">
+                                </div>
+                                <span class="badge rounded-2 border-0 san-pham-card__ma-tag {{ $isVisible ? 'bg-success' : 'bg-danger' }} text-white"
+                                      title="{{ $isVisible ? 'Đang hiển thị' : 'Đang ẩn' }}">{{ $maHienThi }}</span>
+                            </div>
+                            <span class="position-absolute top-0 end-0 m-1 badge rounded-2 border-0 san-pham-card__loai-tag bg-primary text-white"
+                                  title="Loại trang phục">{{ $loaiLabel }}</span>
                             @if($hasHinh)
                                 <img src="{{ asset('storage/' . $item->hinh_anh) }}"
                                      alt="{{ $item->ten_san_pham ?? 'Trang phục' }}"
@@ -250,54 +265,56 @@
                                     <span class="san-pham-card__placeholder-label opacity-75 px-2 text-center">Chưa có ảnh</span>
                                 </div>
                             @endif
-                        </div>
-                        <div class="card-body d-flex flex-column san-pham-card__body position-relative">
-                            <div class="dropdown san-pham-card__actions">
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Thao tác">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                            <div class="san-pham-card__actions" role="toolbar" aria-label="Thao tác sản phẩm">
+                                <button type="button"
+                                        class="san-pham-card__action-icon btn-kiem-tra-san-pham"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalKiemTraSanPham"
+                                        data-id="{{ (int) $item->id }}"
+                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
+                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                        data-url="{{ route('admin.trang-phuc.san-pham.kiem-tra', $item) }}"
+                                        title="Kiểm tra">
+                                    <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Kiểm tra</span>
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <button type="button"
-                                            class="dropdown-item btn-kiem-tra-san-pham"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalKiemTraSanPham"
-                                            data-id="{{ (int) $item->id }}"
-                                            data-ten="{{ e($item->ten_san_pham ?? '') }}"
-                                            data-ma="{{ e($item->ma_san_pham ?? '') }}"
-                                            data-url="{{ route('admin.trang-phuc.san-pham.kiem-tra', $item) }}">
-                                        <i class="fa-solid fa-calendar-check me-2"></i> Kiểm tra
-                                    </button>
-                                    <a class="dropdown-item btn-sua-san-pham"
-                                       href="javascript:void(0);"
-                                       data-bs-toggle="modal"
-                                       data-bs-target="#modalSuaSanPham"
-                                       data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
-                                       data-ten="{{ e($item->ten_san_pham ?? '') }}"
-                                       data-ma="{{ e($item->ma_san_pham ?? '') }}"
-                                       data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
-                                       data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
-                                       data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
-                                       data-gia-tri="{{ $item->gia_tri ?? '' }}">
-                                        <i class="fa-solid fa-pen me-2"></i> Sửa
-                                    </a>
-                                    <form id="form-xoa-sp-{{ $item->id }}" action="{{ route('admin.trang-phuc.san-pham.destroy', $item) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                    <button type="button" class="dropdown-item text-danger btn-xoa-san-pham" data-form-id="form-xoa-sp-{{ $item->id }}">
-                                        <i class="fa-solid fa-trash me-2"></i> Xoá
-                                    </button>
-                                </div>
+                                <button type="button"
+                                        class="san-pham-card__action-icon btn-sua-san-pham"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalSuaSanPham"
+                                        data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
+                                        data-ten="{{ e($item->ten_san_pham ?? '') }}"
+                                        data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                        data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
+                                        data-loai="{{ e(\App\Support\LoaiTrangPhuc::normalize($item->loai ?? null)) }}"
+                                        data-ghi-chu="{{ e($item->ghi_chu ?? '') }}"
+                                        data-gia-tri="{{ $item->gia_tri ?? '' }}"
+                                        title="Sửa">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Sửa</span>
+                                </button>
+                                <button type="button"
+                                        class="san-pham-card__action-icon san-pham-card__action-icon--danger btn-xoa-san-pham"
+                                        data-form-id="form-xoa-sp-{{ $item->id }}"
+                                        title="Xoá">
+                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Xoá</span>
+                                </button>
                             </div>
-                            <h6 class="card-title fw-semibold san-pham-card__title mb-1 pe-4" title="{{ $item->ten_san_pham ?? '' }}">{{ $item->ten_san_pham ?? '—' }}</h6>
-                            <div class="mb-2">
-                                <span class="badge bg-label-primary">{{ $loaiLabel }}</span>
-                            </div>
-                            <div class="san-pham-card__info-row san-pham-card__info-row--icon d-flex align-items-center gap-1 border-top border-light pt-2 mt-auto"
-                                 title="Giá trị: {{ e($giaTriTxt) }}">
-                                <span class="san-pham-card__info-icon text-muted" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+                        </div>
+                        <div class="card-body d-flex flex-column san-pham-card__body">
+                            <form id="form-xoa-sp-{{ $item->id }}" action="{{ route('admin.trang-phuc.san-pham.destroy', $item) }}" method="POST" class="d-none">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                            <p class="san-pham-card__title fw-medium mb-1" title="{{ $item->ten_san_pham ?? '' }}">{{ $item->ten_san_pham ?? '—' }}</p>
+                            <div class="san-pham-card__info-row d-flex align-items-center justify-content-between gap-2 border-top border-light pt-1 mt-auto w-100">
                                 <span class="visually-hidden">Giá trị:</span>
-                                <span class="text-body fw-medium text-end text-break flex-grow-1 min-w-0">{{ $giaTriTxt }}</span>
+                                <span class="san-pham-card__gia-tri text-body fw-medium text-start">{{ $giaTriTxt }}</span>
+                                @if($ghiChuHienThi)
+                                <span class="san-pham-card__ghi-chu text-muted text-end"
+                                      title="{{ e($ghiChuHienThi) }}">{{ $ghiChuHienThi }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -560,7 +577,7 @@
 }
 .san-pham-table-thumb {
     width: 72px;
-    height: 96px;
+    height: 50px;
     object-fit: cover;
     border-radius: 0.25rem;
     display: block;
@@ -605,26 +622,83 @@
     font-size: 0.62rem;
     line-height: 1.2;
 }
-.san-pham-card__ma-tag {
+.san-pham-card__ma-tag,
+.san-pham-card__loai-tag {
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 200;
     z-index: 2;
     padding: 0.35rem 0.45rem;
     letter-spacing: 0.02em;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-    max-width: calc(100% - 2rem);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.san-pham-card__top-start {
+    z-index: 3;
+    max-width: calc(100% - 0.5rem);
+}
+.san-pham-card__ma-tag {
+    max-width: 8rem;
+}
+.san-pham-card__loai-tag {
+    text-align: right;
+    max-width: calc(50% - 0.75rem);
+}
+.san-pham-card__status-switch {
+    display: flex;
+    align-items: center;
+    min-height: auto;
+    padding-left: 0;
+    flex-shrink: 0;
+}
+.san-pham-card__status-switch .form-check-input {
+    width: 1.85rem;
+    height: 1.05rem;
+    margin: 0;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%28255,255,255,0.9%29'/%3e%3c/svg%3e");
+}
+.san-pham-card__status-switch .form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
 .san-pham-card__body {
-    padding: 0.5rem 0.5rem 0.55rem;
+    padding: 0.2rem 0.2rem 0.2rem;
 }
 .san-pham-card__actions {
     position: absolute;
-    top: 0.35rem;
-    right: 0.35rem;
-    z-index: 2;
+    right: 4px;
+    bottom: 4px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.5rem;
+    /* background: linear-gradient(to top, rgba(17, 24, 39, 0.78), rgba(17, 24, 39, 0)); */
+}
+.san-pham-card__action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.82rem;
+    padding: 0.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+.san-pham-card__action-icon:hover {
+    color: #fff;
+    transform: scale(1.12);
+}
+.san-pham-card__action-icon--danger:hover {
+    color: #ff6b6b;
 }
 .san-pham-card__title {
     display: -webkit-box;
@@ -635,12 +709,24 @@
     font-size: 0.78rem;
 }
 .san-pham-card__info-row {
-    font-size: 0.68rem;
+    font-size: 14px;
     line-height: 1.25;
     border-color: rgba(var(--bs-border-color-rgb, 231, 233, 245), 0.9) !important;
 }
-.san-pham-card__info-row--icon {
-    cursor: default;
+.san-pham-card__gia-tri {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+.san-pham-card__ghi-chu {
+    font-size: 0.65rem;
+    font-style: italic;
+    line-height: 1.35;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .san-pham-card__info-icon {
     flex-shrink: 0;
@@ -649,18 +735,15 @@
     font-size: 0.7rem;
     line-height: 1;
 }
-.san-pham-card .btn-icon {
-    width: 1.65rem;
-    height: 1.65rem;
-    padding: 0;
-    font-size: 0.8rem;
-}
 @media (min-width: 1200px) {
     .san-pham-card__title {
         font-size: 14px;
     }
     .san-pham-card__info-row {
-        font-size: 0.7rem;
+        font-size: 12px;
+    }
+    .san-pham-card__ghi-chu {
+        font-size: 0.62rem;
     }
 }
 #modalThemSanPham .modal-san-pham,
@@ -729,6 +812,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var CSRF_TOKEN = @json(csrf_token());
     var TRANG_THAI_HIEN_THI = {{ \App\Models\TrangPhuc::TRANG_THAI_ACTIVE }};
 
+    function capNhatMaTagTheoSwitch(switchEl) {
+        var card = switchEl.closest('.san-pham-card');
+        if (!card) return;
+        var maTag = card.querySelector('.san-pham-card__ma-tag');
+        if (!maTag) return;
+        var isVisible = switchEl.checked;
+        maTag.classList.toggle('bg-success', isVisible);
+        maTag.classList.toggle('bg-danger', !isVisible);
+        maTag.title = isVisible ? 'Đang hiển thị' : 'Đang ẩn';
+        var switchWrap = switchEl.closest('.san-pham-card__status-switch');
+        if (switchWrap) {
+            switchWrap.title = isVisible ? 'Đang hiển thị' : 'Đang ẩn';
+        }
+    }
+
     function capNhatTrangThaiSanPham(switchEl) {
         if (!switchEl) return;
 
@@ -757,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(json) {
                 if (!json || !json.success) throw new Error('update_failed');
                 switchEl.title = switchEl.checked ? 'Hiển thị' : 'Ẩn';
+                capNhatMaTagTheoSwitch(switchEl);
             })
             .catch(function() {
                 switchEl.checked = trangThaiCu === TRANG_THAI_HIEN_THI;

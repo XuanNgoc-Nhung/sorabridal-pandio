@@ -80,7 +80,7 @@
 [data-bs-theme='light'] .pink .table tbody tr:hover td,
 [data-bs-theme='light'] .pink table.dataTable tbody tr:hover td,
 [data-bs-theme='light'] .pink table.dataTable tbody tr:hover th {
-  background-color: #ffecf2;
+  /* background-color: #ffecf2; */
 }
 
 [data-bs-theme='light'] .pink .table td .bg-body-secondary.rounded.border {
