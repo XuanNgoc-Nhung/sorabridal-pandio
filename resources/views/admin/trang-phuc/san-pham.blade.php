@@ -50,14 +50,14 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-6 col-md-3 col-lg-2">
+                {{-- <div class="col-6 col-md-3 col-lg-2">
                     <label class="form-label" for="loc_hinh_anh">Hình ảnh</label>
                     <select class="select2-admin form-select" id="loc_hinh_anh" name="loc_hinh_anh">
                         @foreach(\App\Models\TrangPhuc::LOC_HINH_ANH_OPTIONS as $value => $label)
                             <option value="{{ $value }}" @selected($locHinhAnh === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
-                </div>
+                </div> --}}
                 <div class="col-6 col-md-3 col-lg-2">
                     <label class="form-label" for="sap_xep_theo">Sắp xếp theo</label>
                     <select class="select2-admin form-select" id="sap_xep_theo" name="sap_xep_theo">
