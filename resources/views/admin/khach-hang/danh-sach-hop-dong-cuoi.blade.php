@@ -33,6 +33,9 @@
     .dpc-ekip-col .dpc-ekip-row + .dpc-ekip-row {
         margin-top: 0.2rem;
     }
+    .dpc-ekip-col .dpc-ekip-nv-ngoai {
+        color: var(--bs-link-color);
+    }
     .dpc-date-col .dpc-date-row--chup {
         white-space: nowrap;
     }
@@ -302,7 +305,20 @@
                         $ngayChupHien = $item->ngay_chup_thuc_te ?? $item->ngay_chup_du_kien;
                         $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc ?? $item->ngay_cuoi_du_kien;
                         $gioChupTxt = $item->gio_chup ? substr((string) $item->gio_chup, 0, 5) : '';
-                        $tenThoChup = $item->thoChup?->user?->name ?? '—';
+                        $dpcEkipRow = static function (?string $nvName, ?string $freelancer): array {
+                            if ($nvName !== null && $nvName !== '') {
+                                return ['name' => $nvName, 'is_freelancer' => false];
+                            }
+                            $fl = trim((string) ($freelancer ?? ''));
+                            if ($fl !== '') {
+                                return ['name' => $fl, 'is_freelancer' => true];
+                            }
+
+                            return ['name' => null, 'is_freelancer' => false];
+                        };
+                        $ekipChup = $dpcEkipRow($item->thoChup?->user?->name, $item->tho_chup_freelancer);
+                        $ekipMake = $dpcEkipRow($item->thoMake?->user?->name, $item->tho_make_freelancer);
+                        $ekipEdit = $dpcEkipRow($item->thoEdit?->user?->name, $item->tho_edit_freelancer);
                         $tenDichVu = $item->nhomDichVu?->ten_nhom
                             ?? $item->concept?->ten_concept
                             ?? ($loaiDichVuNhan[$item->loai_dich_vu] ?? null);
@@ -422,9 +438,30 @@
                             </span>
                         </td>
                         <td class="dpc-ekip-col small">
-                            <div class="dpc-ekip-row"><span class="text-muted">Chụp:</span> {{ $tenThoChup }}</div>
-                            <div class="dpc-ekip-row"><span class="text-muted">Make:</span> {{ $item->thoMake?->user?->name ?? '—' }}</div>
-                            <div class="dpc-ekip-row"><span class="text-muted">Edit:</span> {{ $item->thoEdit?->user?->name ?? '—' }}</div>
+                            <div class="dpc-ekip-row">
+                                <span class="text-muted">Chụp:</span>
+                                @if($ekipChup['name'])
+                                <span @class(['dpc-ekip-nv-ngoai' => $ekipChup['is_freelancer']])>{{ $ekipChup['name'] }}</span>
+                                @else
+                                —
+                                @endif
+                            </div>
+                            <div class="dpc-ekip-row">
+                                <span class="text-muted">Make:</span>
+                                @if($ekipMake['name'])
+                                <span @class(['dpc-ekip-nv-ngoai' => $ekipMake['is_freelancer']])>{{ $ekipMake['name'] }}</span>
+                                @else
+                                —
+                                @endif
+                            </div>
+                            <div class="dpc-ekip-row">
+                                <span class="text-muted">Edit:</span>
+                                @if($ekipEdit['name'])
+                                <span @class(['dpc-ekip-nv-ngoai' => $ekipEdit['is_freelancer']])>{{ $ekipEdit['name'] }}</span>
+                                @else
+                                —
+                                @endif
+                            </div>
                         </td>
                         <td class="dpc-ekip-col small">
                             @forelse($thanhVienSaleRows as $saleRow)
@@ -598,7 +635,20 @@
                         $ngayChupHien = $item->ngay_chup_thuc_te ?? $item->ngay_chup_du_kien;
                         $ngayCuoiHien = $item->ngay_cuoi_chinh_thuc ?? $item->ngay_cuoi_du_kien;
                         $gioChupTxt = $item->gio_chup ? substr((string) $item->gio_chup, 0, 5) : '';
-                        $tenThoChup = $item->thoChup?->user?->name ?? '—';
+                        $dpcEkipRow = static function (?string $nvName, ?string $freelancer): array {
+                            if ($nvName !== null && $nvName !== '') {
+                                return ['name' => $nvName, 'is_freelancer' => false];
+                            }
+                            $fl = trim((string) ($freelancer ?? ''));
+                            if ($fl !== '') {
+                                return ['name' => $fl, 'is_freelancer' => true];
+                            }
+
+                            return ['name' => null, 'is_freelancer' => false];
+                        };
+                        $ekipChup = $dpcEkipRow($item->thoChup?->user?->name, $item->tho_chup_freelancer);
+                        $ekipMake = $dpcEkipRow($item->thoMake?->user?->name, $item->tho_make_freelancer);
+                        $ekipEdit = $dpcEkipRow($item->thoEdit?->user?->name, $item->tho_edit_freelancer);
                         $tenDichVu = $item->nhomDichVu?->ten_nhom
                             ?? $item->concept?->ten_concept
                             ?? ($loaiDichVuNhan[$item->loai_dich_vu] ?? null);
@@ -683,9 +733,9 @@
                             'UTF-8'
                         );
                         $ekipCardRows = [
-                            ['short' => 'Chụp', 'name' => $item->thoChup?->user?->name, 'bg' => 'bg-label-primary'],
-                            ['short' => 'Make', 'name' => $item->thoMake?->user?->name, 'bg' => 'bg-label-info'],
-                            ['short' => 'Edit', 'name' => $item->thoEdit?->user?->name, 'bg' => 'bg-label-success'],
+                            ['short' => 'Chụp', 'name' => $ekipChup['name'], 'is_freelancer' => $ekipChup['is_freelancer'], 'bg' => 'bg-label-primary'],
+                            ['short' => 'Make', 'name' => $ekipMake['name'], 'is_freelancer' => $ekipMake['is_freelancer'], 'bg' => 'bg-label-info'],
+                            ['short' => 'Edit', 'name' => $ekipEdit['name'], 'is_freelancer' => $ekipEdit['is_freelancer'], 'bg' => 'bg-label-success'],
                         ];
                         $thanhVienSaleRows = $item->thanhVienHopDongCuis
                             ->map(static fn ($tv) => [
@@ -854,9 +904,30 @@
                                         aria-valuemax="100"></div>
                                 </div>
                                 <div class="dpc-ekip-col small mb-1">
-                                    <div class="dpc-ekip-row"><span class="text-muted">Chụp:</span> {{ $tenThoChup }}</div>
-                                    <div class="dpc-ekip-row"><span class="text-muted">Make:</span> {{ $item->thoMake?->user?->name ?? '—' }}</div>
-                                    <div class="dpc-ekip-row"><span class="text-muted">Edit:</span> {{ $item->thoEdit?->user?->name ?? '—' }}</div>
+                                    <div class="dpc-ekip-row">
+                                        <span class="text-muted">Chụp:</span>
+                                        @if($ekipChup['name'])
+                                        <span @class(['dpc-ekip-nv-ngoai' => $ekipChup['is_freelancer']])>{{ $ekipChup['name'] }}</span>
+                                        @else
+                                        —
+                                        @endif
+                                    </div>
+                                    <div class="dpc-ekip-row">
+                                        <span class="text-muted">Make:</span>
+                                        @if($ekipMake['name'])
+                                        <span @class(['dpc-ekip-nv-ngoai' => $ekipMake['is_freelancer']])>{{ $ekipMake['name'] }}</span>
+                                        @else
+                                        —
+                                        @endif
+                                    </div>
+                                    <div class="dpc-ekip-row">
+                                        <span class="text-muted">Edit:</span>
+                                        @if($ekipEdit['name'])
+                                        <span @class(['dpc-ekip-nv-ngoai' => $ekipEdit['is_freelancer']])>{{ $ekipEdit['name'] }}</span>
+                                        @else
+                                        —
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="d-flex align-items-center flex-wrap gap-3">
                                     <ul class="list-unstyled d-flex align-items-center avatar-group mb-0 z-2 flex-wrap">
