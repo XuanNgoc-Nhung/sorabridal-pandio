@@ -28,5 +28,6 @@ return [
     'admin.khach-hang.hop-dong-cuoi.dieu-phoi' => 'Điều phối hợp đồng cưới (modal)',
     'admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay' => 'Danh sách nhân viên theo ngày chụp (modal điều phối)',
     'admin.khach-hang.chinh-sua-hop-dong-cuoi' => 'Chỉnh sửa hợp đồng cưới',
+    'admin.he-thong.ip-diem-danh' => 'IP điểm danh',
     'admin.he-thong.tai-lieu' => 'Tài liệu hệ thống',
 ];

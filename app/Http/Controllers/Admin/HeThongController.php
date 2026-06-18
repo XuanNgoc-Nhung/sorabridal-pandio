@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\IpDiemDanh;
 use App\Models\NganHangThanhToan;
 use App\Models\NhanVien;
 use App\Models\PhongBan;
@@ -486,6 +487,136 @@ class HeThongController extends Controller
             'items' => $items,
             'total' => count($items),
         ]);
+    }
+
+    public function ipDiemDanh(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'trang_thai' => 'nullable|in:0,1',
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(IpDiemDanh::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]);
+
+        $query = IpDiemDanh::query();
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        if ($search !== '') {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($qb) use ($like) {
+                $qb->where('ten_ip', 'like', $like)
+                    ->orWhere('dia_chi_ip', 'like', $like)
+                    ->orWhere('ghi_chu', 'like', $like);
+            });
+        }
+
+        if (array_key_exists('trang_thai', $validated) && $validated['trang_thai'] !== null && $validated['trang_thai'] !== '') {
+            $query->where('trang_thai', (int) $validated['trang_thai']);
+        }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? IpDiemDanh::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, IpDiemDanh::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = IpDiemDanh::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            IpDiemDanh::SAP_XEP_TEN => $query->orderBy('ten_ip', $thuTu),
+            IpDiemDanh::SAP_XEP_DIA_CHI_IP => $query->orderBy('dia_chi_ip', $thuTu),
+            IpDiemDanh::SAP_XEP_TRANG_THAI => $query->orderBy('trang_thai', $thuTu),
+            IpDiemDanh::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('created_at', $thuTu),
+        };
+        $query->orderBy('id', $thuTu);
+
+        $danhSachIpDiemDanh = $query->paginate(AdminPagination::perPage())->withQueryString();
+
+        return view('admin.he-thong.ip-diem-danh', compact('danhSachIpDiemDanh'));
+    }
+
+    public function storeIpDiemDanh(Request $request)
+    {
+        $request->validate([
+            'ten_ip' => 'required|string|max:255',
+            'dia_chi_ip' => 'required|ip|unique:ip_diem_danh,dia_chi_ip',
+            'ghi_chu' => 'nullable|string',
+        ], [
+            'ten_ip.required' => 'Vui lòng nhập tên IP.',
+            'ten_ip.string' => 'Tên IP phải là chuỗi ký tự.',
+            'ten_ip.max' => 'Tên IP không được quá 255 ký tự.',
+            'dia_chi_ip.required' => 'Vui lòng nhập địa chỉ IP.',
+            'dia_chi_ip.ip' => 'Địa chỉ IP không hợp lệ.',
+            'dia_chi_ip.unique' => 'Địa chỉ IP đã tồn tại, vui lòng chọn địa chỉ khác.',
+            'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
+        ]);
+
+        IpDiemDanh::create([
+            'ten_ip' => $request->input('ten_ip'),
+            'dia_chi_ip' => $request->input('dia_chi_ip'),
+            'ghi_chu' => $request->input('ghi_chu'),
+            'trang_thai' => IpDiemDanh::TRANG_THAI_DANG_HOAT_DONG,
+        ]);
+
+        return redirect()
+            ->route('admin.he-thong.ip-diem-danh')
+            ->with('success', 'Đã thêm IP điểm danh thành công.');
+    }
+
+    public function updateIpDiemDanh(Request $request, IpDiemDanh $ipDiemDanh)
+    {
+        $request->validate([
+            'ten_ip' => 'required|string|max:255',
+            'dia_chi_ip' => ['required', 'ip', Rule::unique('ip_diem_danh', 'dia_chi_ip')->ignore($ipDiemDanh->id)],
+            'ghi_chu' => 'nullable|string',
+        ], [
+            'ten_ip.required' => 'Vui lòng nhập tên IP.',
+            'ten_ip.string' => 'Tên IP phải là chuỗi ký tự.',
+            'ten_ip.max' => 'Tên IP không được quá 255 ký tự.',
+            'dia_chi_ip.required' => 'Vui lòng nhập địa chỉ IP.',
+            'dia_chi_ip.ip' => 'Địa chỉ IP không hợp lệ.',
+            'dia_chi_ip.unique' => 'Địa chỉ IP đã tồn tại, vui lòng chọn địa chỉ khác.',
+            'ghi_chu.string' => 'Ghi chú phải là chuỗi ký tự.',
+        ]);
+
+        $ipDiemDanh->update([
+            'ten_ip' => $request->input('ten_ip'),
+            'dia_chi_ip' => $request->input('dia_chi_ip'),
+            'ghi_chu' => $request->input('ghi_chu'),
+        ]);
+
+        return redirect()
+            ->route('admin.he-thong.ip-diem-danh')
+            ->with('success', 'Đã cập nhật IP điểm danh thành công.');
+    }
+
+    public function updateIpDiemDanhTrangThai(Request $request, IpDiemDanh $ipDiemDanh): JsonResponse
+    {
+        $validated = $request->validate([
+            'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+            'trang_thai.integer' => 'Trạng thái phải là số nguyên.',
+            'trang_thai.in' => 'Trạng thái không hợp lệ.',
+        ]);
+
+        $ipDiemDanh->update([
+            'trang_thai' => (int) $validated['trang_thai'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => $ipDiemDanh->trang_thai,
+            'message' => 'Đã cập nhật trạng thái cho phép điểm danh.',
+        ]);
+    }
+
+    public function destroyIpDiemDanh(IpDiemDanh $ipDiemDanh)
+    {
+        $ipDiemDanh->delete();
+
+        return redirect()
+            ->route('admin.he-thong.ip-diem-danh')
+            ->with('success', 'Đã xóa IP điểm danh.');
     }
 
     public function taiLieu(Request $request)

@@ -218,6 +218,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::put('/phong-ban/{phongBan}', [AdminHeThong::class, 'updatePhongBan'])->name('he-thong.phong-ban.update');
         Route::delete('/phong-ban/{phongBan}', [AdminHeThong::class, 'destroyPhongBan'])->name('he-thong.phong-ban.destroy');
         Route::get('/phong-ban/{phongBan}/nhan-vien', [AdminHeThong::class, 'nhanVienPhongBan'])->name('he-thong.phong-ban.nhan-vien');
+        Route::get('/ip-diem-danh', [AdminHeThong::class, 'ipDiemDanh'])->name('he-thong.ip-diem-danh');
+        Route::post('/ip-diem-danh', [AdminHeThong::class, 'storeIpDiemDanh'])->name('he-thong.ip-diem-danh.store');
+        Route::put('/ip-diem-danh/{ipDiemDanh}', [AdminHeThong::class, 'updateIpDiemDanh'])->name('he-thong.ip-diem-danh.update');
+        Route::patch('/ip-diem-danh/{ipDiemDanh}/trang-thai', [AdminHeThong::class, 'updateIpDiemDanhTrangThai'])->name('he-thong.ip-diem-danh.update-trang-thai');
+        Route::delete('/ip-diem-danh/{ipDiemDanh}', [AdminHeThong::class, 'destroyIpDiemDanh'])->name('he-thong.ip-diem-danh.destroy');
         Route::get('/tai-lieu', [AdminHeThong::class, 'taiLieu'])->name('he-thong.tai-lieu');
         Route::post('/tai-lieu', [AdminHeThong::class, 'storeTaiLieu'])->name('he-thong.tai-lieu.store');
         Route::delete('/tai-lieu/{taiLieu}', [AdminHeThong::class, 'destroyTaiLieu'])->name('he-thong.tai-lieu.destroy');
