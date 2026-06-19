@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CaLamViec;
 use App\Models\ChamCong;
+use App\Models\DangKyCaLamViec;
 use App\Models\DiemDanh;
 use App\Models\HopDong;
 use App\Models\IpDiemDanh;
@@ -144,6 +146,62 @@ class DiemDanhController extends Controller
         User::SAP_XEP_HO_TEN => 'Họ tên',
         User::SAP_XEP_ID => 'Mới nhất',
     ];
+
+    public function caLam(Request $request)
+    {
+        $validated = $request->validate([
+            'tuan' => 'nullable|date',
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        $tuanBatDau = ! empty($validated['tuan'])
+            ? Carbon::parse($validated['tuan'])->startOfWeek()
+            : now()->startOfWeek();
+        $tuanKetThuc = (clone $tuanBatDau)->endOfWeek();
+
+        $tuKhoa = trim((string) ($validated['search'] ?? ''));
+
+        $ngayTrongTuan = [];
+        for ($d = (clone $tuanBatDau); $d->lte($tuanKetThuc); $d->addDay()) {
+            $ngayTrongTuan[] = (clone $d);
+        }
+
+        $startStr = $tuanBatDau->toDateString();
+        $endStr = $tuanKetThuc->toDateString();
+
+        $nhanVienQuery = User::query()->whereHas('nhanVien');
+
+        if ($tuKhoa !== '') {
+            $like = '%'.addcslashes($tuKhoa, '%_\\').'%';
+            $nhanVienQuery->where(function ($q) use ($like) {
+                $q->where('name', 'like', $like)
+                    ->orWhere('email', 'like', $like);
+            });
+        }
+
+        $nhanVien = $nhanVienQuery->orderBy('name')->get();
+
+        $dangKy = DangKyCaLamViec::query()
+            ->with('caLamViec')
+            ->whereBetween('ngay_lam', [$startStr, $endStr])
+            ->get();
+
+        $bangCaLam = [];
+        foreach ($dangKy as $record) {
+            $dateKey = $record->ngay_lam->format('Y-m-d');
+            $bangCaLam[$dateKey][$record->nguoi_dung_id][] = $record;
+        }
+
+        return view('admin.diem-danh.ca-lam', [
+            'tuan' => $tuanBatDau->toDateString(),
+            'tuanBatDau' => $tuanBatDau,
+            'tuanKetThuc' => $tuanKetThuc,
+            'ngayTrongTuan' => $ngayTrongTuan,
+            'nhanVien' => $nhanVien,
+            'bangCaLam' => $bangCaLam,
+            'search' => $tuKhoa,
+        ]);
+    }
 
     public function chamCong(Request $request)
     {

@@ -83,6 +83,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::delete('/hop-dong/{hopDong}', [AdminTrangPhuc::class, 'destroyHopDong'])->name('trang-phuc.destroy-hop-dong');
     });
 
+    // Ca làm (menu độc lập)
+    Route::group(['prefix' => 'ca-lam'], function () {
+        Route::get('/', [AdminDiemDanh::class, 'caLam'])->name('ca-lam');
+    });
+
     // Lịch chụp (menu độc lập)
     Route::group(['prefix' => 'lich-chup'], function () {
         Route::get('/', [AdminNhanSu::class, 'lichLamViec'])->name('lich-chup');
