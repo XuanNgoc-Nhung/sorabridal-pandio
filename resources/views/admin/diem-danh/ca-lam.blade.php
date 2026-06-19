@@ -64,12 +64,13 @@
             <span class="badge bg-label-primary fw-normal">{{ count($nhanVien ?? []) }} nhân viên</span>
         </h5>
         <div class="card-body">
-        <div class="table-responsive text-nowrap table-wrapper-bordered">
-            <table class="table table-bordered table-hover mb-0">
+        <div class="table-responsive text-nowrap table-wrapper-bordered ca-lam-table-wrap">
+            <table class="table table-bordered table-hover mb-0 ca-lam-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center align-middle" style="min-width: 48px;">STT</th>
-                        <th style="min-width: 220px;">Nhân viên</th>
+                        <th class="text-center align-middle ca-lam-sticky ca-lam-sticky-col-1" style="min-width: 48px;">STT</th>
+                        <th class="ca-lam-sticky ca-lam-sticky-col-2" style="min-width: 220px;">Nhân viên</th>
+                        <th style="min-width: 230px;">Ca làm</th>
                         @foreach(($ngayTrongTuan ?? []) as $day)
                             @php
                                 $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
@@ -82,40 +83,45 @@
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @forelse(($nhanVien ?? []) as $u)
-                        <tr>
-                            <td class="text-center align-middle">{{ $loop->iteration }}</td>
-                            <td>
+                        @php
+                            $caLamDaChon = $caLamTheoNhanVien[$u->id] ?? null;
+                        @endphp
+                        <tr data-user-id="{{ $u->id }}">
+                            <td class="text-center align-middle ca-lam-sticky ca-lam-sticky-col-1">{{ $loop->iteration }}</td>
+                            <td class="ca-lam-sticky ca-lam-sticky-col-2">
                                 <div class="fw-medium">{{ $u->name }}</div>
                                 <div class="small text-muted">{{ $u->email }}</div>
+                            </td>
+                            <td class="align-middle">
+                                <select class="form-select js-ca-lam-select js-ca-lam-tuan-select"
+                                        data-user-id="{{ $u->id }}"
+                                        data-tuan="{{ $tuanLoc }}"
+                                        data-placeholder="Chọn ca làm"
+                                        style="width: 100%;">
+                                    @include('admin.diem-danh.partials.ca-lam-select-options', ['selected' => $caLamDaChon])
+                                </select>
                             </td>
                             @foreach(($ngayTrongTuan ?? []) as $day)
                                 @php
                                     $dateKey = $day->toDateString();
                                     $records = $bangCaLam[$dateKey][$u->id] ?? [];
+                                    $caIds = collect($records)->pluck('ca_lam_id')->unique()->values();
+                                    $caNgayDaChon = $caIds->count() === 1 ? $caIds->first() : null;
                                 @endphp
-                                <td class="text-center align-middle">
-                                    @if(count($records) > 0)
-                                        <div class="d-flex flex-column gap-1">
-                                            @foreach($records as $record)
-                                                @php
-                                                    $ca = $record->caLamViec;
-                                                @endphp
-                                                @if($ca)
-                                                <span class="badge bg-label-primary text-wrap" title="{{ \App\Models\CaLamViec::formatGio($ca->gio_bat_dau) }} – {{ \App\Models\CaLamViec::formatGio($ca->gio_ket_thuc) }}">
-                                                    {{ $ca->ten_ca }}
-                                                </span>
-                                                @endif
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
+                                <td class="align-middle ca-lam-ngay-cell" data-ngay="{{ $dateKey }}">
+                                    <select class="form-select js-ca-lam-select js-ca-lam-ngay-select"
+                                            data-user-id="{{ $u->id }}"
+                                            data-ngay="{{ $dateKey }}"
+                                            data-placeholder="Chọn ca"
+                                            style="width: 100%; min-width: 150px;">
+                                        @include('admin.diem-danh.partials.ca-lam-select-options', ['selected' => $caNgayDaChon, 'chiTen' => true])
+                                    </select>
                                 </td>
                             @endforeach
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + count($ngayTrongTuan ?? []) }}" class="text-center py-4 text-muted">
+                            <td colspan="{{ 3 + count($ngayTrongTuan ?? []) }}" class="text-center py-4 text-muted">
                                 Không có nhân viên phù hợp bộ lọc.
                             </td>
                         </tr>
@@ -148,12 +154,193 @@
 [data-bs-theme='dark'] .table-wrapper-bordered .table thead th.ca-lam-weekend {
     background-color: rgba(13, 110, 47, 0.08) !important;
 }
+.ca-lam-table .ca-lam-sticky {
+    position: sticky;
+    z-index: 2;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+.ca-lam-table thead .ca-lam-sticky {
+    z-index: 6;
+    background-color: #f8f9fa;
+}
+.ca-lam-table.table-hover > tbody > tr:hover > .ca-lam-sticky {
+    background-color: #f5f5f9;
+}
+[data-bs-theme='dark'] .ca-lam-table .ca-lam-sticky {
+    background-color: #2f3349;
+}
+[data-bs-theme='dark'] .ca-lam-table thead .ca-lam-sticky {
+    background-color: #353a52;
+}
+[data-bs-theme='dark'] .ca-lam-table.table-hover > tbody > tr:hover > .ca-lam-sticky {
+    background-color: #3a3f5c;
+}
+.ca-lam-table .ca-lam-sticky-col-1 {
+    left: 0;
+    min-width: 48px;
+}
+.ca-lam-table .ca-lam-sticky-col-2 {
+    left: 48px;
+    min-width: 220px;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+[data-bs-theme='dark'] .ca-lam-table .ca-lam-sticky-col-2 {
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
+}
+.ca-lam-ngay-cell .select2-container {
+    min-width: 150px;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.js') }}"></script>
+<script>
+(function () {
+    var $ = window.jQuery;
+    if (!$ || !$.fn.select2) return;
+
+    var CAP_NHAT_TUAN_URL = @json(route('admin.ca-lam.cap-nhat-tuan'));
+    var CAP_NHAT_NGAY_URL = @json(route('admin.ca-lam.cap-nhat-ngay'));
+    var CSRF_TOKEN = (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token());
+
+    function thongBaoLoi(message) {
+        if (window.Swal && typeof window.Swal.fire === 'function') {
+            window.Swal.fire({ icon: 'error', title: 'Lỗi', text: message, confirmButtonText: 'Đóng' });
+            return;
+        }
+        window.alert(message);
+    }
+
+    function setSelectValue($sel, value) {
+        $sel.data('ca-lam-skip', true);
+        $sel.val(value || '').trigger('change.select2');
+        $sel.data('prev-value', value || '');
+        $sel.data('ca-lam-skip', false);
+    }
+
+    function syncWeekSelectFromDays($row) {
+        var $weekSel = $row.find('.js-ca-lam-tuan-select');
+        var values = [];
+        $row.find('.js-ca-lam-ngay-select').each(function () {
+            values.push($(this).val() || '');
+        });
+
+        var first = values.length ? values[0] : '';
+        var allSame = values.length > 0 && values.every(function (v) { return v === first && v !== ''; });
+        var newWeekVal = allSame ? first : '';
+
+        if (String($weekSel.val() || '') !== String(newWeekVal)) {
+            setSelectValue($weekSel, newWeekVal);
+        }
+    }
+
+    function syncDaySelectsInRow($row, caLamId) {
+        $row.find('.js-ca-lam-ngay-select').each(function () {
+            setSelectValue($(this), caLamId);
+        });
+    }
+
+    function postJson(url, payload) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+            },
+            body: JSON.stringify(payload),
+        }).then(function (res) {
+            return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+            });
+        });
+    }
+
+    function handleSelectChange($sel, url, payload, onSuccess) {
+        if ($sel.data('ca-lam-skip') || $sel.data('ca-lam-loading')) {
+            return;
+        }
+
+        var newValue = $sel.val() || '';
+        var prevValue = $sel.data('prev-value');
+        if (prevValue === undefined) {
+            prevValue = '';
+        }
+        if (String(prevValue) === String(newValue)) {
+            return;
+        }
+
+        $sel.data('ca-lam-loading', true).prop('disabled', true);
+
+        postJson(url, payload)
+            .then(function (result) {
+                if (!result.ok || !result.data.success) {
+                    throw new Error((result.data && result.data.message) || 'Không thể cập nhật ca làm.');
+                }
+
+                $sel.data('prev-value', newValue);
+                if (typeof onSuccess === 'function') {
+                    onSuccess(result.data);
+                }
+            })
+            .catch(function (err) {
+                setSelectValue($sel, prevValue);
+                thongBaoLoi(err.message || 'Không thể cập nhật ca làm.');
+            })
+            .finally(function () {
+                $sel.data('ca-lam-loading', false).prop('disabled', false);
+            });
+    }
+
+    $(function () {
+        $('.js-ca-lam-select').each(function () {
+            var $el = $(this);
+            if ($el.data('select2')) {
+                return;
+            }
+
+            $el.select2({
+                placeholder: $el.data('placeholder') || 'Chọn ca làm',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body'),
+            });
+            $el.data('prev-value', $el.val() || '');
+        });
+    });
+
+    $(document).on('change', '.js-ca-lam-tuan-select', function () {
+        var $sel = $(this);
+        var $row = $sel.closest('tr');
+        var caLamId = $sel.val() || '';
+
+        handleSelectChange($sel, CAP_NHAT_TUAN_URL, {
+            nguoi_dung_id: $sel.data('user-id'),
+            tuan: $sel.data('tuan'),
+            ca_lam_id: caLamId || null,
+        }, function () {
+            syncDaySelectsInRow($row, caLamId);
+        });
+    });
+
+    $(document).on('change', '.js-ca-lam-ngay-select', function () {
+        var $sel = $(this);
+        var $row = $sel.closest('tr');
+        var caLamId = $sel.val() || '';
+
+        handleSelectChange($sel, CAP_NHAT_NGAY_URL, {
+            nguoi_dung_id: $sel.data('user-id'),
+            ngay_lam: $sel.data('ngay'),
+            ca_lam_id: caLamId || null,
+        }, function () {
+            syncWeekSelectFromDays($row);
+        });
+    });
+})();
+</script>
 <script>
 (function () {
     if (window.__caLamTuanPickerInit) return;

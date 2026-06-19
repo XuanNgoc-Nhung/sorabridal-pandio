@@ -86,6 +86,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
     // Ca làm (menu độc lập)
     Route::group(['prefix' => 'ca-lam'], function () {
         Route::get('/', [AdminDiemDanh::class, 'caLam'])->name('ca-lam');
+        Route::post('/cap-nhat-tuan', [AdminDiemDanh::class, 'capNhatCaLamTuan'])->name('ca-lam.cap-nhat-tuan');
+        Route::post('/cap-nhat-ngay', [AdminDiemDanh::class, 'capNhatCaLamNgay'])->name('ca-lam.cap-nhat-ngay');
     });
 
     // Lịch chụp (menu độc lập)

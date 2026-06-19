@@ -192,6 +192,23 @@ class DiemDanhController extends Controller
             $bangCaLam[$dateKey][$record->nguoi_dung_id][] = $record;
         }
 
+        $danhSachCaLamViec = CaLamViec::query()
+            ->orderBy('gio_bat_dau')
+            ->get();
+
+        $caLamTheoNhanVien = [];
+        foreach ($nhanVien as $user) {
+            $caIds = [];
+            foreach ($ngayTrongTuan as $day) {
+                $records = $bangCaLam[$day->toDateString()][$user->id] ?? [];
+                foreach ($records as $record) {
+                    $caIds[$record->ca_lam_id] = true;
+                }
+            }
+            $uniqueCaIds = array_keys($caIds);
+            $caLamTheoNhanVien[$user->id] = count($uniqueCaIds) === 1 ? $uniqueCaIds[0] : null;
+        }
+
         return view('admin.diem-danh.ca-lam', [
             'tuan' => $tuanBatDau->toDateString(),
             'tuanBatDau' => $tuanBatDau,
@@ -199,8 +216,148 @@ class DiemDanhController extends Controller
             'ngayTrongTuan' => $ngayTrongTuan,
             'nhanVien' => $nhanVien,
             'bangCaLam' => $bangCaLam,
+            'danhSachCaLamViec' => $danhSachCaLamViec,
+            'caLamTheoNhanVien' => $caLamTheoNhanVien,
             'search' => $tuKhoa,
         ]);
+    }
+
+    public function capNhatCaLamTuan(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nguoi_dung_id' => ['required', 'integer', 'exists:users,id'],
+            'tuan' => ['required', 'date'],
+            'ca_lam_id' => ['nullable', 'integer', 'exists:ca_lam_viec,id'],
+        ]);
+
+        $user = User::query()
+            ->whereHas('nhanVien')
+            ->find($validated['nguoi_dung_id']);
+
+        if ($user === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nhân viên không hợp lệ.',
+            ], 422);
+        }
+
+        $tuanBatDau = Carbon::parse($validated['tuan'])->startOfWeek();
+        $tuanKetThuc = (clone $tuanBatDau)->endOfWeek();
+        $caLamId = $validated['ca_lam_id'] ?? null;
+
+        $caLam = null;
+        if ($caLamId !== null) {
+            $caLam = CaLamViec::query()->find($caLamId);
+            if ($caLam === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ca làm không tồn tại.',
+                ], 422);
+            }
+        }
+
+        DB::transaction(function () use ($user, $tuanBatDau, $tuanKetThuc, $caLamId) {
+            DangKyCaLamViec::query()
+                ->where('nguoi_dung_id', $user->id)
+                ->whereBetween('ngay_lam', [$tuanBatDau->toDateString(), $tuanKetThuc->toDateString()])
+                ->delete();
+
+            if ($caLamId === null) {
+                return;
+            }
+
+            for ($d = (clone $tuanBatDau); $d->lte($tuanKetThuc); $d->addDay()) {
+                DangKyCaLamViec::create([
+                    'ca_lam_id' => $caLamId,
+                    'nguoi_dung_id' => $user->id,
+                    'ngay_lam' => $d->toDateString(),
+                ]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => $caLamId === null
+                ? 'Đã xóa ca làm trong tuần.'
+                : 'Đã cập nhật ca làm cho cả tuần.',
+            'ca_lam' => $this->formatCaLamJson($caLam),
+        ]);
+    }
+
+    public function capNhatCaLamNgay(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nguoi_dung_id' => ['required', 'integer', 'exists:users,id'],
+            'ngay_lam' => ['required', 'date'],
+            'ca_lam_id' => ['nullable', 'integer', 'exists:ca_lam_viec,id'],
+        ]);
+
+        $user = User::query()
+            ->whereHas('nhanVien')
+            ->find($validated['nguoi_dung_id']);
+
+        if ($user === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nhân viên không hợp lệ.',
+            ], 422);
+        }
+
+        $ngayLam = Carbon::parse($validated['ngay_lam'])->toDateString();
+        $caLamId = $validated['ca_lam_id'] ?? null;
+
+        $caLam = null;
+        if ($caLamId !== null) {
+            $caLam = CaLamViec::query()->find($caLamId);
+            if ($caLam === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ca làm không tồn tại.',
+                ], 422);
+            }
+        }
+
+        DB::transaction(function () use ($user, $ngayLam, $caLamId) {
+            DangKyCaLamViec::query()
+                ->where('nguoi_dung_id', $user->id)
+                ->whereDate('ngay_lam', $ngayLam)
+                ->delete();
+
+            if ($caLamId === null) {
+                return;
+            }
+
+            DangKyCaLamViec::create([
+                'ca_lam_id' => $caLamId,
+                'nguoi_dung_id' => $user->id,
+                'ngay_lam' => $ngayLam,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => $caLamId === null
+                ? 'Đã xóa ca làm trong ngày.'
+                : 'Đã cập nhật ca làm cho ngày.',
+            'ca_lam' => $this->formatCaLamJson($caLam),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function formatCaLamJson(?CaLamViec $caLam): ?array
+    {
+        if ($caLam === null) {
+            return null;
+        }
+
+        return [
+            'id' => $caLam->id,
+            'ten_ca' => $caLam->ten_ca,
+            'gio_bat_dau' => CaLamViec::formatGio($caLam->gio_bat_dau),
+            'gio_ket_thuc' => CaLamViec::formatGio($caLam->gio_ket_thuc),
+        ];
     }
 
     public function chamCong(Request $request)

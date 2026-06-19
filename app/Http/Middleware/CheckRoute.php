@@ -37,6 +37,10 @@ class CheckRoute
             'admin.khach-hang.tao-hop-dong.cap-nhat-buoc-3',
             'admin.khach-hang.tao-hop-dong.kiem-tra-ma-giam-gia',
         ],
+        'admin.ca-lam' => [
+            'admin.ca-lam.cap-nhat-tuan',
+            'admin.ca-lam.cap-nhat-ngay',
+        ],
         'admin.lich-chup' => [
             'admin.lich-chup.data',
             'admin.lich-chup.danh-sach',

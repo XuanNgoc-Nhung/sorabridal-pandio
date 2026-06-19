@@ -5,6 +5,8 @@ return [
     'admin.thong-tin-ca-nhan' => 'Thông tin cá nhân',
     'admin.nhan-su.danh-sach' => 'Danh sách nhân sự',
     'admin.ca-lam' => 'Ca làm',
+    'admin.ca-lam.cap-nhat-tuan' => 'Cập nhật ca làm theo tuần',
+    'admin.ca-lam.cap-nhat-ngay' => 'Cập nhật ca làm theo ngày',
     'admin.lich-chup' => 'Lịch chụp',
     'admin.lich-shop' => 'Lịch shop',
     'admin.note-khach-moi' => 'Note khách mới',
