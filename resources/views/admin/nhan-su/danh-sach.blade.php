@@ -117,6 +117,11 @@
                         <th>Phòng ban</th>
                         <th>Ngày vào công ty</th>
                         <th>Ngày ký hợp đồng</th>
+                        <th>Loại nhân viên</th>
+                        <th>Loại hợp đồng</th>
+                        <th>Lương cứng</th>
+                        <th>Lương mềm</th>
+                        <th>Phụ cấp</th>
                         <th>Lương cơ bản</th>
                         <th>Lương tăng ca</th>
                         <th class="text-center" style="width: 100px;">Thao tác</th>
@@ -150,6 +155,11 @@
                         <td>{{ $nv?->phongBan?->ten_phong_ban ?? '—' }}</td>
                         <td>{{ $nv?->ngay_vao_cong_ty ? $nv->ngay_vao_cong_ty->format('d/m/Y') : '—' }}</td>
                         <td>{{ $nv?->ngay_ky_hop_dong ? $nv->ngay_ky_hop_dong->format('d/m/Y') : '—' }}</td>
+                        <td>{{ $nv?->loai_nhan_vien ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$nv->loai_nhan_vien] ?? $nv->loai_nhan_vien) : '—' }}</td>
+                        <td>{{ $nv?->loai_hop_dong ? (\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS[$nv->loai_hop_dong] ?? $nv->loai_hop_dong) : '—' }}</td>
+                        <td>{{ $nv?->luong_cung !== null ? number_format($nv->luong_cung) : '—' }}</td>
+                        <td>{{ $nv?->luong_mem !== null ? number_format($nv->luong_mem) : '—' }}</td>
+                        <td>{{ $nv?->phu_cap !== null ? number_format($nv->phu_cap) : '—' }}</td>
                         <td>{{ $nv?->luong_co_ban !== null ? number_format($nv->luong_co_ban) : '—' }}</td>
                         <td>{{ $nv?->luong_tang_ca !== null ? number_format($nv->luong_tang_ca) : '—' }}</td>
                         <td>
@@ -173,6 +183,11 @@
                                        data-phong-ban-id="{{ $nv?->phongBan?->id ?? '' }}"
                                        data-ngay-vao-cong-ty="{{ $nv?->ngay_vao_cong_ty?->format('Y-m-d') ?? '' }}"
                                        data-ngay-ky-hop-dong="{{ $nv?->ngay_ky_hop_dong?->format('Y-m-d') ?? '' }}"
+                                       data-loai-nhan-vien="{{ e($nv?->loai_nhan_vien ?? '') }}"
+                                       data-loai-hop-dong="{{ e($nv?->loai_hop_dong ?? '') }}"
+                                       data-luong-cung="{{ $nv?->luong_cung ?? '' }}"
+                                       data-luong-mem="{{ $nv?->luong_mem ?? '' }}"
+                                       data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
                                        data-luong-co-ban="{{ $nv?->luong_co_ban ?? '' }}"
                                        data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
                                        data-hinh-anh="{{ !empty($hinhAnh) ? asset('storage/' . $hinhAnh) : '' }}">
@@ -199,7 +214,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="15" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
+                        <td colspan="20" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -346,6 +361,36 @@
                                     <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_ky_hop_dong" name="ngay_ky_hop_dong" value="{{ old('ngay_ky_hop_dong') }}" placeholder="dd/mm/yyyy" autocomplete="off">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_loai_nhan_vien">Loại nhân viên</label>
+                                    <select class="select2-admin form-select" id="them_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên">
+                                        <option value="">-- Chọn --</option>
+                                        @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('loai_nhan_vien') === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_loai_hop_dong">Loại hợp đồng</label>
+                                    <select class="select2-admin form-select" id="them_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
+                                        <option value="">-- Chọn --</option>
+                                        @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('loai_hop_dong') === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ)</label>
+                                    <input type="number" class="form-control" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung', 0) }}" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_luong_mem">Lương mềm (VNĐ)</label>
+                                    <input type="number" class="form-control" id="them_luong_mem" name="luong_mem" value="{{ old('luong_mem', 0) }}" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_phu_cap">Phụ cấp (VNĐ)</label>
+                                    <input type="number" class="form-control" id="them_phu_cap" name="phu_cap" value="{{ old('phu_cap', 0) }}" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="them_luong_co_ban">Lương cơ bản (VNĐ)</label>
                                     <input type="number" class="form-control" id="them_luong_co_ban" name="luong_co_ban" value="{{ old('luong_co_ban', 50000) }}" placeholder="50000" min="0" step="1000">
                                 </div>
@@ -463,6 +508,36 @@
                                     <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_ky_hop_dong" name="ngay_ky_hop_dong" placeholder="dd/mm/yyyy" autocomplete="off">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_loai_nhan_vien">Loại nhân viên</label>
+                                    <select class="select2-admin form-select" id="sua_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên">
+                                        <option value="">-- Chọn --</option>
+                                        @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_loai_hop_dong">Loại hợp đồng</label>
+                                    <select class="select2-admin form-select" id="sua_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
+                                        <option value="">-- Chọn --</option>
+                                        @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_luong_cung">Lương cứng (VNĐ)</label>
+                                    <input type="number" class="form-control" id="sua_luong_cung" name="luong_cung" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_luong_mem">Lương mềm (VNĐ)</label>
+                                    <input type="number" class="form-control" id="sua_luong_mem" name="luong_mem" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_phu_cap">Phụ cấp (VNĐ)</label>
+                                    <input type="number" class="form-control" id="sua_phu_cap" name="phu_cap" placeholder="0" min="0" step="1000">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="sua_luong_co_ban">Lương cơ bản (VNĐ)</label>
                                     <input type="number" class="form-control" id="sua_luong_co_ban" name="luong_co_ban" placeholder="50000" min="0" step="1000">
                                 </div>
@@ -541,7 +616,7 @@
 }
 .table-wrapper-bordered .table {
     border-collapse: collapse;
-    min-width: 1100px;
+    min-width: 1500px;
 }
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
@@ -666,6 +741,11 @@ document.addEventListener('DOMContentLoaded', function() {
             setAdminSelect2Value('sua_vai_tro', btn.getAttribute('data-role'));
             setAdminSelect2Value('sua_phong_ban', btn.getAttribute('data-phong-ban-id'));
             if (window.setAdminDateInput) { setAdminDateInput('sua_ngay_vao_cong_ty', btn.getAttribute('data-ngay-vao-cong-ty') || ''); setAdminDateInput('sua_ngay_ky_hop_dong', btn.getAttribute('data-ngay-ky-hop-dong') || ''); } else { document.getElementById('sua_ngay_vao_cong_ty').value = btn.getAttribute('data-ngay-vao-cong-ty') || ''; document.getElementById('sua_ngay_ky_hop_dong').value = btn.getAttribute('data-ngay-ky-hop-dong') || ''; }
+            setAdminSelect2Value('sua_loai_nhan_vien', btn.getAttribute('data-loai-nhan-vien'));
+            setAdminSelect2Value('sua_loai_hop_dong', btn.getAttribute('data-loai-hop-dong'));
+            document.getElementById('sua_luong_cung').value = btn.getAttribute('data-luong-cung') || '';
+            document.getElementById('sua_luong_mem').value = btn.getAttribute('data-luong-mem') || '';
+            document.getElementById('sua_phu_cap').value = btn.getAttribute('data-phu-cap') || '';
             document.getElementById('sua_luong_co_ban').value = btn.getAttribute('data-luong-co-ban') || '';
             document.getElementById('sua_luong_tang_ca').value = btn.getAttribute('data-luong-tang-ca') || '';
             var imgSrc = btn.getAttribute('data-hinh-anh') || '';
