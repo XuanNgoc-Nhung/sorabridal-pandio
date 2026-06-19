@@ -42,6 +42,7 @@ class DiemDanhController extends Controller
         // Trạng thái check-in/check-out của user đăng nhập trong ngày hôm nay
         $canCheckIn = false;
         $canCheckOut = false;
+        $showChuaDangKyCaLam = false;
         if (Auth::check()) {
             $userId = Auth::id();
             $hasAnyRecordToday = DiemDanh::query()
@@ -53,11 +54,19 @@ class DiemDanhController extends Controller
                 ->whereDate('gio_vao', today())
                 ->whereNull('gio_ra')
                 ->exists();
+            $coDangKyCaLamHomNay = $this->userCoDangKyCaLamHomNay($userId);
             $canCheckIn = ! $hasAnyRecordToday;
             $canCheckOut = $hasOpenRecordToday;
+            $showChuaDangKyCaLam = ! $hasAnyRecordToday && ! $coDangKyCaLamHomNay;
         }
 
-        return view('admin.diem-danh.diem-danh', compact('danhSach', 'canCheckIn', 'canCheckOut'));
+        return view('admin.diem-danh.diem-danh', compact(
+            'danhSach',
+            'canCheckIn',
+            'canCheckOut',
+            'showChuaDangKyCaLam',
+            'coDangKyCaLamHomNay'
+        ));
     }
 
     public function nghiPhep(Request $request)
@@ -519,6 +528,10 @@ class DiemDanhController extends Controller
             return $this->jsonDiemDanhError('Bạn đã điểm danh vào hôm nay rồi.');
         }
 
+        if (! $this->userCoDangKyCaLamHomNay($userId)) {
+            return $this->jsonDiemDanhError('Bạn chưa được phân ca làm việc hôm nay. Không thể điểm danh.');
+        }
+
         $validated = $request->validate([
             'client_ip' => 'required|string|max:45',
         ]);
@@ -815,6 +828,14 @@ class DiemDanhController extends Controller
         $suffix = " IP hiện tại: {$ip}.";
 
         return rtrim($message, '.').$suffix;
+    }
+
+    private function userCoDangKyCaLamHomNay(int $userId): bool
+    {
+        return DangKyCaLamViec::query()
+            ->where('nguoi_dung_id', $userId)
+            ->whereDate('ngay_lam', today())
+            ->exists();
     }
 
     private function jsonDiemDanhError(string $message, int $status = 422, ?string $clientIp = null): JsonResponse

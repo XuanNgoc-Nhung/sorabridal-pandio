@@ -14,6 +14,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
     </div>
     @endif
+    @if($showChuaDangKyCaLam ?? false)
+    <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+        Bạn chưa được phân ca làm việc hôm nay. Vui lòng liên hệ quản lý để được phân ca trước khi điểm danh.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    @endif
     <div id="diemDanhAlert" class="alert alert-dismissible fade show d-none mb-0" role="alert">
         <span id="diemDanhAlertMessage"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
@@ -50,7 +56,11 @@
             <span>Danh sách điểm danh</span>
             <span class="d-flex flex-wrap align-items-center gap-2">
                 @if($canCheckIn ?? false)
-                    <button type="button" id="btnCheckIn" class="btn btn-success btn-sm" data-url="{{ route('admin.diem-danh.check-in') }}">
+                    <button type="button"
+                            id="btnCheckIn"
+                            class="btn btn-success btn-sm"
+                            data-url="{{ route('admin.diem-danh.check-in') }}"
+                            data-co-ca-lam="{{ ($coDangKyCaLamHomNay ?? false) ? '1' : '0' }}">
                         <i class="fa-solid fa-sign-in-alt me-1"></i> Check in
                     </button>
                 @elseif($canCheckOut ?? false)
@@ -266,6 +276,11 @@
 
     if (btnCheckIn) {
         btnCheckIn.addEventListener('click', function () {
+            // if (btnCheckIn.getAttribute('data-co-ca-lam') !== '1') {
+            //     showAlert('error', 'Bạn chưa được phân ca làm việc hôm nay. Không thể điểm danh.');
+            //     return;
+            // }
+
             submitDiemDanh(btnCheckIn, {
                 loadingText: 'Đang check in...',
                 expectJson: true,
