@@ -84,6 +84,11 @@ class CheckRoute
             'admin.he-thong.phong-ban.destroy',
             'admin.he-thong.phong-ban.nhan-vien',
         ],
+        'admin.he-thong.ca-lam-viec' => [
+            'admin.he-thong.ca-lam-viec.store',
+            'admin.he-thong.ca-lam-viec.update',
+            'admin.he-thong.ca-lam-viec.destroy',
+        ],
         'admin.he-thong.ip-diem-danh' => [
             'admin.he-thong.ip-diem-danh.store',
             'admin.he-thong.ip-diem-danh.update',

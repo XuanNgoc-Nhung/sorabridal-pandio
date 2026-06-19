@@ -220,6 +220,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::put('/phong-ban/{phongBan}', [AdminHeThong::class, 'updatePhongBan'])->name('he-thong.phong-ban.update');
         Route::delete('/phong-ban/{phongBan}', [AdminHeThong::class, 'destroyPhongBan'])->name('he-thong.phong-ban.destroy');
         Route::get('/phong-ban/{phongBan}/nhan-vien', [AdminHeThong::class, 'nhanVienPhongBan'])->name('he-thong.phong-ban.nhan-vien');
+        Route::get('/ca-lam-viec', [AdminHeThong::class, 'caLamViec'])->name('he-thong.ca-lam-viec');
+        Route::post('/ca-lam-viec', [AdminHeThong::class, 'storeCaLamViec'])->name('he-thong.ca-lam-viec.store');
+        Route::put('/ca-lam-viec/{caLamViec}', [AdminHeThong::class, 'updateCaLamViec'])->name('he-thong.ca-lam-viec.update');
+        Route::delete('/ca-lam-viec/{caLamViec}', [AdminHeThong::class, 'destroyCaLamViec'])->name('he-thong.ca-lam-viec.destroy');
         Route::get('/ip-diem-danh', [AdminHeThong::class, 'ipDiemDanh'])->name('he-thong.ip-diem-danh');
         Route::post('/ip-diem-danh', [AdminHeThong::class, 'storeIpDiemDanh'])->name('he-thong.ip-diem-danh.store');
         Route::put('/ip-diem-danh/{ipDiemDanh}', [AdminHeThong::class, 'updateIpDiemDanh'])->name('he-thong.ip-diem-danh.update');

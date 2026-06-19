@@ -147,16 +147,17 @@ return [
     [
         'stt' => 14,
         'type' => 'group',
-        'routes' => ['admin.he-thong.vai-tro', 'admin.he-thong.phong-ban', 'admin.he-thong.ip-diem-danh', 'admin.he-thong.tai-lieu', 'admin.he-thong.logs'],
+        'routes' => ['admin.he-thong.vai-tro', 'admin.he-thong.phong-ban', 'admin.he-thong.ca-lam-viec', 'admin.he-thong.ip-diem-danh', 'admin.he-thong.tai-lieu', 'admin.he-thong.logs'],
         'route_prefix' => 'admin.he-thong.',
         'label' => 'Hệ thống',
         'icon' => 'ti tabler-building',
         'children' => [
             ['stt' => 1, 'route' => 'admin.he-thong.vai-tro', 'label' => 'Vai trò', 'icon' => 'ti tabler-shield'],
             ['stt' => 2, 'route' => 'admin.he-thong.phong-ban', 'label' => 'Phòng ban', 'icon' => 'ti tabler-building'],
-            ['stt' => 3, 'route' => 'admin.he-thong.ip-diem-danh', 'label' => 'Ip điểm danh', 'icon' => 'ti tabler-network'],
-            ['stt' => 4, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu', 'icon' => 'ti tabler-file-text'],
-            ['stt' => 5, 'route' => 'admin.he-thong.logs', 'label' => 'Logs', 'icon' => 'ti tabler-list'],
+            ['stt' => 3, 'route' => 'admin.he-thong.ca-lam-viec', 'label' => 'Ca làm việc', 'icon' => 'ti tabler-clock-hour-4'],
+            ['stt' => 4, 'route' => 'admin.he-thong.ip-diem-danh', 'label' => 'Ip điểm danh', 'icon' => 'ti tabler-network'],
+            ['stt' => 5, 'route' => 'admin.he-thong.tai-lieu', 'label' => 'Tài liệu', 'icon' => 'ti tabler-file-text'],
+            ['stt' => 6, 'route' => 'admin.he-thong.logs', 'label' => 'Logs', 'icon' => 'ti tabler-list'],
         ],
     ],
 ];

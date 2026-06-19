@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CaLamViec;
 use App\Models\IpDiemDanh;
 use App\Models\NganHangThanhToan;
 use App\Models\NhanVien;
@@ -487,6 +488,105 @@ class HeThongController extends Controller
             'items' => $items,
             'total' => count($items),
         ]);
+    }
+
+    public function caLamViec(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(CaLamViec::SAP_XEP_OPTIONS)),
+            'thu_tu' => 'nullable|in:asc,desc',
+        ]);
+
+        $query = CaLamViec::query();
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        if ($search !== '') {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where('ten_ca', 'like', $like);
+        }
+
+        $sapXepTheo = $validated['sap_xep_theo'] ?? CaLamViec::SAP_XEP_MAC_DINH;
+        if (! array_key_exists($sapXepTheo, CaLamViec::SAP_XEP_OPTIONS)) {
+            $sapXepTheo = CaLamViec::SAP_XEP_MAC_DINH;
+        }
+        $thuTu = strtolower((string) ($validated['thu_tu'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($sapXepTheo) {
+            CaLamViec::SAP_XEP_TEN => $query->orderBy('ten_ca', $thuTu),
+            CaLamViec::SAP_XEP_GIO_BAT_DAU => $query->orderBy('gio_bat_dau', $thuTu),
+            CaLamViec::SAP_XEP_GIO_KET_THUC => $query->orderBy('gio_ket_thuc', $thuTu),
+            CaLamViec::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
+            default => $query->orderBy('gio_bat_dau', $thuTu),
+        };
+        $query->orderBy('id', $thuTu);
+
+        $danhSach = $query->paginate(AdminPagination::perPage())->withQueryString();
+
+        return view('admin.he-thong.ca-lam-viec', compact('danhSach'));
+    }
+
+    public function storeCaLamViec(Request $request)
+    {
+        $validated = $request->validate([
+            'ten_ca' => 'required|string|max:255',
+            'gio_bat_dau' => 'required|date_format:H:i',
+            'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
+        ], [
+            'ten_ca.required' => 'Vui lòng nhập tên ca.',
+            'ten_ca.max' => 'Tên ca không được quá 255 ký tự.',
+            'gio_bat_dau.required' => 'Vui lòng chọn giờ bắt đầu.',
+            'gio_bat_dau.date_format' => 'Giờ bắt đầu phải có định dạng HH:mm.',
+            'gio_ket_thuc.required' => 'Vui lòng chọn giờ kết thúc.',
+            'gio_ket_thuc.date_format' => 'Giờ kết thúc phải có định dạng HH:mm.',
+            'gio_ket_thuc.after' => 'Giờ kết thúc phải sau giờ bắt đầu.',
+        ]);
+
+        CaLamViec::create([
+            'ten_ca' => trim($validated['ten_ca']),
+            'gio_bat_dau' => $validated['gio_bat_dau'].':00',
+            'gio_ket_thuc' => $validated['gio_ket_thuc'].':00',
+        ]);
+
+        return redirect()
+            ->route('admin.he-thong.ca-lam-viec')
+            ->with('success', 'Đã thêm ca làm việc thành công.');
+    }
+
+    public function updateCaLamViec(Request $request, CaLamViec $caLamViec)
+    {
+        $validated = $request->validate([
+            'ten_ca' => 'required|string|max:255',
+            'gio_bat_dau' => 'required|date_format:H:i',
+            'gio_ket_thuc' => 'required|date_format:H:i|after:gio_bat_dau',
+        ], [
+            'ten_ca.required' => 'Vui lòng nhập tên ca.',
+            'ten_ca.max' => 'Tên ca không được quá 255 ký tự.',
+            'gio_bat_dau.required' => 'Vui lòng chọn giờ bắt đầu.',
+            'gio_bat_dau.date_format' => 'Giờ bắt đầu phải có định dạng HH:mm.',
+            'gio_ket_thuc.required' => 'Vui lòng chọn giờ kết thúc.',
+            'gio_ket_thuc.date_format' => 'Giờ kết thúc phải có định dạng HH:mm.',
+            'gio_ket_thuc.after' => 'Giờ kết thúc phải sau giờ bắt đầu.',
+        ]);
+
+        $caLamViec->update([
+            'ten_ca' => trim($validated['ten_ca']),
+            'gio_bat_dau' => $validated['gio_bat_dau'].':00',
+            'gio_ket_thuc' => $validated['gio_ket_thuc'].':00',
+        ]);
+
+        return redirect()
+            ->route('admin.he-thong.ca-lam-viec')
+            ->with('success', 'Đã cập nhật ca làm việc thành công.');
+    }
+
+    public function destroyCaLamViec(CaLamViec $caLamViec)
+    {
+        $caLamViec->delete();
+
+        return redirect()
+            ->route('admin.he-thong.ca-lam-viec')
+            ->with('success', 'Đã xóa ca làm việc.');
     }
 
     public function ipDiemDanh(Request $request)
