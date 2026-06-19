@@ -571,6 +571,10 @@
                 <p class="text-muted small mb-3">Kiểm tra thông tin khách và nhập số liệu thanh toán trước khi lưu.</p>
                 <div id="wizard-step3-errors" class="alert alert-danger d-none mb-3" role="alert"></div>
 
+                @php
+                    $wizardIsPhongSuCuoi = old('loai_hop_dong', $hopDongCuoi->loai_hop_dong) === 'phong_su_cuoi';
+                @endphp
+
                 <div class="border rounded p-3 mb-4 bg-light">
                     <h6 class="small text-uppercase text-muted mb-3">Tóm tắt — Thông tin khách</h6>
                     <div class="table-responsive">
@@ -617,7 +621,7 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-3{{ $wizardIsPhongSuCuoi ? ' d-none' : '' }}" id="wizard_step3_concept_wrap">
                     <div class="col-12 col-lg-4">
                         <label class="form-label" for="wizard_concept">Concept</label>
                         <select class="form-select" id="wizard_concept" name="concept_id" data-placeholder="Chọn concept">
@@ -651,6 +655,7 @@
                     $coNgayCuoiChinhThuc = filled($hopDongCuoi->ngay_cuoi_chinh_thuc);
                 @endphp
 
+                <div id="wizard_step3_trang_phuc_wrap" class="{{ $wizardIsPhongSuCuoi ? 'd-none' : '' }}">
                 <div class="row g-3 mb-3">
                     <div class="col-12">
                         <label class="form-label" for="wizard_tp_chup_tim">Trang phục chụp</label>
@@ -710,6 +715,7 @@
                         <script type="application/json" id="wizard-tp-selected-data">@json($trangPhucDaChon)</script>
                     </div>
                 </div>
+                </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-12">
@@ -766,7 +772,7 @@
                         <label class="form-label" for="wizard_han_thanh_toan_lan2">Hạn thanh toán lần 2 (dự kiến)</label>
                         <input type="text" readonly tabindex="-1" class="form-control bg-body-secondary" id="wizard_han_thanh_toan_lan2" name="han_thanh_toan_lan2" value="{{ old('han_thanh_toan_lan2', optional($hopDongCuoi->han_thanh_toan_lan2)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
-                    <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="col-12 col-sm-6 col-xl-3{{ $wizardIsPhongSuCuoi ? ' d-none' : '' }}" id="wizard_han_thanh_toan_lan3_wrap">
                         <label class="form-label" for="wizard_han_thanh_toan_lan3">Hạn thanh toán lần 3 (dự kiến)</label>
                         <input type="text" readonly tabindex="-1" class="form-control bg-body-secondary" id="wizard_han_thanh_toan_lan3" name="han_thanh_toan_lan3" value="{{ old('han_thanh_toan_lan3', optional($hopDongCuoi->han_thanh_toan_lan3)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
@@ -3667,6 +3673,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (currentStep === 3) {
             window.requestAnimationFrame(function() {
+                togglePhongSuCuoiStep3Fields();
                 ensureStep3Select2();
                 ensureWizardTrangPhucPicker();
                 wizardTpApplyAllPickersAvailability();
@@ -3819,9 +3826,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function togglePhongSuCuoiStep3Fields() {
+        var isPhongSu = getLoaiHopDongValue() === 'phong_su_cuoi';
+        ['wizard_step3_concept_wrap', 'wizard_step3_trang_phuc_wrap', 'wizard_han_thanh_toan_lan3_wrap'].forEach(function(id) {
+            var wrap = document.getElementById(id);
+            if (wrap) wrap.classList.toggle('d-none', isPhongSu);
+        });
+    }
+
     if (loaiHopDongEl) {
         function onLoaiHopDongChangedForStep2() {
             togglePhongSuCuoiAddressFields();
+            togglePhongSuCuoiStep3Fields();
             if (currentStep === 1) {
                 updateNextButtonState();
             } else if (currentStep === 2) {
@@ -3836,6 +3852,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     togglePhongSuCuoiAddressFields();
+    togglePhongSuCuoiStep3Fields();
     syncComboCheckedState();
     updateNangCapComboDichVuPanel();
     syncDichVuLeCheckedState();
