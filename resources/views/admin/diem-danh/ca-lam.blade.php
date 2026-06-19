@@ -5,6 +5,10 @@
     $hasFilter = filled($search ?? null)
         || ($tuan ?? now()->startOfWeek()->toDateString()) !== now()->startOfWeek()->toDateString();
     $tuanLoc = $tuan ?? now()->startOfWeek()->toDateString();
+    $tuanCarbon = \Illuminate\Support\Carbon::parse($tuanLoc)->startOfWeek();
+    $tuanTruoc = (clone $tuanCarbon)->subWeek()->toDateString();
+    $tuanToi = (clone $tuanCarbon)->addWeek()->toDateString();
+    $laTuanNay = $tuanLoc === now()->startOfWeek()->toDateString();
     $thuLabel = [
         '1' => 'Thứ hai',
         '2' => 'Thứ ba',
@@ -43,16 +47,27 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fa-solid fa-magnifying-glass me-1"></i> Lọc
                     </button>
+                    <a href="{{ route('admin.ca-lam', array_filter(['tuan' => $tuanTruoc, 'search' => $search ?? null])) }}"
+                       class="btn btn-outline-secondary">
+                        Tuần trước
+                    </a>
                     @if($hasFilter)
-                    <a href="{{ route('admin.ca-lam') }}" class="btn btn-outline-secondary">Tuần này</a>
+                    <a href="{{ route('admin.ca-lam', array_filter(['search' => $search ?? null])) }}"
+                       class="btn btn-outline-secondary @if($laTuanNay) active @endif">
+                        Tuần này
+                    </a>
                     @endif
+                    <a href="{{ route('admin.ca-lam', array_filter(['tuan' => $tuanToi, 'search' => $search ?? null])) }}"
+                       class="btn btn-outline-secondary">
+                        Tuần tới
+                    </a>
                 </div>
-                <div class="col-12 col-lg-auto ms-lg-auto">
+                {{-- <div class="col-12 col-lg-auto ms-lg-auto">
                     <div class="text-muted">
                         Khoảng: <strong>{{ ($tuanBatDau ?? now()->startOfWeek())->format('d/m/Y') }}</strong>
                         → <strong>{{ ($tuanKetThuc ?? now()->endOfWeek())->format('d/m/Y') }}</strong>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </form>
         </div>
@@ -70,12 +85,12 @@
                     <tr>
                         <th class="text-center align-middle ca-lam-sticky ca-lam-sticky-col-1" style="min-width: 48px;">STT</th>
                         <th class="ca-lam-sticky ca-lam-sticky-col-2" style="min-width: 220px;">Nhân viên</th>
-                        <th style="min-width: 230px;">Ca làm</th>
+                        <th style="min-width: 230px;">Ca làm (cả tuần)</th>
                         @foreach(($ngayTrongTuan ?? []) as $day)
                             @php
                                 $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
                             @endphp
-                            <th class="text-center small text-nowrap {{ $isWeekend ? 'ca-lam-weekend' : '' }}" style="min-width: 130px;">
+                            <th class="text-center small text-nowrap ca-lam-ngay-col {{ $isWeekend ? 'ca-lam-weekend' : '' }}">
                                 {{ $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dddd') }} - {{ $day->format('j/n') }}
                             </th>
                         @endforeach
@@ -108,12 +123,12 @@
                                     $caIds = collect($records)->pluck('ca_lam_id')->unique()->values();
                                     $caNgayDaChon = $caIds->count() === 1 ? $caIds->first() : null;
                                 @endphp
-                                <td class="align-middle ca-lam-ngay-cell" data-ngay="{{ $dateKey }}">
+                                <td class="align-middle ca-lam-ngay-cell ca-lam-ngay-col" data-ngay="{{ $dateKey }}">
                                     <select class="form-select js-ca-lam-select js-ca-lam-ngay-select"
                                             data-user-id="{{ $u->id }}"
                                             data-ngay="{{ $dateKey }}"
                                             data-placeholder="Chọn ca"
-                                            style="width: 100%; min-width: 150px;">
+                                            style="width: 100%;">
                                         @include('admin.diem-danh.partials.ca-lam-select-options', ['selected' => $caNgayDaChon, 'chiTen' => true])
                                     </select>
                                 </td>
@@ -188,8 +203,19 @@
 [data-bs-theme='dark'] .ca-lam-table .ca-lam-sticky-col-2 {
     box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
 }
+.ca-lam-table .ca-lam-ngay-col {
+    width: 130px;
+}
 .ca-lam-ngay-cell .select2-container {
-    min-width: 150px;
+    width: 100% !important;
+    max-width: 100%;
+}
+.ca-lam-ngay-cell .select2-selection--single {
+    min-height: 32px;
+}
+.ca-lam-ngay-cell .select2-selection__rendered {
+    padding-right: 1.5rem;
+    font-size: 14px;
 }
 </style>
 @endpush
@@ -304,7 +330,7 @@
 
             $el.select2({
                 placeholder: $el.data('placeholder') || 'Chọn ca làm',
-                allowClear: true,
+                allowClear: $el.hasClass('js-ca-lam-tuan-select'),
                 width: '100%',
                 dropdownParent: $('body'),
             });

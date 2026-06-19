@@ -257,21 +257,17 @@ class DiemDanhController extends Controller
         }
 
         DB::transaction(function () use ($user, $tuanBatDau, $tuanKetThuc, $caLamId) {
-            DangKyCaLamViec::query()
-                ->where('nguoi_dung_id', $user->id)
-                ->whereBetween('ngay_lam', [$tuanBatDau->toDateString(), $tuanKetThuc->toDateString()])
-                ->delete();
-
             if ($caLamId === null) {
+                DangKyCaLamViec::query()
+                    ->where('nguoi_dung_id', $user->id)
+                    ->whereBetween('ngay_lam', [$tuanBatDau->toDateString(), $tuanKetThuc->toDateString()])
+                    ->delete();
+
                 return;
             }
 
             for ($d = (clone $tuanBatDau); $d->lte($tuanKetThuc); $d->addDay()) {
-                DangKyCaLamViec::create([
-                    'ca_lam_id' => $caLamId,
-                    'nguoi_dung_id' => $user->id,
-                    'ngay_lam' => $d->toDateString(),
-                ]);
+                $this->dongBoDangKyCaLamChoNgay($user->id, $d->toDateString(), $caLamId);
             }
         });
 
@@ -318,20 +314,7 @@ class DiemDanhController extends Controller
         }
 
         DB::transaction(function () use ($user, $ngayLam, $caLamId) {
-            DangKyCaLamViec::query()
-                ->where('nguoi_dung_id', $user->id)
-                ->whereDate('ngay_lam', $ngayLam)
-                ->delete();
-
-            if ($caLamId === null) {
-                return;
-            }
-
-            DangKyCaLamViec::create([
-                'ca_lam_id' => $caLamId,
-                'nguoi_dung_id' => $user->id,
-                'ngay_lam' => $ngayLam,
-            ]);
+            $this->dongBoDangKyCaLamChoNgay($user->id, $ngayLam, $caLamId);
         });
 
         return response()->json([
@@ -358,6 +341,50 @@ class DiemDanhController extends Controller
             'gio_bat_dau' => CaLamViec::formatGio($caLam->gio_bat_dau),
             'gio_ket_thuc' => CaLamViec::formatGio($caLam->gio_ket_thuc),
         ];
+    }
+
+    private function dongBoDangKyCaLamChoNgay(int $nguoiDungId, string $ngayLam, ?int $caLamId): void
+    {
+        $dangKyHienCo = DangKyCaLamViec::query()
+            ->where('nguoi_dung_id', $nguoiDungId)
+            ->whereDate('ngay_lam', $ngayLam)
+            ->orderBy('id')
+            ->get();
+
+        if ($caLamId === null) {
+            if ($dangKyHienCo->isNotEmpty()) {
+                DangKyCaLamViec::query()
+                    ->where('nguoi_dung_id', $nguoiDungId)
+                    ->whereDate('ngay_lam', $ngayLam)
+                    ->delete();
+            }
+
+            return;
+        }
+
+        $banGhi = $dangKyHienCo->first();
+
+        if ($banGhi !== null) {
+            if ((int) $banGhi->ca_lam_id !== $caLamId) {
+                $banGhi->update(['ca_lam_id' => $caLamId]);
+            }
+
+            if ($dangKyHienCo->count() > 1) {
+                DangKyCaLamViec::query()
+                    ->where('nguoi_dung_id', $nguoiDungId)
+                    ->whereDate('ngay_lam', $ngayLam)
+                    ->where('id', '!=', $banGhi->id)
+                    ->delete();
+            }
+
+            return;
+        }
+
+        DangKyCaLamViec::create([
+            'ca_lam_id' => $caLamId,
+            'nguoi_dung_id' => $nguoiDungId,
+            'ngay_lam' => $ngayLam,
+        ]);
     }
 
     public function chamCong(Request $request)
