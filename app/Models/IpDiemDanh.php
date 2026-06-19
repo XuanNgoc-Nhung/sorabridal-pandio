@@ -68,4 +68,25 @@ class IpDiemDanh extends Model
     {
         return self::TRANG_THAI_BADGE_CLASSES[$this->trang_thai] ?? 'bg-label-secondary';
     }
+
+    /**
+     * Danh sách IP được phép điểm danh: ten_ip => dia_chi_ip.
+     *
+     * @return array<string, string>
+     */
+    public static function diaChiIpAllowlistDangHoatDong(): array
+    {
+        $allowlist = [];
+
+        foreach (self::query()
+            ->where('trang_thai', self::TRANG_THAI_DANG_HOAT_DONG)
+            ->get(['ten_ip', 'dia_chi_ip']) as $row) {
+            $ip = trim((string) $row->dia_chi_ip);
+            if ($ip !== '') {
+                $allowlist[(string) $row->ten_ip] = $ip;
+            }
+        }
+
+        return $allowlist;
+    }
 }

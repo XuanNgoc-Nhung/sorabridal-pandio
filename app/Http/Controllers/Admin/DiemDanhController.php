@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChamCong;
 use App\Models\DiemDanh;
 use App\Models\HopDong;
+use App\Models\IpDiemDanh;
 use App\Models\NhanVien;
 use App\Models\User;
 use App\Support\AdminPagination;
@@ -19,34 +20,6 @@ use Illuminate\Support\Facades\Log;
 
 class DiemDanhController extends Controller
 {
-    /**
-     * IP công cộng được phép điểm danh (check-in).
-     *
-     * | key (gợi nhớ) | value (IP) |
-     * |---------------|------------|
-     * | van_phong     | 1.2.3.4    |
-     *
-     * Thay value bằng IPv4 thật (mở https://ipv4.geojs.io/v1/ip.json trên cùng mạng với máy người dùng).
-     */
-    private const DIEM_DANH_CHECK_IN_IP_ALLOWLIST = [
-        'van_phong_252F' => '42.119.222.154',
-        'xuan_ngoc' => '14.162.129.132',
-        'chi_nhanh_2' => '14.231.244.24',
-    ];
-
-    /**
-     * IP công cộng được phép check-out (có thể khác danh sách check-in).
-     *
-     * | key (gợi nhớ) | value (IP) |
-     * |---------------|------------|
-     * | van_phong     | 1.2.3.4    |
-     */
-    private const DIEM_DANH_CHECK_OUT_IP_ALLOWLIST = [
-        'van_phong_252F' => '42.119.222.154',
-        'xuan_ngoc' => '14.162.129.132',
-        'chi_nhanh_2' => '14.231.244.24',
-    ];
-
     public function diemDanh(Request $request)
     {
         $query = DiemDanh::query()
@@ -228,7 +201,7 @@ class DiemDanhController extends Controller
         if ($guardResponse = $this->guardDiemDanhPublicIp(
             'Check-in',
             $validated['client_ip'],
-            self::DIEM_DANH_CHECK_IN_IP_ALLOWLIST,
+            IpDiemDanh::diaChiIpAllowlistDangHoatDong(),
             'Chỉ được điểm danh khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).',
             true
         )) {
@@ -305,7 +278,7 @@ class DiemDanhController extends Controller
         if ($guardResponse = $this->guardDiemDanhPublicIp(
             'Check-out',
             $validated['client_ip'],
-            self::DIEM_DANH_CHECK_OUT_IP_ALLOWLIST,
+            IpDiemDanh::diaChiIpAllowlistDangHoatDong(),
             'Chỉ được check-out khi kết nối từ mạng được phép (IP hiện tại không nằm trong danh sách).',
             true
         )) {
@@ -471,7 +444,7 @@ class DiemDanhController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            return $fail('Điểm danh chưa được cấu hình (danh sách IP cho phép trống). Liên hệ quản trị.');
+            return $fail('Điểm danh chưa được cấu hình. Liên hệ quản trị.');
         }
 
         $allowedValues = array_values($allowed);
