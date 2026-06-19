@@ -17,6 +17,9 @@
  *   toastError: false             — không toast lỗi
  *   successMessage, errorMessage  — ghi đè nội dung toast
  *
+ * Loading overlay (mặc định tự động cho POST/PUT/PATCH/DELETE):
+ *   loading: false | true | 'auto' — tắt / bật cả GET / auto (mặc định)
+ *
  * Kết quả luôn resolve (không reject) dạng:
  *   { ok: boolean, status: number, data: any, message?: string, errors?: object }
  */
@@ -27,6 +30,8 @@
     window.__restApiInit = true;
 
     var client = null;
+    var loadingCount = 0;
+    var loadingOverlay = null;
     var MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
     function getCsrfToken() {
@@ -107,6 +112,78 @@
 
     function isMutationMethod(method) {
         return MUTATION_METHODS.indexOf(String(method || 'GET').toUpperCase()) !== -1;
+    }
+
+    function ensureLoadingOverlay() {
+        if (loadingOverlay) {
+            return loadingOverlay;
+        }
+
+        if (!document.getElementById('rest-api-loading-style')) {
+            var style = document.createElement('style');
+            style.id = 'rest-api-loading-style';
+            style.textContent = [
+                '#rest-api-loading {',
+                '  position: fixed; inset: 0; z-index: 1090;',
+                '  display: none; align-items: center; justify-content: center;',
+                '  background: rgba(15, 23, 42, 0.35);',
+                '  pointer-events: all;',
+                '}',
+                '#rest-api-loading.is-visible { display: flex; }',
+                '#rest-api-loading .rest-api-loading-panel {',
+                '  display: flex; align-items: center; gap: 0.75rem;',
+                '  padding: 1rem 1.25rem; border-radius: 0.5rem;',
+                '  background: #fff; box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.15);',
+                '}',
+                '#rest-api-loading .rest-api-loading-text {',
+                '  font-size: 0.9375rem; color: #566a7f; white-space: nowrap;',
+                '}'
+            ].join('\n');
+            document.head.appendChild(style);
+        }
+
+        loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'rest-api-loading';
+        loadingOverlay.setAttribute('aria-hidden', 'true');
+        loadingOverlay.innerHTML = [
+            '<div class="rest-api-loading-panel" role="status" aria-live="polite">',
+            '  <div class="spinner-border text-primary" aria-hidden="true"></div>',
+            '  <span class="rest-api-loading-text">Đang xử lý...</span>',
+            '</div>'
+        ].join('');
+        document.body.appendChild(loadingOverlay);
+        return loadingOverlay;
+    }
+
+    function startLoading() {
+        loadingCount += 1;
+        if (loadingCount === 1) {
+            var el = ensureLoadingOverlay();
+            el.classList.add('is-visible');
+            el.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function stopLoading() {
+        if (loadingCount <= 0) {
+            return;
+        }
+        loadingCount -= 1;
+        if (loadingCount === 0 && loadingOverlay) {
+            loadingOverlay.classList.remove('is-visible');
+            loadingOverlay.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function resolveLoadingFlag(method, options) {
+        options = options || {};
+        if (options.loading === false) {
+            return false;
+        }
+        if (options.loading === true) {
+            return true;
+        }
+        return isMutationMethod(method);
     }
 
     function resolveToastFlags(method, options, result) {
@@ -280,6 +357,11 @@
         var config = buildAxiosConfig(options);
         var payload = options.data !== undefined ? options.data : options.body;
         var axiosClient = getClient();
+        var useLoading = resolveLoadingFlag(method, options);
+
+        if (useLoading) {
+            startLoading();
+        }
 
         var promise;
         if (method === 'GET') {
@@ -314,6 +396,11 @@
 
                 notifyResult(method, options, result);
                 return result;
+            })
+            .finally(function () {
+                if (useLoading) {
+                    stopLoading();
+                }
             });
     }
 
