@@ -38,6 +38,7 @@ class DiemDanhController extends Controller
         }
 
         $danhSach = $query->orderByDesc('gio_vao')->paginate(AdminPagination::perPage())->withQueryString();
+        $this->ganCaLamHomDoChoDanhSachDiemDanh($danhSach, (int) Auth::id());
 
         // Trạng thái check-in/check-out của user đăng nhập trong ngày hôm nay
         $canCheckIn = false;
@@ -547,12 +548,15 @@ class DiemDanhController extends Controller
         }
 
         $gioVao = now();
+        $thoiGianDiMuon = $this->tinhThoiGianDiMuon($userId, $gioVao);
 
-        DB::transaction(function () use ($userId, $gioVao) {
+        DB::transaction(function () use ($userId, $gioVao, $thoiGianDiMuon) {
             $diemDanh = DiemDanh::create([
                 'user_id' => $userId,
                 'gio_vao' => $gioVao,
                 'gio_ra' => null,
+                'di_muon' => $thoiGianDiMuon > 0,
+                'thoi_gian_di_muon' => $thoiGianDiMuon,
             ]);
 
             ChamCong::query()->updateOrCreate(
@@ -643,9 +647,11 @@ class DiemDanhController extends Controller
 
         $luongCoBan = round($gioLamCoBan * $donGiaLuongCoBan, 2);
         $luongTangCa = round($gioLamTangCa * $donGiaLuongTangCa, 2);
+        $thoiGianVeSom = $this->tinhThoiGianVeSom($record->user_id, $gioRa);
 
         $record->update([
             'gio_ra' => $gioRa,
+            'thoi_gian_ve_som' => $thoiGianVeSom,
             'gio_lam_co_ban' => $gioLamCoBan,
             'gio_lam_tang_ca' => $gioLamTangCa,
             'luong_co_ban' => $luongCoBan,
@@ -836,6 +842,94 @@ class DiemDanhController extends Controller
             ->where('nguoi_dung_id', $userId)
             ->whereDate('ngay_lam', today())
             ->exists();
+    }
+
+    /**
+     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, DiemDanh>  $danhSach
+     */
+    private function ganCaLamHomDoChoDanhSachDiemDanh($danhSach, int $userId): void
+    {
+        $collection = $danhSach->getCollection();
+        if ($collection->isEmpty()) {
+            return;
+        }
+
+        $dates = $collection
+            ->map(fn (DiemDanh $item) => $item->gio_vao?->toDateString())
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($dates->isEmpty()) {
+            return;
+        }
+
+        $dangKyTheoNgay = DangKyCaLamViec::query()
+            ->with('caLamViec')
+            ->where('nguoi_dung_id', $userId)
+            ->whereIn('ngay_lam', $dates)
+            ->get()
+            ->keyBy(fn (DangKyCaLamViec $dk) => $dk->ngay_lam->format('Y-m-d'));
+
+        $danhSach->setCollection(
+            $collection->map(function (DiemDanh $item) use ($dangKyTheoNgay) {
+                $ngay = $item->gio_vao?->format('Y-m-d');
+                $item->caLamHomDo = $ngay ? $dangKyTheoNgay->get($ngay)?->caLamViec : null;
+
+                return $item;
+            })
+        );
+    }
+
+    private function dangKyCaLamHomNay(int $userId): ?DangKyCaLamViec
+    {
+        return DangKyCaLamViec::query()
+            ->with('caLamViec')
+            ->where('nguoi_dung_id', $userId)
+            ->whereDate('ngay_lam', today())
+            ->first();
+    }
+
+    /**
+     * Số phút đi muộn so với giờ bắt đầu ca làm hôm nay (0 nếu vào đúng giờ hoặc sớm hơn).
+     */
+    private function tinhThoiGianDiMuon(int $userId, Carbon $gioVao): int
+    {
+        $dangKy = $this->dangKyCaLamHomNay($userId);
+        $caLam = $dangKy?->caLamViec;
+
+        if ($caLam === null || $caLam->gio_bat_dau === null) {
+            return 0;
+        }
+
+        $gioBatDauCa = Carbon::parse($gioVao->toDateString().' '.$caLam->gio_bat_dau);
+
+        if ($gioVao->lte($gioBatDauCa)) {
+            return 0;
+        }
+
+        return (int) $gioBatDauCa->diffInMinutes($gioVao);
+    }
+
+    /**
+     * Số phút về sớm so với giờ kết thúc ca làm hôm nay (0 nếu ra đúng giờ hoặc muộn hơn).
+     */
+    private function tinhThoiGianVeSom(int $userId, Carbon $gioRa): int
+    {
+        $dangKy = $this->dangKyCaLamHomNay($userId);
+        $caLam = $dangKy?->caLamViec;
+
+        if ($caLam === null || $caLam->gio_ket_thuc === null) {
+            return 0;
+        }
+
+        $gioKetThucCa = Carbon::parse($gioRa->toDateString().' '.$caLam->gio_ket_thuc);
+
+        if ($gioRa->gte($gioKetThucCa)) {
+            return 0;
+        }
+
+        return (int) $gioRa->diffInMinutes($gioKetThucCa);
     }
 
     private function jsonDiemDanhError(string $message, int $status = 422, ?string $clientIp = null): JsonResponse

@@ -74,15 +74,17 @@
             </span>
         </h5>
         <div class="card-body">
-        <div class="table-responsive text-nowrap table-wrapper-bordered">
-            <table class="table table-hover table-bordered mb-0">
+        <div class="table-responsive text-nowrap table-wrapper-bordered diem-danh-table-wrap">
+            <table class="table table-hover table-bordered mb-0 diem-danh-table">
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 50px;">STT</th>
-                        <th>Họ tên</th>
+                        <th class="diem-danh-sticky diem-danh-sticky-ho-ten" style="min-width: 160px;">Họ tên</th>
+                        <th>Ca làm</th>
                         <th>Giờ vào</th>
                         <th>Giờ ra</th>
                         <th class="text-center">Đi muộn</th>
+                        <th class="text-center">Về sớm</th>
                         {{-- <th class="text-center">Hợp lệ</th> --}}
                         <th>Lý do</th>
                         {{-- <th class="text-center">Nghỉ phép</th> --}}
@@ -98,12 +100,27 @@
                     @forelse($danhSach ?? [] as $index => $item)
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
-                        <td><span class="fw-medium">{{ $item->user?->name ?? '—' }}</span></td>
+                        <td class="diem-danh-sticky diem-danh-sticky-ho-ten"><span class="fw-medium">{{ $item->user?->name ?? '—' }}</span></td>
+                        <td>
+                            @if($item->caLamHomDo ?? null)
+                                <span>{{ $item->caLamHomDo->ten_ca }}</span>
+                                <span class="text-muted small">({{ $item->caLamHomDo->gioBatDauHienThi() }} – {{ $item->caLamHomDo->gioKetThucHienThi() }})</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td>{{ $item->gio_vao ? $item->gio_vao->format('d/m/Y H:i') : '—' }}</td>
                         <td>{{ $item->gio_ra ? $item->gio_ra->format('d/m/Y H:i') : '—' }}</td>
                         <td class="text-center">
-                            @if($item->di_muon)
-                                <span class="badge bg-warning">Có</span>
+                            @if(($item->thoi_gian_di_muon ?? 0) > 0)
+                                <span class="badge bg-warning">{{ $item->thoi_gian_di_muon }} phút</span>
+                            @else
+                                <span class="text-muted">Không</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if(($item->thoi_gian_ve_som ?? 0) > 0)
+                                <span class="badge bg-info">{{ $item->thoi_gian_ve_som }} phút</span>
                             @else
                                 <span class="text-muted">Không</span>
                             @endif
@@ -132,7 +149,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="14" class="text-center py-4 text-muted">Chưa có dữ liệu điểm danh.</td>
+                        <td colspan="16" class="text-center py-4 text-muted">Chưa có dữ liệu điểm danh.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -160,6 +177,36 @@
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.diem-danh-table .diem-danh-sticky {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+.diem-danh-table thead .diem-danh-sticky {
+    z-index: 6;
+    background-color: #f8f9fa;
+}
+.diem-danh-table.table-hover > tbody > tr:hover > .diem-danh-sticky {
+    background-color: #f5f5f9;
+}
+[data-bs-theme='dark'] .diem-danh-table .diem-danh-sticky {
+    background-color: #2f3349;
+}
+[data-bs-theme='dark'] .diem-danh-table thead .diem-danh-sticky {
+    background-color: #353a52;
+}
+[data-bs-theme='dark'] .diem-danh-table.table-hover > tbody > tr:hover > .diem-danh-sticky {
+    background-color: #3a3f5c;
+}
+.diem-danh-table .diem-danh-sticky-ho-ten {
+    min-width: 160px;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+[data-bs-theme='dark'] .diem-danh-table .diem-danh-sticky-ho-ten {
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
 }
 </style>
 @endpush
