@@ -1130,29 +1130,17 @@ document.addEventListener('DOMContentLoaded', function() {
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang import...';
 
-            fetch(SP_IMPORT_JSON_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': CSRF_TOKEN,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ items: items })
-            })
+            RestApi.post(SP_IMPORT_JSON_URL, { items: items }, { toast: false })
                 .then(function (res) {
-                    return res.json().then(function (json) {
-                        if (!res.ok) {
-                            var msg = 'Import thất bại.';
-                            if (json && json.message) msg = json.message;
-                            if (json && json.errors) {
-                                var errs = Object.values(json.errors).flat();
-                                if (errs.length) msg = errs.join('; ');
-                            }
-                            throw new Error(msg);
+                    if (!res.ok) {
+                        var msg = res.message || 'Import thất bại.';
+                        if (res.errors) {
+                            var errs = Object.values(res.errors).flat();
+                            if (errs.length) msg = errs.join('; ');
                         }
-                        return json;
-                    });
+                        throw new Error(msg);
+                    }
+                    return res.data;
                 })
                 .then(function (json) {
                     renderResult(json);
@@ -1212,28 +1200,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         switchEl.disabled = true;
 
-        fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ trang_thai: trangThai })
-        })
+        RestApi.patch(url, { trang_thai: trangThai })
             .then(function(res) {
-                if (!res.ok) throw new Error('update_failed');
-                return res.json();
-            })
-            .then(function(json) {
-                if (!json || !json.success) throw new Error('update_failed');
+                if (!res.ok || !res.data || !res.data.success) throw new Error('update_failed');
                 switchEl.title = switchEl.checked ? 'Hiển thị' : 'Ẩn';
                 capNhatMaTagTheoSwitch(switchEl);
             })
             .catch(function() {
                 switchEl.checked = trangThaiCu === TRANG_THAI_HIEN_THI;
-                alert('Không thể cập nhật trạng thái. Vui lòng thử lại.');
             })
             .finally(function() {
                 switchEl.disabled = false;
@@ -1664,19 +1638,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function ktFetch(url) {
-        var res = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        });
+        var res = await RestApi.get(url);
         if (!res.ok) {
-            var t = await res.text();
-            throw new Error('HTTP ' + res.status + ': ' + t);
+            throw new Error('HTTP ' + res.status + ': ' + (res.message || ''));
         }
-        return await res.json();
+        return res.data;
     }
 
     if (modalKiemTra) {

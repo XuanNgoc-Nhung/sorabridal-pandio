@@ -410,31 +410,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         switchEl.disabled = true;
 
-        fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ trang_thai: trangThai })
-        })
+        RestApi.patch(url, { trang_thai: trangThai })
             .then(function(res) {
-                if (!res.ok) {
-                    throw new Error('update_failed');
-                }
-                return res.json();
-            })
-            .then(function(json) {
-                if (!json || !json.success) {
+                if (!res.ok || !res.data || !res.data.success) {
                     throw new Error('update_failed');
                 }
                 switchEl.title = switchEl.checked ? 'Cho phép điểm danh' : 'Không cho phép điểm danh';
             })
             .catch(function() {
                 switchEl.checked = trangThaiCu === TRANG_THAI_CHO_PHEP;
-                alert('Không thể cập nhật trạng thái. Vui lòng thử lại.');
             })
             .finally(function() {
                 switchEl.disabled = false;

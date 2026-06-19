@@ -416,9 +416,9 @@
             function loadChuaPhanCongPanel() {
                 if (!chuaPhanCongBody || !chuaPhanCongUrl) return;
                 chuaPhanCongBody.innerHTML = '<div class="text-muted small">Đang tải...</div>';
-                fetch(chuaPhanCongUrl, { method: 'GET' })
-                    .then(function (r) { return r.json(); })
-                    .then(function (payload) {
+                RestApi.get(chuaPhanCongUrl)
+                    .then(function (res) {
+                        var payload = res.ok ? res.data : {};
                         renderChuaPhanCongPanel((payload && payload.items) ? payload.items : []);
                     })
                     .catch(function () {
@@ -1275,9 +1275,11 @@
                 });
                 appendLocParams(params);
 
-                fetch(listDanhSachUrl + '?' + params.toString(), { method: 'GET' })
-                    .then(function (r) { return r.json(); })
-                    .then(function (payload) { renderListDanhSach(payload); })
+                RestApi.get(listDanhSachUrl + '?' + params.toString())
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('fetch_failed');
+                        renderListDanhSach(res.data);
+                    })
                     .catch(function () {
                         listBodyEl.innerHTML = '<div class="alert alert-danger mb-0">Không tải được danh sách. Vui lòng thử lại.</div>';
                         if (listSummaryEl) listSummaryEl.textContent = '';
@@ -1341,10 +1343,13 @@
                         end: info.endStr
                     });
                     appendLocParams(params);
-                    fetch(baseUrl + '?' + params.toString(), { method: 'GET' })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            successCallback(normalizeCalendarEvents(data));
+                    RestApi.get(baseUrl + '?' + params.toString())
+                        .then(function (res) {
+                            if (!res.ok) {
+                                failureCallback(new Error(res.message || 'fetch_failed'));
+                                return;
+                            }
+                            successCallback(normalizeCalendarEvents(res.data));
                             requestAnimationFrame(function () {
                                 syncMobileMonthLayout();
                                 applyTienDoColors();
@@ -1496,9 +1501,9 @@
                 var detailUrl = @json(route('admin.lich-chup.chi-tiet-ngay'));
                 var params = new URLSearchParams({ date: dateStr });
                 appendLocParams(params);
-                fetch(detailUrl + '?' + params.toString(), { method: 'GET' })
-                    .then(function (r) { return r.json(); })
-                    .then(function (payload) {
+                RestApi.get(detailUrl + '?' + params.toString())
+                    .then(function (res) {
+                        var payload = res.ok ? res.data : {};
                         var items = (payload && payload.items) ? payload.items : [];
                         if (!items.length) {
                             bodyEl.classList.add('is-centered');
@@ -1747,13 +1752,10 @@
                 var url = wsAddWorkNvUrl(wsAddWorkHopId)
                     + '?ngay=' + encodeURIComponent(ymd)
                     + '&ma_phong_ban=' + encodeURIComponent(maPhongBan);
-                return fetch(url, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-                    credentials: 'same-origin'
-                })
-                    .then(function (r) {
-                        if (!r.ok) throw new Error('HTTP ' + r.status);
-                        return r.json();
+                return RestApi.get(url)
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.data;
                     });
             }
 
@@ -1856,20 +1858,12 @@
                 if (capNhat) {
                     dataUrl += (dataUrl.indexOf('?') >= 0 ? '&' : '?') + 'cap_nhat=1';
                 }
-                fetch(dataUrl, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-                    credentials: 'same-origin'
-                })
-                    .then(function (r) {
-                        return r.json().catch(function () { return {}; }).then(function (j) {
-                            return { ok: r.ok, json: j };
-                        });
-                    })
+                RestApi.get(dataUrl)
                     .then(function (res) {
                         if (!res.ok) {
                             wsAddWorkResetDieuPhoiFields();
                             if (errEl) {
-                                errEl.textContent = (res.json && res.json.message) ? res.json.message : 'Không tải được thông tin hợp đồng.';
+                                errEl.textContent = (res.data && res.data.message) ? res.data.message : (res.message || 'Không tải được thông tin hợp đồng.');
                                 errEl.classList.remove('d-none');
                             }
                             return;
@@ -1878,7 +1872,7 @@
                             errEl.classList.add('d-none');
                             errEl.textContent = '';
                         }
-                        wsAddWorkFillDieuPhoiFields(res.json, scheduleDate);
+                        wsAddWorkFillDieuPhoiFields(res.data || {}, scheduleDate);
                     })
                     .catch(function () {
                         wsAddWorkResetDieuPhoiFields();
@@ -1916,9 +1910,9 @@
                 }
 
                 var listUrl = @json(route('admin.lich-chup.hop-dong-chua-phan-ngay'));
-                fetch(listUrl, { method: 'GET' })
-                    .then(function (r) { return r.json(); })
-                    .then(function (payload) {
+                RestApi.get(listUrl)
+                    .then(function (res) {
+                        var payload = res.ok ? res.data : {};
                         var items = (payload && payload.items) ? payload.items : [];
                         if (!items.length) {
                             hopDongEl.innerHTML = '<option value="">(Không có hợp đồng phù hợp)</option>';
@@ -2051,11 +2045,6 @@
                     var fd = new FormData(formEl);
                     var isEdit = modalEl && modalEl.dataset.wsMode === 'edit';
                     var fetchUrl = @json(route('admin.lich-chup.tao-lich'));
-                    var fetchOpts = {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': @json(csrf_token()) },
-                        body: fd
-                    };
 
                     if (isEdit) {
                         var editHopId = modalEl.dataset.wsEditHopId;
@@ -2068,31 +2057,21 @@
                         }
                         fd.delete('hop_dong_id');
                         fetchUrl = wsAddWorkDieuPhoiPutUrl(editHopId);
-                        fetchOpts = {
-                            method: 'PUT',
-                            headers: {
-                                'X-CSRF-TOKEN': @json(csrf_token()),
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: fd
-                        };
                     }
 
-                    fetch(fetchUrl, fetchOpts)
-                        .then(function (r) {
-                            return r.json().catch(function () { return { message: 'Có lỗi xảy ra.' }; }).then(function (j) {
-                                return { ok: r.ok, status: r.status, json: j };
-                            });
-                        })
+                    RestApi.request(fetchUrl, {
+                        method: isEdit ? 'PUT' : 'POST',
+                        data: fd,
+                        toast: false
+                    })
                         .then(function (res) {
                             if (!res.ok) {
                                 var defaultMsg = isEdit ? 'Không lưu được điều phối.' : 'Không tạo được lịch.';
-                                var msg = (res.json && (res.json.message || res.json.error)) ? (res.json.message || res.json.error) : defaultMsg;
-                                if (res.json && res.json.errors) {
-                                    var keys = Object.keys(res.json.errors);
-                                    if (keys.length && res.json.errors[keys[0]] && res.json.errors[keys[0]][0]) {
-                                        msg = res.json.errors[keys[0]][0];
+                                var msg = res.message || defaultMsg;
+                                if (res.errors) {
+                                    var keys = Object.keys(res.errors);
+                                    if (keys.length && res.errors[keys[0]] && res.errors[keys[0]][0]) {
+                                        msg = res.errors[keys[0]][0];
                                     }
                                 }
                                 if (errEl) {

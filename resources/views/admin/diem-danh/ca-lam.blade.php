@@ -232,14 +232,6 @@
     var CAP_NHAT_NGAY_URL = @json(route('admin.ca-lam.cap-nhat-ngay'));
     var CSRF_TOKEN = (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token());
 
-    function thongBaoLoi(message) {
-        if (window.Swal && typeof window.Swal.fire === 'function') {
-            window.Swal.fire({ icon: 'error', title: 'Lỗi', text: message, confirmButtonText: 'Đóng' });
-            return;
-        }
-        window.alert(message);
-    }
-
     function setSelectValue($sel, value) {
         $sel.data('ca-lam-skip', true);
         $sel.val(value || '').trigger('change.select2');
@@ -270,19 +262,7 @@
     }
 
     function postJson(url, payload) {
-        return fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': CSRF_TOKEN,
-            },
-            body: JSON.stringify(payload),
-        }).then(function (res) {
-            return res.json().then(function (data) {
-                return { ok: res.ok, data: data };
-            });
-        });
+        return RestApi.post(url, payload);
     }
 
     function handleSelectChange($sel, url, payload, onSuccess) {
@@ -312,9 +292,8 @@
                     onSuccess(result.data);
                 }
             })
-            .catch(function (err) {
+            .catch(function () {
                 setSelectValue($sel, prevValue);
-                thongBaoLoi(err.message || 'Không thể cập nhật ca làm.');
             })
             .finally(function () {
                 $sel.data('ca-lam-loading', false).prop('disabled', false);

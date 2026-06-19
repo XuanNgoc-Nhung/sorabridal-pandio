@@ -517,18 +517,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (dnpbLoading) dnpbLoading.classList.remove('d-none');
 
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-                credentials: 'same-origin'
-            })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.json();
-                })
-                .then(function(data) {
+            RestApi.get(url)
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
                     if (dnpbLoading) dnpbLoading.classList.add('d-none');
                     if (dnpbContent) dnpbContent.classList.remove('d-none');
-                    var items = data && Array.isArray(data.items) ? data.items : [];
+                    var items = res.data && Array.isArray(res.data.items) ? res.data.items : [];
                     dnpbRenderRows(items);
                 })
                 .catch(function(err) {

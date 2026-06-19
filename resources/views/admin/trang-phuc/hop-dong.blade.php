@@ -1020,7 +1020,6 @@ body.modal-hop-dong-ktsp-open .modal-backdrop:last-of-type {
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" crossorigin="anonymous"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -1703,17 +1702,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     themSpRenderCards();
                     return;
                 }
-                var ax = window.axios;
-                if (!ax || !THEM_SP_SEARCH_URL) {
+                if (!RestApi || !THEM_SP_SEARCH_URL) {
                     themSpRemoteList = null;
                     themSpRenderCards();
                     return;
                 }
                 var reqId = ++themSpSearchReqId;
-                ax.get(THEM_SP_SEARCH_URL, { params: { q: raw.trim() } })
+                RestApi.get(THEM_SP_SEARCH_URL, { q: raw.trim() })
                     .then(function (res) {
                         if (reqId !== themSpSearchReqId) return;
-                        var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
+                        var items = (res.ok && res.data && Array.isArray(res.data.items)) ? res.data.items : [];
                         items.forEach(function (p) {
                             if (p && p.id != null) themSpById[p.id] = p;
                         });
@@ -1851,17 +1849,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 suaSpRenderCards();
                 return;
             }
-            var ax = window.axios;
-            if (!ax || !THEM_SP_SEARCH_URL) {
+            if (!RestApi || !THEM_SP_SEARCH_URL) {
                 suaSpRemoteList = null;
                 suaSpRenderCards();
                 return;
             }
             var reqId = ++suaSpSearchReqId;
-            ax.get(THEM_SP_SEARCH_URL, { params: { q: raw.trim() } })
+            RestApi.get(THEM_SP_SEARCH_URL, { q: raw.trim() })
                 .then(function (res) {
                     if (reqId !== suaSpSearchReqId) return;
-                    var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
+                    var items = (res.ok && res.data && Array.isArray(res.data.items)) ? res.data.items : [];
                     items.forEach(function (p) {
                         if (p && p.id != null) themSpById[p.id] = p;
                     });
@@ -2183,19 +2180,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function hdKtspFetch(url) {
-        var res = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        });
+        var res = await RestApi.get(url);
         if (!res.ok) {
-            var t = await res.text();
-            throw new Error('HTTP ' + res.status + ': ' + t);
+            throw new Error('HTTP ' + res.status + ': ' + (res.message || ''));
         }
-        return await res.json();
+        return res.data;
     }
 
     function hopDongSpOpenKiemTra(btn) {

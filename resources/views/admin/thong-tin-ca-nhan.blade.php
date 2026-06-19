@@ -356,44 +356,20 @@
     var fd = new FormData(form);
     fd.set('_method', 'PUT');
 
-    fetch(form.action, {
-      method: 'POST',
-      body: fd,
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-      .then(function (res) {
-        return res.json().then(function (data) {
-          return { ok: res.ok, status: res.status, data: data };
-        }).catch(function () {
-          return { ok: res.ok, status: res.status, data: {} };
-        });
-      })
+    RestApi.post(form.action, fd)
       .then(function (result) {
         if (btn) { btn.disabled = false; btn.textContent = 'Đổi mật khẩu'; }
         if (result.ok) {
-          showAlert('success', result.data.message || 'Đã đổi mật khẩu thành công.');
           form.reset();
           clearFieldErrors();
         } else if (result.status === 422 && result.data.errors) {
-          var list = [];
           Object.keys(result.data.errors).forEach(function (key) {
             var msgs = result.data.errors[key];
             if (msgs && msgs[0]) {
               setFieldError(key, msgs[0]);
-              list.push(msgs[0]);
             }
           });
-          if (list.length) showAlert('danger', '<ul class="mb-0 list-unstyled">' + list.map(function (m) { return '<li>' + m + '</li>'; }).join('') + '</ul>');
-        } else {
-          showAlert('danger', result.data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
         }
-      })
-      .catch(function () {
-        if (btn) { btn.disabled = false; btn.textContent = 'Đổi mật khẩu'; }
-        showAlert('danger', 'Không thể kết nối. Vui lòng thử lại.');
       });
   });
 })();

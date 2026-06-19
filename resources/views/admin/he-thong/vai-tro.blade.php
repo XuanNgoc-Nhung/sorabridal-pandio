@@ -629,18 +629,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (dvvtLoading) dvvtLoading.classList.remove('d-none');
 
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-                credentials: 'same-origin'
-            })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.json();
-                })
-                .then(function(data) {
+            RestApi.get(url)
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
                     if (dvvtLoading) dvvtLoading.classList.add('d-none');
                     if (dvvtContent) dvvtContent.classList.remove('d-none');
-                    var items = data && Array.isArray(data.items) ? data.items : [];
+                    var items = res.data && Array.isArray(res.data.items) ? res.data.items : [];
                     dvvtRenderRows(items);
                 })
                 .catch(function(err) {
@@ -668,25 +662,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             var oldValue = !target.checked;
             target.disabled = true;
-            fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    dieu_chinh_hop_dong_cuoi: target.checked ? 1 : 0
-                })
+            RestApi.patch(url, {
+                dieu_chinh_hop_dong_cuoi: target.checked ? 1 : 0
             })
-                .then(function (response) {
-                    if (!response.ok) {
-                        throw new Error('HTTP ' + response.status);
+                .then(function (res) {
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status);
                     }
-
-                    return response.json();
                 })
                 .catch(function () {
                     target.checked = oldValue;

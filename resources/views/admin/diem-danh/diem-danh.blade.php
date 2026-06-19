@@ -226,46 +226,27 @@
                 formData.append('_token', csrfToken);
                 formData.append('client_ip', clientIp);
 
-                return fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        Accept: options.accept || 'application/json'
-                    },
-                    credentials: 'same-origin'
-                });
-            })
-            .then(function (response) {
-                if (options.expectJson) {
-                    return response.json().catch(function () { return {}; }).then(function (body) {
-                        return { ok: response.ok, redirected: response.redirected, url: response.url, body: body || {} };
-                    });
-                }
-
-                return { ok: response.ok, redirected: response.redirected, url: response.url, body: {} };
+                return RestApi.post(url, formData);
             })
             .then(function (result) {
                 if (options.expectJson) {
-                    if (result.ok && result.body.success) {
-                        showAlert('success', result.body.message || options.successFallback || 'Thành công.');
+                    var body = result.data || {};
+                    if (result.ok && body.success) {
                         window.setTimeout(function () {
                             window.location.reload();
                         }, 800);
                         return;
                     }
 
-                    showAlert('error', result.body.message || options.errorFallback || 'Không thể hoàn tất. Vui lòng thử lại.');
                     resetButton();
                     return;
                 }
 
-                if (result.redirected || result.ok) {
-                    window.location.href = result.url || window.location.href;
+                if (result.ok) {
+                    window.location.reload();
                     return;
                 }
 
-                showAlert('error', options.errorFallback || 'Không thể hoàn tất. Vui lòng thử lại.');
                 resetButton();
             })
             .catch(function () {

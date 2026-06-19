@@ -1467,9 +1467,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load dịch vụ đã lưu của hợp đồng từ dich_vu_trong_hop_dong và đổ vào bảng (Sua)
             var dichVuUrl = btn.getAttribute('data-dich-vu-url');
             if (dichVuUrl && tbodyDichVuLeSua && boxDichVuLeSua) {
-                fetch(dichVuUrl, { headers: { 'Accept': 'application/json' } })
-                    .then(function(res) { return res.json(); })
-                    .then(function(json) {
+                RestApi.get(dichVuUrl)
+                    .then(function(res) {
+                        var json = res.ok ? res.data : {};
                         var data = (json && json.data) ? json.data : [];
                         tbodyDichVuLeSua.innerHTML = '';
                         if (!Array.isArray(data) || data.length === 0) {
@@ -2184,17 +2184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var hopDongId = hopDongIdEl ? (hopDongIdEl.value || '').trim() : '';
                 if (hopDongId) fd.append('hop_dong_id', hopDongId);
             }
-        fetch(URL_KIEM_TRA_MA_GIOI_THIEU, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: fd,
-            credentials: 'same-origin'
-        })
-            .then(function(res) {
-                return res.json().then(function(data) {
-                    return { ok: res.ok, status: res.status, data: data };
-                });
-            })
+        RestApi.post(URL_KIEM_TRA_MA_GIOI_THIEU, fd, { toast: false })
             .then(function(payload) {
                 var data = payload.data || {};
                 if (!payload.ok) {

@@ -31,6 +31,18 @@
     </script>
     <script src="../../assets/js/main.js"></script>
 
+    <!-- Admin toast (Notyf) + REST API client -->
+    <link rel="stylesheet" href="../../assets/vendor/libs/notyf/notyf.css" />
+    <style>
+        .notyf { z-index: 1095 !important; }
+        .notyf__title { font-weight: 600; margin-bottom: 0.15rem; }
+        .notyf__text { font-size: 0.9375rem; line-height: 1.4; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" crossorigin="anonymous"></script>
+    <script src="../../assets/vendor/libs/notyf/notyf.js"></script>
+    <script src="../../assets/js/admin-toast.js"></script>
+    <script src="../../assets/js/rest_api.js"></script>
+
     <!-- Select2: thống nhất UX select (tương tự modal phân công công việc) -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
     <script>

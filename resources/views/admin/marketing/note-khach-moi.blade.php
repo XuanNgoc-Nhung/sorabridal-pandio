@@ -500,15 +500,10 @@ document.addEventListener('DOMContentLoaded', function () {
             timHopDongAbort.abort();
         }
         timHopDongAbort = new AbortController();
-        var url = URL_TIM_HOP_DONG_THEO_SDT + '?' + new URLSearchParams({ so_dien_thoai: sdt });
-        fetch(url, {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            signal: timHopDongAbort.signal,
-        })
-            .then(function (res) { return res.ok ? res.json() : null; })
-            .then(function (data) { onDone(data || null); })
-            .catch(function (err) {
-                if (err.name !== 'AbortError') onDone(null);
+        RestApi.get(URL_TIM_HOP_DONG_THEO_SDT, { so_dien_thoai: sdt }, { signal: timHopDongAbort.signal })
+            .then(function (res) {
+                if (res.message === 'Request cancelled.') return;
+                onDone(res.ok ? res.data : null);
             })
             .finally(function () { timHopDongAbort = null; });
     }

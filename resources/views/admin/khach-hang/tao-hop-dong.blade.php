@@ -1900,8 +1900,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         picker.renderCards();
                         return;
                     }
-                    var ax = window.axios;
-                    if (!ax || !opts.searchUrl) {
+                    if (!RestApi || !opts.searchUrl) {
                         picker.remoteList = null;
                         picker.renderCards();
                         return;
@@ -1909,10 +1908,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     var reqId = ++picker.searchReqId;
                     var params = { q: raw.trim(), loai: picker.loai };
                     if (wizardTpState.dungChung) params.dung_chung = 1;
-                    ax.get(opts.searchUrl, { params: params })
+                    RestApi.get(opts.searchUrl, params)
                         .then(function(res) {
                             if (reqId !== picker.searchReqId) return;
-                            var items = (res.data && Array.isArray(res.data.items)) ? res.data.items : [];
+                            var items = (res.ok && res.data && Array.isArray(res.data.items)) ? res.data.items : [];
                             items.forEach(function(p) {
                                 if (p && p.id != null) {
                                     if (!p.loai && picker.loai) p.loai = picker.loai;
@@ -2143,20 +2142,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function wizardKtspFetch(url) {
-        return fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        }).then(function(res) {
+        return RestApi.get(url).then(function(res) {
             if (!res.ok) {
-                return res.text().then(function(t) {
-                    throw new Error('HTTP ' + res.status + ': ' + t);
-                });
+                throw new Error('HTTP ' + res.status + ': ' + (res.message || ''));
             }
-            return res.json();
+            return res.data;
         });
     }
 
@@ -2698,22 +2688,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btnKiemTraMaGiamGia) btnKiemTraMaGiamGia.disabled = true;
         setMaGiamGiaMessage('Đang kiểm tra mã...', false);
 
-        fetch(URL_KIEM_TRA_MA_GIAM_GIA, {
-            method: 'POST',
-            body: fd,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        })
+        RestApi.post(URL_KIEM_TRA_MA_GIAM_GIA, fd, { toast: false })
             .then(function(r) {
-                return r.json().catch(function() { return {}; }).then(function(body) {
-                    return { ok: r.ok, body: body || {} };
-                });
-            })
-            .catch(function() {
-                return { ok: false, body: { message: 'Không kết nối được máy chủ.' } };
+                return {
+                    ok: r.ok,
+                    body: r.data || { message: r.message || 'Không kết nối được máy chủ.' }
+                };
             })
             .then(function(res) {
                 if (btnKiemTraMaGiamGia) btnKiemTraMaGiamGia.disabled = false;
@@ -3352,32 +3332,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var fd = buildStep2SaveFormData();
         if (btnNext) btnNext.disabled = true;
 
-        fetch(url, {
-            method: 'POST',
-            body: fd,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-            .then(function(r) {
-                var ct = r.headers.get('content-type') || '';
-                if (ct.indexOf('application/json') !== -1) {
-                    return r.json().then(function(j) {
-                        return { ok: r.ok, status: r.status, body: j };
-                    });
-                }
-                return r.text().then(function(t) {
-                    return {
-                        ok: r.ok,
-                        status: r.status,
-                        body: { message: t ? 'Lỗi máy chủ (' + r.status + ').' : 'Lỗi máy chủ.' }
-                    };
-                });
-            })
-            .catch(function() {
-                return { ok: false, status: 0, body: { message: 'Không kết nối được máy chủ.' } };
+        RestApi.post(url, fd, { toast: false })
+            .then(function(res) {
+                return {
+                    ok: res.ok,
+                    status: res.status,
+                    body: res.data || { message: res.message || 'Lỗi máy chủ.' }
+                };
             })
             .then(function(res) {
                 updateNextButtonState();
@@ -3469,32 +3430,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var fd = buildStep1SaveFormData();
         btnNext.disabled = true;
 
-        fetch(url, {
-            method: 'POST',
-            body: fd,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-            .then(function(r) {
-                var ct = r.headers.get('content-type') || '';
-                if (ct.indexOf('application/json') !== -1) {
-                    return r.json().then(function(j) {
-                        return { ok: r.ok, status: r.status, body: j };
-                    });
-                }
-                return r.text().then(function(t) {
-                    return {
-                        ok: r.ok,
-                        status: r.status,
-                        body: { message: t ? 'Lỗi máy chủ (' + r.status + ').' : 'Lỗi máy chủ.' }
-                    };
-                });
-            })
-            .catch(function() {
-                return { ok: false, status: 0, body: { message: 'Không kết nối được máy chủ.' } };
+        RestApi.post(url, fd, { toast: false })
+            .then(function(res) {
+                return {
+                    ok: res.ok,
+                    status: res.status,
+                    body: res.data || { message: res.message || 'Lỗi máy chủ.' }
+                };
             })
             .then(function(res) {
                 updateNextButtonState();
@@ -3547,32 +3489,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var fd = buildStep3SaveFormData();
         if (btnSubmit) btnSubmit.disabled = true;
 
-        fetch(url, {
-            method: 'POST',
-            body: fd,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-            .then(function(r) {
-                var ct = r.headers.get('content-type') || '';
-                if (ct.indexOf('application/json') !== -1) {
-                    return r.json().then(function(j) {
-                        return { ok: r.ok, status: r.status, body: j };
-                    });
-                }
-                return r.text().then(function(t) {
-                    return {
-                        ok: r.ok,
-                        status: r.status,
-                        body: { message: t ? 'Lỗi máy chủ (' + r.status + ').' : 'Lỗi máy chủ.' }
-                    };
-                });
-            })
-            .catch(function() {
-                return { ok: false, status: 0, body: { message: 'Không kết nối được máy chủ.' } };
+        RestApi.post(url, fd, { toast: false })
+            .then(function(res) {
+                return {
+                    ok: res.ok,
+                    status: res.status,
+                    body: res.data || { message: res.message || 'Lỗi máy chủ.' }
+                };
             })
             .then(function(res) {
                 updateSubmitButtonState();

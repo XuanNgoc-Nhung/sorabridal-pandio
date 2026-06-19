@@ -1006,8 +1006,6 @@
 </div>
 @endsection
 
-@include('admin.components.admin-toast')
-
 @push('modals')
 <div class="modal fade" id="modalDieuPhoiHopDongCuoi" tabindex="-1" aria-labelledby="modalDieuPhoiHopDongCuoiLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
@@ -1701,16 +1699,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function dpcFetchNhanVienTheoNgayVaPhongBan(ymd, maPhongBan) {
-        var url = dpcNvUrl(dpcHopId)
-            + '?ngay=' + encodeURIComponent(ymd)
-            + '&ma_phong_ban=' + encodeURIComponent(maPhongBan);
-        return fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-            credentials: 'same-origin'
-        })
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
+        return RestApi.get(dpcNvUrl(dpcHopId), { ngay: ymd, ma_phong_ban: maPhongBan })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.data;
             });
     }
 
@@ -2058,13 +2050,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function ttLoad(id) {
         ttHideAlert();
-        fetch(ttUrl(id), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
-            credentials: 'same-origin'
-        })
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
+        RestApi.get(ttUrl(id))
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.data;
             })
             .then(ttFillFromJson)
             .catch(function (e) {
@@ -2108,24 +2097,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (submitBtn) submitBtn.disabled = true;
             var fd = new FormData(formTt);
             fd.append('_token', CSRF_TOKEN);
-            fetch(ttPostUrl(ttHopId), {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': CSRF_TOKEN
-                },
-                body: fd,
-                credentials: 'same-origin'
-            })
-                .then(function (r) {
-                    if (r.status === 422) {
-                        return r.json().then(function (j) {
-                            throw j;
-                        });
+            RestApi.post(ttPostUrl(ttHopId), fd, { toast: false })
+                .then(function (res) {
+                    if (!res.ok) {
+                        if (res.status === 422 && res.errors) {
+                            throw { errors: res.errors, message: res.message };
+                        }
+                        throw new Error(res.message || ('HTTP ' + res.status));
                     }
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.json();
+                    return res.data;
                 })
                 .then(ttFillFromJson)
                 .then(function () {
