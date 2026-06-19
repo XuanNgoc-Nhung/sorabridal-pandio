@@ -60,6 +60,13 @@ return [
     ],
     [
         'stt' => 6,
+        'type' => 'single',
+        'route' => 'admin.diem-danh.nghi-phep',
+        'label' => 'Nghỉ phép',
+        'icon' => 'ti tabler-beach',
+    ],
+    [
+        'stt' => 7,
         'type' => 'group',
         'routes' => [
             'admin.nhan-su.danh-sach',
@@ -74,7 +81,7 @@ return [
         ],
     ],
     [
-        'stt' => 7,
+        'stt' => 8,
         'type' => 'group',
         'routes' => [
             'admin.trang-phuc.san-pham',
@@ -93,7 +100,7 @@ return [
         ],
     ],
     [
-        'stt' => 8,
+        'stt' => 9,
         'type' => 'group',
         'routes' => ['admin.tai-chinh.cong-no', 'admin.tai-chinh.phieu-thu-chi', 'admin.tai-chinh.tinh-luong'],
         'route_prefix' => 'admin.tai-chinh.',
@@ -106,14 +113,14 @@ return [
         ],
     ],
     [
-        'stt' => 9,
+        'stt' => 10,
         'type' => 'single',
         'route' => 'admin.note-khach-moi',
         'label' => 'Note khách mới',
         'icon' => 'ti tabler-notes',
     ],
     [
-        'stt' => 10,
+        'stt' => 11,
         'type' => 'group',
         'routes' => ['admin.bao-cao.ads'],
         'route_prefix' => 'admin.bao-cao.',
@@ -124,21 +131,21 @@ return [
         ],
     ],
     [
-        'stt' => 11,
+        'stt' => 12,
         'type' => 'single',
         'route' => 'admin.tu-van.danh-sach',
         'label' => 'Tư vấn',
         'icon' => 'ti tabler-message-circle',
     ],
     [
-        'stt' => 12,
+        'stt' => 13,
         'type' => 'single',
         'route' => 'admin.thong-tin-ca-nhan',
         'label' => 'Thông tin cá nhân',
         'icon' => 'ti tabler-id',
     ],
     [
-        'stt' => 13,
+        'stt' => 14,
         'type' => 'group',
         'routes' => ['admin.he-thong.vai-tro', 'admin.he-thong.phong-ban', 'admin.he-thong.ip-diem-danh', 'admin.he-thong.tai-lieu', 'admin.he-thong.logs'],
         'route_prefix' => 'admin.he-thong.',

@@ -60,6 +60,9 @@ class CheckRoute
         'admin.nhan-su.cong-viec-cua-toi' => [
             'admin.nhan-su.cong-viec-cua-toi.cap-nhat-link',
         ],
+        'admin.diem-danh.nghi-phep' => [
+            'admin.diem-danh.nghi-phep.store',
+        ],
         'admin.trang-phuc.hop-dong' => [
             'admin.trang-phuc.hop-dong.tim-san-pham',
             'admin.trang-phuc.update-hop-dong-trang-thai',

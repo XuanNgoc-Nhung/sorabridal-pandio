@@ -9,6 +9,7 @@ use App\Models\HopDong;
 use App\Models\IpDiemDanh;
 use App\Models\NhanVien;
 use App\Models\User;
+use App\Models\XinNghiPhep;
 use App\Support\AdminPagination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class DiemDanhController extends Controller
 {
@@ -54,6 +56,87 @@ class DiemDanhController extends Controller
         }
 
         return view('admin.diem-danh.diem-danh', compact('danhSach', 'canCheckIn', 'canCheckOut'));
+    }
+
+    public function nghiPhep(Request $request)
+    {
+        $validated = $request->validate([
+            'tu_ngay' => 'nullable|date',
+            'den_ngay' => 'nullable|date',
+            'loai_nghi_phep' => 'nullable|string|in:'.implode(',', array_keys(XinNghiPhep::LOAI_NGHI_PHEP_OPTIONS)),
+            'trang_thai' => 'nullable|string|in:'.implode(',', array_keys(XinNghiPhep::TRANG_THAI_OPTIONS)),
+        ]);
+
+        $query = XinNghiPhep::query()
+            ->with(['user', 'nguoiDuyet'])
+            ->where('user_id', Auth::id());
+
+        if (! empty($validated['tu_ngay'])) {
+            $query->whereDate('ngay_bat_dau', '>=', $validated['tu_ngay']);
+        }
+        if (! empty($validated['den_ngay'])) {
+            $query->whereDate('ngay_bat_dau', '<=', $validated['den_ngay']);
+        }
+        if (! empty($validated['loai_nghi_phep'])) {
+            $query->where('loai_nghi_phep', $validated['loai_nghi_phep']);
+        }
+        if (! empty($validated['trang_thai'])) {
+            $query->where('trang_thai', $validated['trang_thai']);
+        }
+
+        $danhSach = $query->orderByDesc('created_at')->paginate(AdminPagination::perPage())->withQueryString();
+
+        return view('admin.diem-danh.nghi-phep', compact('danhSach'));
+    }
+
+    public function storeNghiPhep(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'loai_nghi_phep' => ['required', 'string', Rule::in(array_keys(XinNghiPhep::LOAI_NGHI_PHEP_OPTIONS))],
+            'buoi_nghi' => [
+                'nullable',
+                'required_if:loai_nghi_phep,'.XinNghiPhep::LOAI_NUA_NGAY,
+                'string',
+                Rule::in(array_keys(XinNghiPhep::BUOI_NGHI_OPTIONS)),
+            ],
+            'ngay_bat_dau' => ['required', 'date'],
+            'ngay_ket_thuc' => [
+                'nullable',
+                'required_if:loai_nghi_phep,'.XinNghiPhep::LOAI_NHIEU_NGAY,
+                'date',
+                'after_or_equal:ngay_bat_dau',
+            ],
+            'ly_do' => ['required', 'string', 'max:2000'],
+        ], [
+            'loai_nghi_phep.required' => 'Vui lòng chọn loại nghỉ phép.',
+            'buoi_nghi.required_if' => 'Vui lòng chọn buổi nghỉ.',
+            'ngay_bat_dau.required' => 'Vui lòng chọn ngày xin phép hoặc ngày nghỉ.',
+            'ngay_ket_thuc.required_if' => 'Vui lòng chọn khoảng ngày nghỉ.',
+            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'ly_do.required' => 'Vui lòng nhập lý do.',
+        ]);
+
+        $loai = $validated['loai_nghi_phep'];
+        $buoiNghi = $loai === XinNghiPhep::LOAI_NUA_NGAY ? ($validated['buoi_nghi'] ?? null) : null;
+        $ngayKetThuc = match ($loai) {
+            XinNghiPhep::LOAI_NHIEU_NGAY => $validated['ngay_ket_thuc'] ?? null,
+            XinNghiPhep::LOAI_CA_NGAY => $validated['ngay_bat_dau'],
+            default => null,
+        };
+
+        XinNghiPhep::create([
+            'user_id' => Auth::id(),
+            'loai_nghi_phep' => $loai,
+            'buoi_nghi' => $buoiNghi,
+            'ngay_bat_dau' => $validated['ngay_bat_dau'],
+            'ngay_ket_thuc' => $ngayKetThuc,
+            'ly_do' => trim($validated['ly_do']),
+            'trang_thai' => XinNghiPhep::TRANG_THAI_CHO_DUYET,
+        ]);
+
+        return redirect()
+            ->route('admin.diem-danh.nghi-phep')
+            ->with('success', 'Đã gửi đơn xin nghỉ phép.');
     }
 
     /** @var array<string, string> */

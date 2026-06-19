@@ -168,6 +168,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Một user có nhiều đơn xin nghỉ phép.
+     */
+    public function xinNghiPhep(): HasMany
+    {
+        return $this->hasMany(XinNghiPhep::class, 'user_id', 'id');
+    }
+
+    /**
+     * Các đơn xin nghỉ phép do user này duyệt.
+     */
+    public function nghiPhepDaDuyet(): HasMany
+    {
+        return $this->hasMany(XinNghiPhep::class, 'nguoi_duyet', 'id');
+    }
+
+    /**
      * Một user có nhiều hợp đồng cho thuê trang phục.
      */
     public function hopDongChoThueTrangPhuc(): HasMany

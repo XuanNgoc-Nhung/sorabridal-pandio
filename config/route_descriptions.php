@@ -23,6 +23,7 @@ return [
     'admin.diem-danh.cham-cong' => 'Chấm công',
     'admin.diem-danh.check-in' => 'Check-in',
     'admin.diem-danh.check-out' => 'Check-out',
+    'admin.diem-danh.nghi-phep' => 'Nghỉ phép',
     'admin.nhan-su.cong-viec-cua-toi' => 'Công việc của tôi',
     'admin.khach-hang.danh-sach-hop-dong-cuoi' => 'Danh sách hợp đồng cưới',
     'admin.khach-hang.hop-dong-cuoi.dieu-phoi' => 'Điều phối hợp đồng cưới (modal)',
