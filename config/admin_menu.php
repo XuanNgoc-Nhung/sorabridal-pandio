@@ -41,7 +41,7 @@ return [
         'label' => 'Lịch làm việc',
         'icon' => 'ti tabler-calendar',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.ca-lam', 'label' => 'Ca làm', 'icon' => 'ti tabler-clock'],
+            ['stt' => 1, 'route' => 'admin.ca-lam', 'label' => 'Chia ca làm việc', 'icon' => 'ti tabler-clock'],
             ['stt' => 2, 'route' => 'admin.lich-chup', 'label' => 'Lịch chụp', 'icon' => 'ti tabler-calendar'],
             ['stt' => 3, 'route' => 'admin.lich-shop', 'label' => 'Lịch shop', 'icon' => 'ti tabler-calendar-event'],
         ],
