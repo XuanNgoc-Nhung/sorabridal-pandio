@@ -603,14 +603,18 @@ class DiemDanhController extends Controller
 
         $gioVao = now();
         $thoiGianDiMuon = $this->tinhThoiGianDiMuon($userId, $gioVao);
+        $tienPhatDiMuon = $this->tinhTienPhatTheoSoPhut($thoiGianDiMuon);
+        $clientIp = trim($validated['client_ip']);
 
-        DB::transaction(function () use ($userId, $gioVao, $thoiGianDiMuon) {
+        DB::transaction(function () use ($userId, $gioVao, $thoiGianDiMuon, $tienPhatDiMuon, $clientIp) {
             $diemDanh = DiemDanh::create([
                 'user_id' => $userId,
                 'gio_vao' => $gioVao,
                 'gio_ra' => null,
                 'di_muon' => $thoiGianDiMuon > 0,
                 'thoi_gian_di_muon' => $thoiGianDiMuon,
+                'tien_phat_di_muon' => $tienPhatDiMuon,
+                'ip_checkin' => $clientIp,
             ]);
 
             ChamCong::query()->updateOrCreate(
@@ -623,8 +627,6 @@ class DiemDanhController extends Controller
                 ]
             );
         });
-
-        $clientIp = trim($validated['client_ip']);
 
         return response()->json([
             'success' => true,
@@ -702,10 +704,14 @@ class DiemDanhController extends Controller
         $luongCoBan = round($gioLamCoBan * $donGiaLuongCoBan, 2);
         $luongTangCa = round($gioLamTangCa * $donGiaLuongTangCa, 2);
         $thoiGianVeSom = $this->tinhThoiGianVeSom($record->user_id, $gioRa);
+        $tienPhatVeSom = $this->tinhTienPhatTheoSoPhut($thoiGianVeSom);
+        $clientIp = trim($validated['client_ip']);
 
         $record->update([
             'gio_ra' => $gioRa,
             'thoi_gian_ve_som' => $thoiGianVeSom,
+            'tien_phat_ve_som' => $tienPhatVeSom,
+            'ip_checkout' => $clientIp,
             'gio_lam_co_ban' => $gioLamCoBan,
             'gio_lam_tang_ca' => $gioLamTangCa,
             'luong_co_ban' => $luongCoBan,
@@ -722,8 +728,6 @@ class DiemDanhController extends Controller
             'luong_co_ban' => $luongCoBan,
             'luong_tang_ca' => $luongTangCa,
         ]);
-
-        $clientIp = trim($validated['client_ip']);
 
         return response()->json([
             'success' => true,
@@ -984,6 +988,22 @@ class DiemDanhController extends Controller
         }
 
         return (int) $gioRa->diffInMinutes($gioKetThucCa);
+    }
+
+    /**
+     * Tiền phạt theo số phút đi muộn / về sớm: 1–30 phút = 50.000đ, trên 30 phút = 100.000đ.
+     */
+    private function tinhTienPhatTheoSoPhut(int $soPhut): int
+    {
+        if ($soPhut <= 0) {
+            return 0;
+        }
+
+        if ($soPhut <= 30) {
+            return 50000;
+        }
+
+        return 100000;
     }
 
     private function jsonDiemDanhError(string $message, int $status = 422, ?string $clientIp = null): JsonResponse

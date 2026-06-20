@@ -85,6 +85,8 @@
                         <th>Giờ ra</th>
                         <th class="text-center">Đi muộn</th>
                         <th class="text-center">Về sớm</th>
+                        <th class="text-end">Phạt đi muộn</th>
+                        <th class="text-end">Phạt về sớm</th>
                         {{-- <th class="text-center">Hợp lệ</th> --}}
                         <th>Lý do</th>
                         {{-- <th class="text-center">Nghỉ phép</th> --}}
@@ -125,6 +127,20 @@
                                 <span class="text-muted">Không</span>
                             @endif
                         </td>
+                        <td class="text-end">
+                            @if(($item->tien_phat_di_muon ?? 0) > 0)
+                                <span class="text-danger">{{ number_format($item->tien_phat_di_muon, 0, ',', '.') }} đ</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            @if(($item->tien_phat_ve_som ?? 0) > 0)
+                                <span class="text-danger">{{ number_format($item->tien_phat_ve_som, 0, ',', '.') }} đ</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         {{-- <td class="text-center">
                             @if($item->hop_le)
                                 <span class="badge bg-success">Có</span>
@@ -149,7 +165,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="16" class="text-center py-4 text-muted">Chưa có dữ liệu điểm danh.</td>
+                        <td colspan="18" class="text-center py-4 text-muted">Chưa có dữ liệu điểm danh.</td>
                     </tr>
                     @endforelse
                 </tbody>
