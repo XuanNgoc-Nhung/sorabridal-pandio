@@ -88,7 +88,7 @@
                         <th>Tên khách</th>
                         <th style="width: 120px;">SĐT</th>
                         <th style="width: 140px;">Phụ trách sale</th>
-                        <th style="width: 165px;">Ngày hẹn lịch</th>
+                        <th style="width: 195px;">Ngày hẹn lịch</th>
                         <th style="width: 165px;">Ngày đến thực tế</th>
                         <th style="width: 130px;">Hình thức đặt cọc</th>
                         <th style="width: 120px;">Nguồn khách</th>
@@ -120,7 +120,7 @@
                             @endphp
                             {{ $tenSales->isNotEmpty() ? $tenSales->join(', ') : '—' }}
                         </td>
-                        <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_hen_lich) }}</td>
+                        <td>{{ \App\Models\NoteKhachMoi::formatNgayGioCoThu($item->ngay_hen_lich) }}</td>
                         <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_den_thuc_te) }}</td>
                         <td>
                             @php
@@ -155,7 +155,7 @@
                                             data-ten-khach="{{ e($item->ten_khach ?? '') }}"
                                             data-so-dien-thoai="{{ e($item->so_dien_thoai ?? '') }}"
                                             data-phu-trach-sale-nhan-vien-ids="{{ e(json_encode($item->phuTrachSaleNhanVienIds())) }}"
-                                            data-ngay-hen-lich="{{ $item->ngay_hen_lich?->format('Y-m-d') }}"
+                                            data-ngay-hen-lich="{{ $item->ngay_hen_lich?->format('Y-m-d H:i') }}"
                                             data-ngay-den-thuc-te="{{ $item->ngay_den_thuc_te?->format('Y-m-d') }}"
                                             data-nguon-khach="{{ e($item->nguon_khach ?? '') }}"
                                             data-nguon-khach-key="{{ e(\App\Models\HopDongCuoi::nguonKhachToKenhKey($item->nguon_khach) ?? '') }}"
@@ -259,7 +259,7 @@
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label" for="them_ngay_hen_lich">Ngày hẹn lịch</label>
-                            <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_hen_lich" name="ngay_hen_lich" value="{{ old('ngay_hen_lich') }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                            <input type="text" class="flatpickr-datetime-admin form-control" id="them_ngay_hen_lich" name="ngay_hen_lich" value="{{ old('ngay_hen_lich') }}" placeholder="dd/mm/yyyy hh:mm" autocomplete="off">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label" for="them_ngay_den_thuc_te">Ngày đến thực tế</label>
@@ -349,7 +349,7 @@
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label" for="sua_ngay_hen_lich">Ngày hẹn lịch</label>
-                            <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_hen_lich" name="ngay_hen_lich" placeholder="dd/mm/yyyy" autocomplete="off">
+                            <input type="text" class="flatpickr-datetime-admin form-control" id="sua_ngay_hen_lich" name="ngay_hen_lich" placeholder="dd/mm/yyyy hh:mm" autocomplete="off">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label" for="sua_ngay_den_thuc_te">Ngày đến thực tế</label>
@@ -712,8 +712,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 setNoteSelect2Multi(document.getElementById('sua_phu_trach_sale_ids'), []);
             }
             setNoteSelect2Value(document.getElementById('sua_trang_thai'), btn.getAttribute('data-trang-thai') || '');
-            if (window.setAdminDateInput) {
-                setAdminDateInput('sua_ngay_hen_lich', btn.getAttribute('data-ngay-hen-lich') || '');
+            if (window.setAdminDateTimeInput && window.setAdminDateInput) {
+                setAdminDateTimeInput('sua_ngay_hen_lich', btn.getAttribute('data-ngay-hen-lich') || '');
                 setAdminDateInput('sua_ngay_den_thuc_te', btn.getAttribute('data-ngay-den-thuc-te') || '');
             } else {
                 document.getElementById('sua_ngay_hen_lich').value = btn.getAttribute('data-ngay-hen-lich') || '';

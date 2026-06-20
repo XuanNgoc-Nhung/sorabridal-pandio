@@ -144,7 +144,7 @@ class MarketingController extends Controller
             'phu_trach_sale_id' => 'nullable|integer|exists:users,id',
             'phu_trach_sale_nhan_vien_ids' => 'nullable|array',
             'phu_trach_sale_nhan_vien_ids.*' => 'integer|exists:nhan_vien,id',
-            'ngay_hen_lich' => 'nullable|date',
+            'ngay_hen_lich' => 'nullable|date_format:Y-m-d H:i',
             'ngay_den_thuc_te' => 'nullable|date',
             'nguon_khach' => 'nullable|string|max:255',
             'trang_thai' => ['nullable', 'string', Rule::in($trangThaiKeys)],
@@ -155,7 +155,7 @@ class MarketingController extends Controller
                 Rule::requiredIf(fn () => $request->input('trang_thai') === NoteKhachMoi::TRANG_THAI_KHONG_CHOT),
             ],
         ], [
-            'ngay_hen_lich.date' => 'Ngày hẹn lịch không hợp lệ.',
+            'ngay_hen_lich.date_format' => 'Ngày hẹn lịch không hợp lệ.',
             'ngay_den_thuc_te.date' => 'Ngày đến thực tế không hợp lệ.',
             'phu_trach_sale_id.exists' => 'Phụ trách sale không hợp lệ.',
             'phu_trach_sale_nhan_vien_ids.*.exists' => 'Nhân viên sale không hợp lệ.',

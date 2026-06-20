@@ -66,7 +66,7 @@ class NoteKhachMoi extends Model
     ];
 
     protected $casts = [
-        'ngay_hen_lich' => 'date',
+        'ngay_hen_lich' => 'datetime',
         'ngay_den_thuc_te' => 'date',
     ];
 
@@ -117,6 +117,20 @@ class NoteKhachMoi extends Model
             return '—';
         }
 
+        return self::thuTrongTuan($date).' '.$date->format('d/m/Y');
+    }
+
+    public static function formatNgayGioCoThu(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return '—';
+        }
+
+        return self::thuTrongTuan($date).' '.$date->format('d/m/Y H:i');
+    }
+
+    private static function thuTrongTuan(CarbonInterface $date): string
+    {
         $thu = [
             1 => 'Thứ hai',
             2 => 'Thứ ba',
@@ -127,7 +141,7 @@ class NoteKhachMoi extends Model
             7 => 'Chủ nhật',
         ];
 
-        return $date->format('d/m/Y').' ('.$thu[$date->isoWeekday()].')';
+        return $thu[$date->isoWeekday()];
     }
 
     public function phuTrachSale(): BelongsTo
