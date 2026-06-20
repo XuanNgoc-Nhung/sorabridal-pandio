@@ -394,6 +394,38 @@ class HopDongCuoi extends Model
     /**
      * HĐ cuối mới nhất khớp SĐT chú rể hoặc cô dâu.
      */
+    public static function hinhThucCocLabel(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return self::HINH_THUC_COC[$value] ?? $value;
+    }
+
+    /**
+     * @param  iterable<mixed>  $phones
+     * @return array<string, string|null> SĐT đã chuẩn hóa => nhãn hình thức cọc
+     */
+    public static function mapHinhThucCocLabelsByContactPhones(iterable $phones): array
+    {
+        $map = [];
+
+        foreach ($phones as $phone) {
+            $normalized = self::normalizeContactPhone($phone);
+            if ($normalized === null || array_key_exists($normalized, $map)) {
+                continue;
+            }
+
+            $hopDong = self::findByContactPhone($phone);
+            $map[$normalized] = $hopDong
+                ? self::hinhThucCocLabel($hopDong->hinh_thuc_coc)
+                : null;
+        }
+
+        return $map;
+    }
+
     public static function findByContactPhone(mixed $phone): ?self
     {
         $normalized = self::normalizeContactPhone($phone);

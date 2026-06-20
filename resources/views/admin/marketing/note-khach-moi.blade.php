@@ -88,8 +88,9 @@
                         <th>Tên khách</th>
                         <th style="width: 120px;">SĐT</th>
                         <th style="width: 140px;">Phụ trách sale</th>
-                        <th style="width: 115px;">Ngày hẹn lịch</th>
-                        <th style="width: 115px;">Ngày đến thực tế</th>
+                        <th style="width: 165px;">Ngày hẹn lịch</th>
+                        <th style="width: 165px;">Ngày đến thực tế</th>
+                        <th style="width: 130px;">Hình thức đặt cọc</th>
                         <th style="width: 120px;">Nguồn khách</th>
                         <th style="width: 130px;">Người tạo</th>
                         <th style="width: 115px;">Ngày tạo</th>
@@ -119,8 +120,15 @@
                             @endphp
                             {{ $tenSales->isNotEmpty() ? $tenSales->join(', ') : '—' }}
                         </td>
-                        <td>{{ $item->ngay_hen_lich?->format('d/m/Y') ?? '—' }}</td>
-                        <td>{{ $item->ngay_den_thuc_te?->format('d/m/Y') ?? '—' }}</td>
+                        <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_hen_lich) }}</td>
+                        <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_den_thuc_te) }}</td>
+                        <td>
+                            @php
+                                $sdtChuan = \App\Models\HopDongCuoi::normalizeContactPhone($item->so_dien_thoai);
+                                $hinhThucCoc = $sdtChuan ? ($hinhThucCocTheoSdt[$sdtChuan] ?? null) : null;
+                            @endphp
+                            {{ $hinhThucCoc ?: '—' }}
+                        </td>
                         <td>{{ $item->nguon_khach ?: '—' }}</td>
                         <td>{{ $item->nguoiTao?->name ?? '—' }}</td>
                         <td>{{ $item->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
@@ -172,7 +180,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="12" class="text-center py-4 text-muted">Chưa có note khách mới nào.</td>
+                        <td colspan="13" class="text-center py-4 text-muted">Chưa có note khách mới nào.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -403,7 +411,7 @@
     overflow-x: auto;
 }
 .table-wrapper-bordered .table {
-    min-width: 1400px;
+    min-width: 1550px;
     border-collapse: collapse;
 }
 .table-wrapper-bordered .table th,

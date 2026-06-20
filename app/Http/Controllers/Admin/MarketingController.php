@@ -64,6 +64,10 @@ class MarketingController extends Controller
             ->paginate(AdminPagination::perPage())
             ->withQueryString();
 
+        $hinhThucCocTheoSdt = HopDongCuoi::mapHinhThucCocLabelsByContactPhones(
+            $danhSach->getCollection()->pluck('so_dien_thoai')
+        );
+
         $danhSachNhanVien = NhanVien::query()
             ->with('user')
             ->whereHas('user')
@@ -73,7 +77,13 @@ class MarketingController extends Controller
         $trangThaiLabels = NoteKhachMoi::trangThaiLabels();
         $kenhTiepCanLabels = HopDongCuoi::kenhTiepCanLabels();
 
-        return view('admin.marketing.note-khach-moi', compact('danhSach', 'danhSachNhanVien', 'trangThaiLabels', 'kenhTiepCanLabels'));
+        return view('admin.marketing.note-khach-moi', compact(
+            'danhSach',
+            'danhSachNhanVien',
+            'trangThaiLabels',
+            'kenhTiepCanLabels',
+            'hinhThucCocTheoSdt',
+        ));
     }
 
     public function timHopDongTheoSdt(Request $request): JsonResponse

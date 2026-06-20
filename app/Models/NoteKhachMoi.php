@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -108,6 +109,25 @@ class NoteKhachMoi extends Model
             self::TRANG_THAI_KHONG_CHOT,
             self::TRANG_THAI_CO_ADD_ZALO,
         ];
+    }
+
+    public static function formatNgayCoThu(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return '—';
+        }
+
+        $thu = [
+            1 => 'Thứ hai',
+            2 => 'Thứ ba',
+            3 => 'Thứ tư',
+            4 => 'Thứ năm',
+            5 => 'Thứ sáu',
+            6 => 'Thứ bảy',
+            7 => 'Chủ nhật',
+        ];
+
+        return $date->format('d/m/Y').' ('.$thu[$date->isoWeekday()].')';
     }
 
     public function phuTrachSale(): BelongsTo
