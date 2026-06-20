@@ -93,12 +93,12 @@
         {{-- <p class="small text-muted mb-2">Mỗi ô: giờ vào–giờ ra
              bên dưới là <strong>giờ làm cơ bản</strong> / <strong>giờ tăng ca</strong> (đơn vị: giờ).
             </p> --}}
-        <div class="table-responsive text-nowrap table-wrapper-bordered">
-            <table class="table table-bordered table-hover mb-0">
+        <div class="table-responsive text-nowrap table-wrapper-bordered cham-cong-table-wrap">
+            <table class="table table-bordered table-hover mb-0 cham-cong-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center align-middle" style="min-width: 48px;">STT</th>
-                        <th style="min-width: 220px;">Nhân viên</th>
+                        <th class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1" style="min-width: 48px;">STT</th>
+                        <th class="cham-cong-sticky cham-cong-sticky-col-2" style="min-width: 220px;">Nhân viên</th>
                         @php
                             $thuLabel = ['1' => 'T2', '2' => 'T3', '3' => 'T4', '4' => 'T5', '5' => 'T6', '6' => 'T7', '7' => 'CN'];
                         @endphp
@@ -106,9 +106,8 @@
                             @php
                                 $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
                             @endphp
-                            <th class="text-center {{ $isWeekend ? 'bg-secondary bg-opacity-25' : '' }}" style="min-width: 72px;">
-                                <div class="fw-semibold">{{ $day->format('d') }}</div>
-                                <div class="small text-muted">{{ $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dd') }}</div>
+                            <th class="text-center small text-nowrap cham-cong-ngay-col {{ $isWeekend ? 'cham-cong-weekend' : '' }}" style="min-width: 72px;">
+                                {{ $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dd') }} {{ $day->format('j/n') }}
                             </th>
                         @endforeach
                     </tr>
@@ -119,8 +118,8 @@
                             $coChamCongTrongThang = collect($bangChamCong ?? [])->contains(fn ($byUser) => isset($byUser[$u->id]));
                         @endphp
                         <tr>
-                            <td class="text-center align-middle">{{ $loop->iteration }}</td>
-                            <td>
+                            <td class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1">{{ $loop->iteration }}</td>
+                            <td class="cham-cong-sticky cham-cong-sticky-col-2">
                                 <div class="fw-medium">{{ $u->name }}</div>
                                 <div class="small text-muted">{{ $u->email }}</div>
                                 @if($coChamCongTrongThang)
@@ -136,7 +135,7 @@
                                     $diemDanh = $record?->diemDanh;
                                     $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true); // 6=Thứ 7, 7=Chủ nhật
                                 @endphp
-                                <td class="text-center align-middle {{ $isWeekend ? 'bg-secondary bg-opacity-25' : '' }}">
+                                <td class="text-center align-middle cham-cong-ngay-col {{ $isWeekend ? 'cham-cong-weekend' : '' }}">
                                     @if($record && $diemDanh)
                                         <div class="small">
                                             <span class="text-success fw-medium">{{ $diemDanh->gio_vao ? $diemDanh->gio_vao->format('H:i') : '—' }}</span>
@@ -182,6 +181,52 @@
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.cham-cong-table .cham-cong-sticky {
+    position: sticky;
+    z-index: 2;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+.cham-cong-table thead .cham-cong-sticky {
+    z-index: 6;
+    background-color: #f8f9fa;
+}
+.cham-cong-table.table-hover > tbody > tr:hover > .cham-cong-sticky {
+    background-color: #f5f5f9;
+}
+[data-bs-theme='dark'] .cham-cong-table .cham-cong-sticky {
+    background-color: #2f3349;
+}
+[data-bs-theme='dark'] .cham-cong-table thead .cham-cong-sticky {
+    background-color: #353a52;
+}
+[data-bs-theme='dark'] .cham-cong-table.table-hover > tbody > tr:hover > .cham-cong-sticky {
+    background-color: #3a3f5c;
+}
+.cham-cong-table .cham-cong-sticky-col-1 {
+    left: 0;
+    min-width: 48px;
+}
+.cham-cong-table .cham-cong-sticky-col-2 {
+    left: 48px;
+    min-width: 220px;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+[data-bs-theme='dark'] .cham-cong-table .cham-cong-sticky-col-2 {
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
+}
+.cham-cong-table .cham-cong-ngay-col.cham-cong-weekend {
+    background-color: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.15);
+}
+.cham-cong-table thead .cham-cong-ngay-col.cham-cong-weekend {
+    background-color: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.25);
+}
+[data-bs-theme='dark'] .cham-cong-table .cham-cong-ngay-col.cham-cong-weekend {
+    background-color: rgba(108, 117, 125, 0.12);
+}
+[data-bs-theme='dark'] .cham-cong-table thead .cham-cong-ngay-col.cham-cong-weekend {
+    background-color: rgba(108, 117, 125, 0.2);
 }
 .gio-ra { color: #e8590c; }
 /* Chỉ chọn tháng/năm — ẩn lưới ngày (Bootstrap Daterangepicker) */
