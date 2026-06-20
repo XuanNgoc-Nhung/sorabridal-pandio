@@ -110,6 +110,14 @@ class XinNghiPhep extends Model
         return self::TRANG_THAI_BADGE_CLASSES[$this->trang_thai] ?? 'bg-label-secondary';
     }
 
+    public function coTheXoaBoiChuDon(): bool
+    {
+        return in_array($this->trang_thai, [
+            self::TRANG_THAI_CHO_DUYET,
+            self::TRANG_THAI_TU_CHOI,
+        ], true);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');

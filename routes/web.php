@@ -133,6 +133,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::post('/nghi-phep', [AdminDiemDanh::class, 'storeNghiPhep'])->name('diem-danh.nghi-phep.store');
         Route::put('/nghi-phep/{xinNghiPhep}/duyet', [AdminDiemDanh::class, 'duyetNghiPhep'])->name('diem-danh.nghi-phep.duyet');
         Route::put('/nghi-phep/{xinNghiPhep}/tu-choi', [AdminDiemDanh::class, 'tuChoiNghiPhep'])->name('diem-danh.nghi-phep.tu-choi');
+        Route::delete('/nghi-phep/{xinNghiPhep}', [AdminDiemDanh::class, 'destroyNghiPhep'])->name('diem-danh.nghi-phep.destroy');
         Route::post('/check-in', [AdminDiemDanh::class, 'checkIn'])->name('diem-danh.check-in');
         Route::post('/check-out', [AdminDiemDanh::class, 'checkOut'])->name('diem-danh.check-out');
     });

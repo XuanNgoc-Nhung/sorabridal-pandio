@@ -159,6 +159,33 @@ class DiemDanhController extends Controller
             ->with('success', 'Đã từ chối đơn xin nghỉ phép.');
     }
 
+    public function destroyNghiPhep(XinNghiPhep $xinNghiPhep): RedirectResponse
+    {
+        if (VaiTro::isAdminMa((string) Auth::user()?->role)) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Admin không thể xóa đơn qua chức năng này.');
+        }
+
+        if ($xinNghiPhep->user_id !== Auth::id()) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Bạn chỉ được xóa đơn nghỉ phép của mình.');
+        }
+
+        if (! $xinNghiPhep->coTheXoaBoiChuDon()) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Chỉ được xóa đơn đang chờ duyệt hoặc đã từ chối.');
+        }
+
+        $xinNghiPhep->delete();
+
+        return redirect()
+            ->route('admin.diem-danh.nghi-phep')
+            ->with('success', 'Đã xóa đơn xin nghỉ phép.');
+    }
+
     public function storeNghiPhep(Request $request): RedirectResponse
     {
         $validated = $request->validate([

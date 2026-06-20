@@ -79,7 +79,7 @@
 
     <div class="card mb-0">
         <h5 class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <span>Danh sách xin nghỉ phép</span>
+            <span>{{ ($coQuyenDuyet ?? false) ? 'Danh sách xin nghỉ phép' : 'Đơn xin nghỉ phép của tôi' }}</span>
             <button type="button"
                     class="btn btn-primary btn-sm"
                     data-bs-toggle="modal"
@@ -162,6 +162,24 @@
                                     </button>
                                 </form>
                             </div>
+                            @elseif(!($coQuyenDuyet ?? false) && $item->coTheXoaBoiChuDon())
+                            <form id="form-xoa-nghi-phep-{{ $item->id }}"
+                                  action="{{ route('admin.diem-danh.nghi-phep.destroy', $item) }}"
+                                  method="POST"
+                                  class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="button"
+                                        class="btn btn-sm btn-icon btn-text-danger btn-xac-nhan-nghi-phep"
+                                        data-form-id="form-xoa-nghi-phep-{{ $item->id }}"
+                                        data-action="xoa"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Xóa"
+                                        aria-label="Xóa">
+                                    <i class="fa-solid fa-trash nghi-phep-action-icon" aria-hidden="true"></i>
+                                </button>
+                            </form>
                             @else
                             <span class="text-muted">—</span>
                             @endif
@@ -579,6 +597,13 @@ document.addEventListener('DOMContentLoaded', function() {
             btnClass: 'btn btn-danger',
             btnIcon: 'fa-solid fa-xmark',
             btnText: 'Từ chối'
+        },
+        xoa: {
+            title: 'Xác nhận xóa',
+            body: 'Bạn có chắc muốn xóa đơn nghỉ phép này?',
+            btnClass: 'btn btn-danger',
+            btnIcon: 'fa-solid fa-trash',
+            btnText: 'Xóa'
         }
     };
 
