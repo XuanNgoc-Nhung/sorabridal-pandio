@@ -121,10 +121,14 @@ class DiemDanhController extends Controller
                 ->with('error', 'Chỉ được duyệt đơn đang chờ duyệt.');
         }
 
-        $xinNghiPhep->update([
-            'trang_thai' => XinNghiPhep::TRANG_THAI_DA_DUYET,
-            'nguoi_duyet' => Auth::id(),
-        ]);
+        DB::transaction(function () use ($xinNghiPhep) {
+            $xinNghiPhep->update([
+                'trang_thai' => XinNghiPhep::TRANG_THAI_DA_DUYET,
+                'nguoi_duyet' => Auth::id(),
+            ]);
+
+            DiemDanh::capNhatTienPhatTuDonNghiPhepDaDuyet($xinNghiPhep);
+        });
 
         return redirect()
             ->route('admin.diem-danh.nghi-phep')

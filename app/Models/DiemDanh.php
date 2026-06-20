@@ -76,4 +76,52 @@ class DiemDanh extends Model
     {
         return $this->hasMany(ChamCong::class, 'diem_danh_id', 'id');
     }
+
+    /**
+     * Khi duyệt đơn xin đi muộn / về sớm: bỏ tiền phạt tương ứng trên bản ghi điểm danh cùng ngày.
+     */
+    public static function capNhatTienPhatTuDonNghiPhepDaDuyet(XinNghiPhep $don): void
+    {
+        if (! in_array($don->loai_nghi_phep, [XinNghiPhep::LOAI_DI_MUON, XinNghiPhep::LOAI_VE_SOM], true)) {
+            return;
+        }
+
+        foreach ($don->cacNgayApDung() as $ngay) {
+            $diemDanh = self::query()
+                ->where('user_id', $don->user_id)
+                ->whereDate('gio_vao', $ngay)
+                ->first();
+
+            if ($diemDanh === null) {
+                continue;
+            }
+
+            $capNhat = match ($don->loai_nghi_phep) {
+                XinNghiPhep::LOAI_DI_MUON => self::coPhatDiMuon($diemDanh)
+                    ? ['tien_phat_di_muon' => 0]
+                    : [],
+                XinNghiPhep::LOAI_VE_SOM => self::coPhatVeSom($diemDanh)
+                    ? ['tien_phat_ve_som' => 0]
+                    : [],
+                default => [],
+            };
+
+            if ($capNhat !== []) {
+                $diemDanh->update($capNhat);
+            }
+        }
+    }
+
+    private static function coPhatDiMuon(self $diemDanh): bool
+    {
+        return ($diemDanh->thoi_gian_di_muon ?? 0) > 0
+            || ($diemDanh->tien_phat_di_muon ?? 0) > 0
+            || $diemDanh->di_muon;
+    }
+
+    private static function coPhatVeSom(self $diemDanh): bool
+    {
+        return ($diemDanh->thoi_gian_ve_som ?? 0) > 0
+            || ($diemDanh->tien_phat_ve_som ?? 0) > 0;
+    }
 }

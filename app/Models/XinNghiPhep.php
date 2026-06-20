@@ -119,4 +119,27 @@ class XinNghiPhep extends Model
     {
         return $this->belongsTo(User::class, 'nguoi_duyet', 'id');
     }
+
+    /**
+     * Các ngày áp dụng của đơn (một ngày hoặc khoảng ngày với loại nhiều ngày).
+     *
+     * @return list<\Illuminate\Support\Carbon>
+     */
+    public function cacNgayApDung(): array
+    {
+        if ($this->loai_nghi_phep === self::LOAI_NHIEU_NGAY && $this->ngay_ket_thuc !== null) {
+            $dates = [];
+            $current = $this->ngay_bat_dau->copy()->startOfDay();
+            $end = $this->ngay_ket_thuc->copy()->startOfDay();
+
+            while ($current->lte($end)) {
+                $dates[] = $current->copy();
+                $current->addDay();
+            }
+
+            return $dates;
+        }
+
+        return [$this->ngay_bat_dau->copy()->startOfDay()];
+    }
 }
