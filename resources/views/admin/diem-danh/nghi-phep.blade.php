@@ -93,6 +93,9 @@
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 48px;">STT</th>
+                        @if($coQuyenDuyet ?? false)
+                        <th>Nhân viên</th>
+                        @endif
                         <th>Loại nghỉ phép</th>
                         <th>Buổi nghỉ</th>
                         <th>Ngày bắt đầu</th>
@@ -101,12 +104,16 @@
                         <th class="text-center">Trạng thái</th>
                         <th>Người duyệt</th>
                         <th>Thời gian tạo</th>
+                        <th class="text-center" style="min-width: 96px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @forelse($danhSach as $index => $item)
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
+                        @if($coQuyenDuyet ?? false)
+                        <td class="text-nowrap">{{ $item->user?->name ?? '—' }}</td>
+                        @endif
                         <td class="text-nowrap">{{ $item->loaiNghiPhepLabel() }}</td>
                         <td class="text-nowrap">{{ $item->buoiNghiLabel() }}</td>
                         <td class="text-nowrap">{{ $item->ngay_bat_dau?->format('d/m/Y') ?? '—' }}</td>
@@ -117,10 +124,52 @@
                         </td>
                         <td class="text-nowrap">{{ $item->nguoiDuyet?->name ?? '—' }}</td>
                         <td class="text-nowrap">{{ $item->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td class="text-center text-nowrap nghi-phep-action-col">
+                            @if(($coQuyenDuyet ?? false) && $item->trang_thai === \App\Models\XinNghiPhep::TRANG_THAI_CHO_DUYET)
+                            <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                <form id="form-duyet-nghi-phep-{{ $item->id }}"
+                                      action="{{ route('admin.diem-danh.nghi-phep.duyet', $item) }}"
+                                      method="POST"
+                                      class="d-inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <button type="button"
+                                            class="btn btn-sm btn-icon btn-text-success btn-xac-nhan-nghi-phep"
+                                            data-form-id="form-duyet-nghi-phep-{{ $item->id }}"
+                                            data-action="duyet"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Duyệt"
+                                            aria-label="Duyệt">
+                                        <i class="fa-solid fa-check nghi-phep-action-icon" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                                <form id="form-tu-choi-nghi-phep-{{ $item->id }}"
+                                      action="{{ route('admin.diem-danh.nghi-phep.tu-choi', $item) }}"
+                                      method="POST"
+                                      class="d-inline">
+                                    @csrf
+                                    @method('PUT')
+                                    <button type="button"
+                                            class="btn btn-sm btn-icon btn-text-danger btn-xac-nhan-nghi-phep"
+                                            data-form-id="form-tu-choi-nghi-phep-{{ $item->id }}"
+                                            data-action="tu_choi"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Từ chối"
+                                            aria-label="Từ chối">
+                                        <i class="fa-solid fa-xmark nghi-phep-action-icon" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            @else
+                            <span class="text-muted">—</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">Chưa có đơn xin nghỉ phép nào.</td>
+                        <td colspan="{{ ($coQuyenDuyet ?? false) ? 11 : 10 }}" class="text-center py-4 text-muted">Chưa có đơn xin nghỉ phép nào.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -232,6 +281,27 @@
     </div>
 </div>
 
+{{-- Modal xác nhận duyệt / từ chối đơn nghỉ phép --}}
+<div class="modal fade" id="modalXacNhanNghiPhep" tabindex="-1" aria-labelledby="modalXacNhanNghiPhepLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-confirm-xoa">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalXacNhanNghiPhepLabel">Xác nhận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body" id="modalXacNhanNghiPhepBody">
+                Bạn có chắc muốn thực hiện thao tác này?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnXacNhanNghiPhep">
+                    <i class="fa-solid fa-check me-1"></i> Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
 <style>
@@ -257,6 +327,10 @@
 .nghi-phep-ly-do {
     min-width: 200px;
     white-space: normal;
+}
+.nghi-phep-action-col .btn-icon .nghi-phep-action-icon {
+    font-size: 1.125rem;
+    line-height: 1;
 }
 </style>
 @endpush
@@ -484,6 +558,75 @@ document.addEventListener('DOMContentLoaded', function() {
         bootstrap.Modal.getOrCreateInstance(modalThemNghiPhep).show();
     }
     @endif
+
+    var modalXacNhanNghiPhep = document.getElementById('modalXacNhanNghiPhep');
+    var btnXacNhanNghiPhep = document.getElementById('btnXacNhanNghiPhep');
+    var modalXacNhanNghiPhepLabel = document.getElementById('modalXacNhanNghiPhepLabel');
+    var modalXacNhanNghiPhepBody = document.getElementById('modalXacNhanNghiPhepBody');
+    var formIdCanXuLy = null;
+
+    var nghiPhepActionConfig = {
+        duyet: {
+            title: 'Xác nhận duyệt',
+            body: 'Bạn có chắc muốn duyệt đơn này?',
+            btnClass: 'btn btn-success',
+            btnIcon: 'fa-solid fa-check',
+            btnText: 'Duyệt'
+        },
+        tu_choi: {
+            title: 'Xác nhận từ chối',
+            body: 'Bạn có chắc muốn từ chối đơn này?',
+            btnClass: 'btn btn-danger',
+            btnIcon: 'fa-solid fa-xmark',
+            btnText: 'Từ chối'
+        }
+    };
+
+    if (modalXacNhanNghiPhep && btnXacNhanNghiPhep) {
+        modalXacNhanNghiPhep.addEventListener('hidden.bs.modal', cleanupModalBackdrop);
+
+        document.querySelectorAll('.btn-xac-nhan-nghi-phep').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                formIdCanXuLy = this.getAttribute('data-form-id');
+                var action = this.getAttribute('data-action');
+                var config = nghiPhepActionConfig[action];
+                if (!formIdCanXuLy || !config) {
+                    return;
+                }
+
+                if (modalXacNhanNghiPhepLabel) {
+                    modalXacNhanNghiPhepLabel.textContent = config.title;
+                }
+                if (modalXacNhanNghiPhepBody) {
+                    modalXacNhanNghiPhepBody.textContent = config.body;
+                }
+
+                btnXacNhanNghiPhep.className = config.btnClass;
+                btnXacNhanNghiPhep.innerHTML = '<i class="' + config.btnIcon + ' me-1"></i> ' + config.btnText;
+
+                bootstrap.Modal.getOrCreateInstance(modalXacNhanNghiPhep).show();
+            });
+        });
+
+        btnXacNhanNghiPhep.addEventListener('click', function() {
+            if (formIdCanXuLy) {
+                var form = document.getElementById(formIdCanXuLy);
+                if (form) {
+                    form.submit();
+                }
+            }
+
+            var inst = bootstrap.Modal.getInstance(modalXacNhanNghiPhep);
+            if (inst) {
+                inst.hide();
+            }
+            formIdCanXuLy = null;
+        });
+    }
+
+    [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).forEach(function (el) {
+        new bootstrap.Tooltip(el);
+    });
 });
 </script>
 @endpush

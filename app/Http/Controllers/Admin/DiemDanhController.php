@@ -11,6 +11,7 @@ use App\Models\HopDong;
 use App\Models\IpDiemDanh;
 use App\Models\NhanVien;
 use App\Models\User;
+use App\Models\VaiTro;
 use App\Models\XinNghiPhep;
 use App\Support\AdminPagination;
 use Illuminate\Http\JsonResponse;
@@ -79,9 +80,14 @@ class DiemDanhController extends Controller
             'trang_thai' => 'nullable|string|in:'.implode(',', array_keys(XinNghiPhep::TRANG_THAI_OPTIONS)),
         ]);
 
+        $coQuyenDuyet = VaiTro::isAdminMa((string) Auth::user()?->role);
+
         $query = XinNghiPhep::query()
-            ->with(['user', 'nguoiDuyet'])
-            ->where('user_id', Auth::id());
+            ->with(['user', 'nguoiDuyet']);
+
+        if (! $coQuyenDuyet) {
+            $query->where('user_id', Auth::id());
+        }
 
         if (! empty($validated['tu_ngay'])) {
             $query->whereDate('ngay_bat_dau', '>=', $validated['tu_ngay']);
@@ -98,7 +104,55 @@ class DiemDanhController extends Controller
 
         $danhSach = $query->orderByDesc('created_at')->paginate(AdminPagination::perPage())->withQueryString();
 
-        return view('admin.diem-danh.nghi-phep', compact('danhSach'));
+        return view('admin.diem-danh.nghi-phep', compact('danhSach', 'coQuyenDuyet'));
+    }
+
+    public function duyetNghiPhep(XinNghiPhep $xinNghiPhep): RedirectResponse
+    {
+        if (! VaiTro::isAdminMa((string) Auth::user()?->role)) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Bạn không có quyền duyệt đơn nghỉ phép.');
+        }
+
+        if ($xinNghiPhep->trang_thai !== XinNghiPhep::TRANG_THAI_CHO_DUYET) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Chỉ được duyệt đơn đang chờ duyệt.');
+        }
+
+        $xinNghiPhep->update([
+            'trang_thai' => XinNghiPhep::TRANG_THAI_DA_DUYET,
+            'nguoi_duyet' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('admin.diem-danh.nghi-phep')
+            ->with('success', 'Đã duyệt đơn xin nghỉ phép.');
+    }
+
+    public function tuChoiNghiPhep(XinNghiPhep $xinNghiPhep): RedirectResponse
+    {
+        if (! VaiTro::isAdminMa((string) Auth::user()?->role)) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Bạn không có quyền từ chối đơn nghỉ phép.');
+        }
+
+        if ($xinNghiPhep->trang_thai !== XinNghiPhep::TRANG_THAI_CHO_DUYET) {
+            return redirect()
+                ->route('admin.diem-danh.nghi-phep')
+                ->with('error', 'Chỉ được từ chối đơn đang chờ duyệt.');
+        }
+
+        $xinNghiPhep->update([
+            'trang_thai' => XinNghiPhep::TRANG_THAI_TU_CHOI,
+            'nguoi_duyet' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('admin.diem-danh.nghi-phep')
+            ->with('success', 'Đã từ chối đơn xin nghỉ phép.');
     }
 
     public function storeNghiPhep(Request $request): RedirectResponse

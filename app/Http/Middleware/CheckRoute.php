@@ -66,6 +66,8 @@ class CheckRoute
         ],
         'admin.diem-danh.nghi-phep' => [
             'admin.diem-danh.nghi-phep.store',
+            'admin.diem-danh.nghi-phep.duyet',
+            'admin.diem-danh.nghi-phep.tu-choi',
         ],
         'admin.trang-phuc.hop-dong' => [
             'admin.trang-phuc.hop-dong.tim-san-pham',
