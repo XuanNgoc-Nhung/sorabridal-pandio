@@ -101,13 +101,13 @@
             </span>
         </h5>
         <div class="card-body">
-        <div class="table-responsive text-nowrap table-wrapper-bordered">
-            <table class="table table-hover table-bordered mb-0">
+        <div class="table-responsive text-nowrap table-wrapper-bordered nhan-su-table-wrap">
+            <table class="table table-hover table-bordered mb-0 nhan-su-table">
                 <thead class="table-light">
                     <tr>
                         <th style="width: 60px;" class="text-center">STT</th>
                         <th style="width: 70px;" class="text-center">Hình ảnh</th>
-                        <th>Họ tên</th>
+                        <th class="nhan-su-sticky nhan-su-sticky-ho-ten" style="min-width: 160px;">Họ tên</th>
                         <th>Giới tính</th>
                         <th>Ngày sinh</th>
                         <th>CCCD</th>
@@ -145,7 +145,7 @@
                             </div>
                             @endif
                         </td>
-                        <td><span class="fw-medium">{{ $item->name ?? '—' }}</span></td>
+                        <td class="nhan-su-sticky nhan-su-sticky-ho-ten"><span class="fw-medium">{{ $item->name ?? '—' }}</span></td>
                         <td>{{ $nv?->gioi_tinh ?? '—' }}</td>
                         <td>{{ $nv?->ngay_sinh ? $nv->ngay_sinh->format('d/m/Y') : '—' }}</td>
                         <td>{{ $nv?->cccd ?? '—' }}</td>
@@ -621,6 +621,36 @@
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.nhan-su-table .nhan-su-sticky {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+.nhan-su-table thead .nhan-su-sticky {
+    z-index: 6;
+    background-color: #f8f9fa;
+}
+.nhan-su-table.table-hover > tbody > tr:hover > .nhan-su-sticky {
+    background-color: #f5f5f9;
+}
+[data-bs-theme='dark'] .nhan-su-table .nhan-su-sticky {
+    background-color: #2f3349;
+}
+[data-bs-theme='dark'] .nhan-su-table thead .nhan-su-sticky {
+    background-color: #353a52;
+}
+[data-bs-theme='dark'] .nhan-su-table.table-hover > tbody > tr:hover > .nhan-su-sticky {
+    background-color: #3a3f5c;
+}
+.nhan-su-table .nhan-su-sticky-ho-ten {
+    min-width: 160px;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+[data-bs-theme='dark'] .nhan-su-table .nhan-su-sticky-ho-ten {
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
 }
 </style>
 @endpush

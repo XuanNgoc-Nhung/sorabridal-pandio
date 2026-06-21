@@ -88,13 +88,13 @@
             </button>
         </h5>
         <div class="card-body">
-        <div class="table-responsive text-nowrap table-wrapper-bordered">
-            <table class="table table-hover table-bordered mb-0 align-middle">
+        <div class="table-responsive text-nowrap table-wrapper-bordered nghi-phep-table-wrap">
+            <table class="table table-hover table-bordered mb-0 align-middle nghi-phep-table">
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 48px;">STT</th>
                         @if($coQuyenDuyet ?? false)
-                        <th>Nhân viên</th>
+                        <th class="nghi-phep-sticky nghi-phep-sticky-nhan-vien" style="min-width: 160px;">Nhân viên</th>
                         @endif
                         <th>Loại nghỉ phép</th>
                         <th>Buổi nghỉ</th>
@@ -112,7 +112,7 @@
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
                         @if($coQuyenDuyet ?? false)
-                        <td class="text-nowrap">{{ $item->user?->name ?? '—' }}</td>
+                        <td class="text-nowrap nghi-phep-sticky nghi-phep-sticky-nhan-vien"><span class="fw-medium">{{ $item->user?->name ?? '—' }}</span></td>
                         @endif
                         <td class="text-nowrap">{{ $item->loaiNghiPhepLabel() }}</td>
                         <td class="text-nowrap">{{ $item->buoiNghiLabel() }}</td>
@@ -338,6 +338,36 @@
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
     vertical-align: middle;
+}
+.nghi-phep-table .nghi-phep-sticky {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+.nghi-phep-table thead .nghi-phep-sticky {
+    z-index: 6;
+    background-color: #f8f9fa;
+}
+.nghi-phep-table.table-hover > tbody > tr:hover > .nghi-phep-sticky {
+    background-color: #f5f5f9;
+}
+[data-bs-theme='dark'] .nghi-phep-table .nghi-phep-sticky {
+    background-color: #2f3349;
+}
+[data-bs-theme='dark'] .nghi-phep-table thead .nghi-phep-sticky {
+    background-color: #353a52;
+}
+[data-bs-theme='dark'] .nghi-phep-table.table-hover > tbody > tr:hover > .nghi-phep-sticky {
+    background-color: #3a3f5c;
+}
+.nghi-phep-table .nghi-phep-sticky-nhan-vien {
+    min-width: 160px;
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.08);
+}
+[data-bs-theme='dark'] .nghi-phep-table .nghi-phep-sticky-nhan-vien {
+    box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
 }
 .modal-nghi-phep {
     max-width: 720px;
