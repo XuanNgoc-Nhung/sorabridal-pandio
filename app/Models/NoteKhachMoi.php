@@ -117,7 +117,7 @@ class NoteKhachMoi extends Model
             return '—';
         }
 
-        return self::thuTrongTuan($date).' '.$date->format('d/m/Y');
+        return self::thuTrongTuanText($date).' '.$date->format('d/m/Y');
     }
 
     public static function formatNgayGioCoThu(?CarbonInterface $date): string
@@ -126,7 +126,16 @@ class NoteKhachMoi extends Model
             return '—';
         }
 
-        return self::thuTrongTuan($date).' '.$date->format('d/m/Y H:i');
+        return self::thuTrongTuanText($date).' '.$date->format('d/m/Y H:i');
+    }
+
+    public static function thuTrongTuanText(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return '—';
+        }
+
+        return self::thuTrongTuan($date);
     }
 
     private static function thuTrongTuan(CarbonInterface $date): string
@@ -179,6 +188,45 @@ class NoteKhachMoi extends Model
     public function nguoiTao(): BelongsTo
     {
         return $this->belongsTo(User::class, 'nguoi_tao_id');
+    }
+
+    /**
+     * HĐ cưới khớp SĐT note với SĐT cô dâu/chú rể (lấy HĐ mới nhất nếu có nhiều).
+     */
+    public function hopDongCuoiKhop(): ?HopDongCuoi
+    {
+        return HopDongCuoi::findByContactPhone($this->so_dien_thoai);
+    }
+
+    /**
+     * @return array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}
+     */
+    public function traCuuHopDong(): array
+    {
+        return HopDongCuoi::traCuuTheoSoDienThoai($this->so_dien_thoai);
+    }
+
+    /**
+     * @param  array<string, array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}>  $map
+     * @return array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}
+     */
+    public function traCuuHopDongTuMap(array $map): array
+    {
+        $normalized = HopDongCuoi::normalizeContactPhone($this->so_dien_thoai);
+        if ($normalized === null) {
+            return ['ma_hop_dong' => null, 'hinh_thuc_coc' => null];
+        }
+
+        return $map[$normalized] ?? ['ma_hop_dong' => null, 'hinh_thuc_coc' => null];
+    }
+
+    /**
+     * @param  iterable<mixed>  $phones
+     * @return array<string, array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}>
+     */
+    public static function mapTraCuuHopDongTheoSoDienThoai(iterable $phones): array
+    {
+        return HopDongCuoi::mapTraCuuTheoSoDienThoai($phones);
     }
 
     public function getTrangThaiLabelAttribute(): string

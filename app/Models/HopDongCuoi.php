@@ -404,10 +404,100 @@ class HopDongCuoi extends Model
     }
 
     /**
-     * @param  iterable<mixed>  $phones
-     * @return array<string, string|null> SĐT đã chuẩn hóa => nhãn hình thức cọc
+     * Kiểm tra trường email/SĐT có chứa số điện thoại đã chuẩn hóa hay không.
      */
-    public static function mapHinhThucCocLabelsByContactPhones(iterable $phones): array
+    public static function contactFieldMatchesPhone(?string $contactValue, string $normalizedPhone): bool
+    {
+        $value = trim((string) ($contactValue ?? ''));
+        if ($value === '') {
+            return false;
+        }
+
+        if (self::normalizeContactPhone($value) === $normalizedPhone) {
+            return true;
+        }
+
+        $candidates = preg_split('/[\r\n,;|\/]+/u', $value) ?: [$value];
+        foreach ($candidates as $candidate) {
+            if (self::normalizeContactPhone($candidate) === $normalizedPhone) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * HĐ cưới có SĐT cô dâu hoặc chú rể khớp số đã chuẩn hóa.
+     */
+    public static function recordMatchesContactPhone(self $hopDong, string $normalizedPhone): bool
+    {
+        return self::contactFieldMatchesPhone($hopDong->email_sdt_chu_re, $normalizedPhone)
+            || self::contactFieldMatchesPhone($hopDong->email_sdt_co_dau, $normalizedPhone);
+    }
+
+    /**
+     * Các mẫu LIKE tìm SĐT đã lưu dạng 0xxx, 84xxx hoặc +84xxx.
+     *
+     * @return list<string>
+     */
+    public static function contactPhoneLikePatterns(string $normalizedPhone): array
+    {
+        $patterns = ['%'.$normalizedPhone.'%'];
+
+        if (str_starts_with($normalizedPhone, '0') && strlen($normalizedPhone) > 1) {
+            $withoutLeadingZero = substr($normalizedPhone, 1);
+            $patterns[] = '%'.$withoutLeadingZero.'%';
+            $patterns[] = '%84'.$withoutLeadingZero.'%';
+            $patterns[] = '%+84'.$withoutLeadingZero.'%';
+        }
+
+        return array_values(array_unique($patterns));
+    }
+
+    /**
+     * HĐ cưới mới nhất khớp SĐT chú rể hoặc cô dâu.
+     */
+    public static function findByContactPhone(mixed $phone): ?self
+    {
+        $normalized = self::normalizeContactPhone($phone);
+        if ($normalized === null) {
+            return null;
+        }
+
+        $likePatterns = self::contactPhoneLikePatterns($normalized);
+
+        return self::query()
+            ->with(['thanhVienHopDongCuis'])
+            ->where(function ($q) use ($likePatterns) {
+                foreach ($likePatterns as $pattern) {
+                    $q->orWhere('email_sdt_chu_re', 'like', $pattern)
+                        ->orWhere('email_sdt_co_dau', 'like', $pattern);
+                }
+            })
+            ->orderByDesc('id')
+            ->get()
+            ->first(fn (self $hopDong) => self::recordMatchesContactPhone($hopDong, $normalized));
+    }
+
+    /**
+     * @return array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}
+     */
+    public static function traCuuTheoSoDienThoai(mixed $phone): array
+    {
+        $hopDong = self::findByContactPhone($phone);
+
+        return [
+            'ma_hop_dong' => $hopDong?->ma_hop_dong,
+            'hinh_thuc_coc' => $hopDong ? self::hinhThucCocLabel($hopDong->hinh_thuc_coc) : null,
+        ];
+    }
+
+    /**
+     * @param  iterable<mixed>  $phones
+     * @return array<string, array{ma_hop_dong: string|null, hinh_thuc_coc: string|null}>
+     */
+    public static function mapTraCuuTheoSoDienThoai(iterable $phones): array
     {
         $map = [];
 
@@ -417,30 +507,10 @@ class HopDongCuoi extends Model
                 continue;
             }
 
-            $hopDong = self::findByContactPhone($phone);
-            $map[$normalized] = $hopDong
-                ? self::hinhThucCocLabel($hopDong->hinh_thuc_coc)
-                : null;
+            $map[$normalized] = self::traCuuTheoSoDienThoai($phone);
         }
 
         return $map;
-    }
-
-    public static function findByContactPhone(mixed $phone): ?self
-    {
-        $normalized = self::normalizeContactPhone($phone);
-        if ($normalized === null) {
-            return null;
-        }
-
-        return self::query()
-            ->with(['thanhVienHopDongCuis'])
-            ->where(function ($q) use ($normalized) {
-                $q->where('email_sdt_chu_re', $normalized)
-                    ->orWhere('email_sdt_co_dau', $normalized);
-            })
-            ->orderByDesc('id')
-            ->first();
     }
 
     /**

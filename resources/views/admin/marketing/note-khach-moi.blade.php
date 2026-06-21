@@ -87,16 +87,18 @@
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th>Tên khách</th>
                         <th style="width: 120px;">SĐT</th>
-                        <th style="width: 140px;">Phụ trách sale</th>
-                        <th style="width: 195px;">Ngày hẹn lịch</th>
+                        <th style="width: 165px;">Ngày hẹn lịch</th>
+                        <th style="width: 110px;">Thứ</th>
+                        <th style="width: 160px;">Phụ trách sale</th>
+                        <th style="width: 160px;">Ghi chú</th>
+                        <th style="width: 130px;">Nguồn khách</th>
                         <th style="width: 165px;">Ngày đến thực tế</th>
-                        <th style="width: 130px;">Hình thức đặt cọc</th>
-                        <th style="width: 120px;">Nguồn khách</th>
-                        <th style="width: 130px;">Người tạo</th>
-                        <th style="width: 115px;">Ngày tạo</th>
                         <th style="width: 120px;">Trạng thái</th>
-                        <th>Lý do không chốt</th>
-                        <th class="text-center" style="width: 100px;">Thao tác</th>
+                        <th style="width: 140px;">Tra cứu HĐ</th>
+                        <th style="width: 130px;">Hình thức đặt cọc</th>
+                        <th style="width: 130px;">Người tạo</th>
+                        <th style="width: 130px;">Ngày tạo</th>
+                        <th class="text-center" style="width: 80px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -111,6 +113,8 @@
                             —
                             @endif
                         </td>
+                        <td>{{ $item->ngay_hen_lich?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td>{{ \App\Models\NoteKhachMoi::thuTrongTuanText($item->ngay_hen_lich) }}</td>
                         <td>
                             @php
                                 $tenSales = $item->phuTrachSales->pluck('name')->filter()->unique()->values();
@@ -120,18 +124,9 @@
                             @endphp
                             {{ $tenSales->isNotEmpty() ? $tenSales->join(', ') : '—' }}
                         </td>
-                        <td>{{ \App\Models\NoteKhachMoi::formatNgayGioCoThu($item->ngay_hen_lich) }}</td>
-                        <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_den_thuc_te) }}</td>
-                        <td>
-                            @php
-                                $sdtChuan = \App\Models\HopDongCuoi::normalizeContactPhone($item->so_dien_thoai);
-                                $hinhThucCoc = $sdtChuan ? ($hinhThucCocTheoSdt[$sdtChuan] ?? null) : null;
-                            @endphp
-                            {{ $hinhThucCoc ?: '—' }}
-                        </td>
+                        <td class="text-wrap note-khach-moi-ly-do">{{ $item->ly_do_khong_chot ?: '—' }}</td>
                         <td>{{ $item->nguon_khach ?: '—' }}</td>
-                        <td>{{ $item->nguoiTao?->name ?? '—' }}</td>
-                        <td>{{ $item->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td>{{ \App\Models\NoteKhachMoi::formatNgayCoThu($item->ngay_den_thuc_te) }}</td>
                         <td>
                             @if($item->trang_thai)
                             <span class="badge {{ $item->trang_thai_badge_class }}">{{ $item->trang_thai_label }}</span>
@@ -139,16 +134,21 @@
                             —
                             @endif
                         </td>
-                        <td class="text-wrap note-khach-moi-ly-do">{{ $item->ly_do_khong_chot ?: '—' }}</td>
-                        <td class="text-center">
-                            <div class="dropdown">
-                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Thao tác
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li>
-                                        <button type="button"
-                                            class="dropdown-item btn-sua-note-khach-moi"
+                        @php
+                            $traCuuHopDong = $item->traCuuHopDongTuMap($traCuuHopDongTheoSdt);
+                        @endphp
+                        <td>{{ $traCuuHopDong['ma_hop_dong'] ?: '—' }}</td>
+                        <td>{{ $traCuuHopDong['hinh_thuc_coc'] ?: '—' }}</td>
+                        <td>{{ $item->nguoiTao?->name ?? '—' }}</td>
+                        <td>{{ $item->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td class="text-center text-nowrap note-khach-moi-action-col">
+                            <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                <span class="d-inline-flex"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="Sửa">
+                                    <button type="button"
+                                            class="btn btn-sm btn-icon btn-text-primary btn-sua-note-khach-moi"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalSuaNoteKhachMoi"
                                             data-url="{{ route('admin.note-khach-moi.update', $item) }}"
@@ -160,27 +160,30 @@
                                             data-nguon-khach="{{ e($item->nguon_khach ?? '') }}"
                                             data-nguon-khach-key="{{ e(\App\Models\HopDongCuoi::nguonKhachToKenhKey($item->nguon_khach) ?? '') }}"
                                             data-trang-thai="{{ e($item->trang_thai ?? '') }}"
-                                            data-ly-do-khong-chot="{{ e($item->ly_do_khong_chot ?? '') }}">
-                                            <i class="fa-solid fa-pen me-1"></i> Sửa
-                                        </button>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form id="form-xoa-note-khach-moi-{{ $item->id }}" action="{{ route('admin.note-khach-moi.destroy', $item) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                        <button type="button" class="dropdown-item text-danger btn-xoa-note-khach-moi" data-form-id="form-xoa-note-khach-moi-{{ $item->id }}">
-                                            <i class="fa-solid fa-trash me-1"></i> Xóa
-                                        </button>
-                                    </li>
-                                </ul>
+                                            data-ly-do-khong-chot="{{ e($item->ly_do_khong_chot ?? '') }}"
+                                            aria-label="Sửa">
+                                        <i class="fa-solid fa-pen note-khach-moi-action-icon" aria-hidden="true"></i>
+                                    </button>
+                                </span>
+                                <form id="form-xoa-note-khach-moi-{{ $item->id }}" action="{{ route('admin.note-khach-moi.destroy', $item) }}" method="POST" class="d-none">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-icon btn-text-danger btn-xoa-note-khach-moi"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        data-form-id="form-xoa-note-khach-moi-{{ $item->id }}"
+                                        title="Xóa"
+                                        aria-label="Xóa">
+                                    <i class="fa-solid fa-trash note-khach-moi-action-icon" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="13" class="text-center py-4 text-muted">Chưa có note khách mới nào.</td>
+                        <td colspan="16" class="text-center py-4 text-muted">Chưa có note khách mới nào.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -421,6 +424,10 @@
 .note-khach-moi-ly-do {
     max-width: 220px;
     white-space: pre-wrap;
+}
+.note-khach-moi-action-col .btn-icon .note-khach-moi-action-icon {
+    font-size: 1.125rem;
+    line-height: 1;
 }
 #modalXacNhanXoaNoteKhachMoi .modal-confirm-xoa {
     max-width: 90vw;

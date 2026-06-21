@@ -64,7 +64,7 @@ class MarketingController extends Controller
             ->paginate(AdminPagination::perPage())
             ->withQueryString();
 
-        $hinhThucCocTheoSdt = HopDongCuoi::mapHinhThucCocLabelsByContactPhones(
+        $traCuuHopDongTheoSdt = NoteKhachMoi::mapTraCuuHopDongTheoSoDienThoai(
             $danhSach->getCollection()->pluck('so_dien_thoai')
         );
 
@@ -82,7 +82,7 @@ class MarketingController extends Controller
             'danhSachNhanVien',
             'trangThaiLabels',
             'kenhTiepCanLabels',
-            'hinhThucCocTheoSdt',
+            'traCuuHopDongTheoSdt',
         ));
     }
 
