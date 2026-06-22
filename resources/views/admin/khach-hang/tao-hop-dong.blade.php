@@ -229,9 +229,9 @@
                                                     data-gia="{{ is_numeric($nhomDichVu->gia_tien) ? (float) $nhomDichVu->gia_tien : 0 }}"
                                                     @checked($isChecked)>
                                                 <div class="combo-service-card-body">
-                                                    <div class="combo-service-card-main">
-                                                        <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
-                                                        <label class="combo-service-selectable" for="{{ $radioId }}">
+                                                    <label class="combo-service-card-main combo-service-selectable" for="{{ $radioId }}">
+                                                        <span class="combo-service-checkbox" aria-hidden="true"></span>
+                                                        <span class="combo-service-content">
                                                             <span class="combo-service-card-head">
                                                                 <span class="combo-service-title-wrap">
                                                                     <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
@@ -250,10 +250,9 @@
                                                                 <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
                                                             @elseif (!empty($nhomDichVu->ghi_chu))
                                                                 <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
-                                                            @else
                                                             @endif
-                                                        </label>
-                                                    </div>
+                                                        </span>
+                                                    </label>
                                                     <div class="combo-service-footer">
                                                         <button
                                                             type="button"
@@ -402,9 +401,9 @@
                                                     data-gia="{{ is_numeric($nhomDichVu->gia_tien) ? (float) $nhomDichVu->gia_tien : 0 }}"
                                                     @checked($isChecked)>
                                                 <div class="combo-service-card-body">
-                                                    <div class="combo-service-card-main">
-                                                        <input class="form-check-input combo-service-checkbox" type="checkbox" tabindex="-1" aria-hidden="true" @checked($isChecked) disabled>
-                                                        <label class="combo-service-selectable" for="{{ $radioIdNc }}">
+                                                    <label class="combo-service-card-main combo-service-selectable" for="{{ $radioIdNc }}">
+                                                        <span class="combo-service-checkbox" aria-hidden="true"></span>
+                                                        <span class="combo-service-content">
                                                             <span class="combo-service-card-head">
                                                                 <span class="combo-service-title-wrap">
                                                                     <span class="combo-service-title">{{ $nhomDichVu->ten_nhom }}</span>
@@ -423,10 +422,9 @@
                                                                 <span class="combo-service-desc">{{ $nhomDichVu->mo_ta }}</span>
                                                             @elseif (!empty($nhomDichVu->ghi_chu))
                                                                 <span class="combo-service-desc">{{ $nhomDichVu->ghi_chu }}</span>
-                                                            @else
                                                             @endif
-                                                        </label>
-                                                    </div>
+                                                        </span>
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
@@ -1021,24 +1019,29 @@
     flex-direction: column;
     gap: 0.45rem;
     height: 100%;
-    border: 1px solid var(--bs-border-color);
+    border: 2px solid var(--bs-border-color);
     border-radius: 0.75rem;
     padding: 14px;
     background: var(--bs-body-bg);
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .tao-hop-dong-wizard .combo-service-card-main {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.625rem;
+    margin: 0;
 }
 .tao-hop-dong-wizard .combo-service-selectable {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+.tao-hop-dong-wizard .combo-service-content {
     display: flex;
     flex: 1;
     flex-direction: column;
     gap: 0.45rem;
     min-width: 0;
-    cursor: pointer;
 }
 .tao-hop-dong-wizard .combo-service-card-head {
     display: flex;
@@ -1052,8 +1055,27 @@
 }
 .tao-hop-dong-wizard .combo-service-checkbox {
     flex-shrink: 0;
-    margin: 0;
-    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0.1rem 0 0;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 0.25rem;
+    background: var(--bs-body-bg);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.tao-hop-dong-wizard .combo-service-checkbox::after {
+    content: '';
+    display: block;
+    width: 0.35rem;
+    height: 0.625rem;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.12s ease;
+    margin-top: -1px;
 }
 .tao-hop-dong-wizard .combo-service-title {
     font-weight: 500;
@@ -1077,14 +1099,24 @@
     border-color: rgba(var(--bs-primary-rgb), 0.55);
     box-shadow: 0 0.25rem 0.75rem rgba(var(--bs-primary-rgb), 0.12);
 }
-.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body {
+.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body,
+.tao-hop-dong-wizard .combo-service-card.is-selected .combo-service-card-body {
     border-color: var(--bs-primary);
-    background: rgba(var(--bs-primary-rgb), 0.07);
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.12);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
 }
-.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body .combo-service-checkbox {
+.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body .combo-service-title,
+.tao-hop-dong-wizard .combo-service-card.is-selected .combo-service-title {
+    font-weight: 600;
+}
+.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body .combo-service-checkbox,
+.tao-hop-dong-wizard .combo-service-card.is-selected .combo-service-checkbox {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
+}
+.tao-hop-dong-wizard .combo-service-radio:checked + .combo-service-card-body .combo-service-checkbox::after,
+.tao-hop-dong-wizard .combo-service-card.is-selected .combo-service-checkbox::after {
+    transform: rotate(45deg) scale(1);
 }
 .tao-hop-dong-wizard .combo-service-footer {
     margin-top: 0.25rem;
@@ -1154,12 +1186,12 @@
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    border: 1px solid var(--bs-border-color);
+    border: 2px solid var(--bs-border-color);
     border-radius: 0.6rem;
     padding: 0.6rem 0.75rem;
     background: var(--bs-body-bg);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .tao-hop-dong-wizard .dich-vu-le-item:hover {
     border-color: rgba(var(--bs-primary-rgb), 0.45);
@@ -1195,8 +1227,16 @@
     white-space: nowrap;
 }
 .tao-hop-dong-wizard .dich-vu-le-item.is-checked {
-    border-color: rgba(var(--bs-primary-rgb), 0.7);
-    background: rgba(var(--bs-primary-rgb), 0.08);
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.12);
+}
+.tao-hop-dong-wizard .dich-vu-le-item.is-checked .dich-vu-le-title {
+    font-weight: 600;
+}
+.tao-hop-dong-wizard .dich-vu-le-item.is-checked .form-check-input {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 .tao-hop-dong-wizard #wizard-table-dich-vu-le-body .form-control {
     min-width: 96px;
@@ -2468,7 +2508,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function afterTab() {
             clearAllComboGoiRadios();
-            syncComboCheckedState();
+            syncComboSelectedState();
 
             var nid = data.nhom_dich_vu_id != null && data.nhom_dich_vu_id !== '' ? String(data.nhom_dich_vu_id) : '';
 
@@ -2476,7 +2516,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (wizardPaginators.combo) wizardPaginators.combo.ensureSelectorVisible('input.combo-service-radio[value="' + nid + '"]');
                 var rCombo = document.querySelector('#wizard-service-combo input.combo-service-radio[value="' + nid + '"]');
                 if (rCombo) rCombo.checked = true;
-                syncComboCheckedState();
+                syncComboSelectedState();
             }
             if (data.loai_dich_vu === 'ghep_dich_vu_le' && data.dich_vu_le && data.dich_vu_le.length) {
                 data.dich_vu_le.forEach(function(row) {
@@ -2498,7 +2538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (wizardPaginators.comboNangCap) wizardPaginators.comboNangCap.ensureSelectorVisible('input.combo-service-radio[value="' + nid + '"]');
                     var rNc = document.querySelector('#wizard-service-nang-cap input.combo-service-radio[value="' + nid + '"]');
                     if (rNc) rNc.checked = true;
-                    syncComboCheckedState();
+                    syncComboSelectedState();
                 }
                 updateNangCapComboDichVuPanel();
                 var checkedSet = {};
@@ -2958,7 +2998,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (hadHiddenSelection) {
-            syncComboCheckedState();
+            syncComboSelectedState();
             syncDichVuLeCheckedState();
             buildDichVuLeTable('.js-dich-vu-le', 'wizard-table-dich-vu-le-body', 'wizard-dich-vu-le-total', 'Chưa chọn dịch vụ lẻ nào.');
             buildDichVuLeTable('.js-dich-vu-le-nang-cap', 'wizard-table-dich-vu-le-nang-cap-body', 'wizard-dich-vu-le-nang-cap-total', 'Chưa chọn dịch vụ lẻ nâng cấp nào.', 'dich_vu_nang_cap');
@@ -3646,17 +3686,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    function syncComboCheckedState() {
-        document.querySelectorAll('.combo-service-radio').forEach(function(radio) {
-            var card = radio.closest('.combo-service-card');
-            var checkbox = card ? card.querySelector('.combo-service-checkbox') : null;
-            if (checkbox) checkbox.checked = !!radio.checked;
+    function syncComboSelectedState() {
+        document.querySelectorAll('.combo-service-card').forEach(function(card) {
+            var radio = card.querySelector('.combo-service-radio');
+            card.classList.toggle('is-selected', !!(radio && radio.checked));
         });
     }
 
     document.querySelectorAll('.combo-service-radio').forEach(function(el) {
         el.addEventListener('change', function() {
-            syncComboCheckedState();
+            syncComboSelectedState();
             updateNangCapComboDichVuPanel();
             updateTongTienDichVu();
             updateNextButtonState();
@@ -3776,7 +3815,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     togglePhongSuCuoiAddressFields();
     togglePhongSuCuoiStep3Fields();
-    syncComboCheckedState();
+    syncComboSelectedState();
     updateNangCapComboDichVuPanel();
     syncDichVuLeCheckedState();
     buildDichVuLeTable('.js-dich-vu-le', 'wizard-table-dich-vu-le-body', 'wizard-dich-vu-le-total', 'Chưa chọn dịch vụ lẻ nào.');

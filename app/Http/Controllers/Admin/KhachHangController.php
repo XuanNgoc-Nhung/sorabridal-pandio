@@ -300,7 +300,6 @@ class KhachHangController extends Controller
         }
 
         $ngayChup = $validated['ngay_chup_thuc_te'] ?? null;
-        $ngayCuoiChinhThuc = $validated['ngay_cuoi_chinh_thuc'] ?? null;
         if ($ngayChup) {
             $banIds = $this->layTapIdNhanVienBanChoNgayChupThucTe(
                 Carbon::parse($ngayChup)->toDateString(),
@@ -324,20 +323,6 @@ class KhachHangController extends Controller
 
         $hopDongCuoi->fill($validated);
         $hopDongCuoi->save();
-
-        if (! $ngayChup) {
-            HopDongCuoiTrangPhuc::query()
-                ->where('hop_dong_cuoi_id', $hopDongCuoi->id)
-                ->whereHas('trangPhuc', fn ($q) => $q->where('loai', 'chup'))
-                ->delete();
-        }
-
-        if (! $ngayCuoiChinhThuc) {
-            HopDongCuoiTrangPhuc::query()
-                ->where('hop_dong_cuoi_id', $hopDongCuoi->id)
-                ->whereHas('trangPhuc', fn ($q) => $q->where('loai', 'cuoi'))
-                ->delete();
-        }
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Đã cập nhật điều phối hợp đồng.']);

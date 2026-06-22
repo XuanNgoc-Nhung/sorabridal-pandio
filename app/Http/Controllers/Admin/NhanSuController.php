@@ -1133,6 +1133,9 @@ class NhanSuController extends Controller
             'tho_chup_id' => $hopDongCuoi->tho_chup_id,
             'tho_make_id' => $hopDongCuoi->tho_make_id,
             'tho_edit_id' => $hopDongCuoi->tho_edit_id,
+            'tho_chup_freelancer' => $hopDongCuoi->tho_chup_freelancer ? (string) $hopDongCuoi->tho_chup_freelancer : '',
+            'tho_make_freelancer' => $hopDongCuoi->tho_make_freelancer ? (string) $hopDongCuoi->tho_make_freelancer : '',
+            'tho_edit_freelancer' => $hopDongCuoi->tho_edit_freelancer ? (string) $hopDongCuoi->tho_edit_freelancer : '',
             'ghi_chu_sale' => $hopDongCuoi->ghi_chu_sale ? (string) $hopDongCuoi->ghi_chu_sale : '',
         ]);
     }
@@ -1189,6 +1192,9 @@ class NhanSuController extends Controller
             'tho_chup_id' => ['nullable', 'integer', 'exists:nhan_vien,id'],
             'tho_make_id' => ['nullable', 'integer', 'exists:nhan_vien,id'],
             'tho_edit_id' => ['nullable', 'integer', 'exists:nhan_vien,id'],
+            'tho_chup_freelancer' => ['nullable', 'string', 'max:255'],
+            'tho_make_freelancer' => ['nullable', 'string', 'max:255'],
+            'tho_edit_freelancer' => ['nullable', 'string', 'max:255'],
             'ghi_chu_sale' => ['nullable', 'string'],
         ];
 
@@ -1207,6 +1213,24 @@ class NhanSuController extends Controller
         }
 
         $validated = $request->validate($rules, $messages);
+
+        foreach (['tho_chup_freelancer', 'tho_make_freelancer', 'tho_edit_freelancer'] as $freelancerField) {
+            $value = trim((string) ($validated[$freelancerField] ?? ''));
+            $validated[$freelancerField] = $value !== '' ? $value : null;
+        }
+
+        $freelancerIdMap = [
+            'tho_chup_freelancer' => 'tho_chup_id',
+            'tho_make_freelancer' => 'tho_make_id',
+            'tho_edit_freelancer' => 'tho_edit_id',
+        ];
+        foreach ($freelancerIdMap as $freelancerField => $idField) {
+            if ($request->has($freelancerField)) {
+                $validated[$idField] = null;
+            } else {
+                $validated[$freelancerField] = null;
+            }
+        }
 
         $ngayChup = ! empty($validated['ngay_chup_thuc_te'])
             ? Carbon::parse($validated['ngay_chup_thuc_te'])->toDateString()
