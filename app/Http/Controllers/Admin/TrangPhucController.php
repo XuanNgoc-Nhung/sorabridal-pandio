@@ -78,6 +78,9 @@ class TrangPhucController extends Controller
             TrangPhuc::SAP_XEP_TEN => $query->orderBy('ten_san_pham', $thuTu),
             TrangPhuc::SAP_XEP_MA => $query->orderBy('ma_san_pham', $thuTu),
             TrangPhuc::SAP_XEP_GIA_TRI => $query->orderBy('gia_tri', $thuTu),
+            TrangPhuc::SAP_XEP_LUOT_DUNG => $query
+                ->orderByRaw('(luot_dung_thue + luot_dung_cuoi) '.$thuTu)
+                ->orderBy('id', $thuTu),
             TrangPhuc::SAP_XEP_TRANG_THAI => $query->orderBy('trang_thai', $thuTu),
             TrangPhuc::SAP_XEP_CREATED_AT => $query->orderBy('created_at', $thuTu),
             default => $query->orderBy('id', $thuTu),
