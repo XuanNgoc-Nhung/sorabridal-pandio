@@ -42,7 +42,11 @@ class TrangPhucController extends Controller
             'loc_hinh_anh' => ['nullable', 'string', Rule::in(array_keys(TrangPhuc::LOC_HINH_ANH_OPTIONS))],
         ]);
 
-        $query = TrangPhuc::query();
+        $query = TrangPhuc::query()
+            ->withCount([
+                'sanPhamChoThue as luot_dung_thue',
+                'hopDongCuoiTrangPhuc as luot_dung_cuoi',
+            ]);
 
         $tuKhoa = trim((string) ($validated['tu_khoa'] ?? $validated['search'] ?? ''));
         if ($tuKhoa !== '') {

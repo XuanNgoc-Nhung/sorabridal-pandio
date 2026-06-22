@@ -140,6 +140,7 @@
                         <th style="min-width: 180px;">Tên sản phẩm</th>
                         <th style="min-width: 120px;">Ngày nhập</th>
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
+                        <th class="text-center" style="min-width: 90px;">Lượt dùng</th>
                         <th class="text-center" style="min-width: 100px;">Hiển thị</th>
                         <th style="min-width: 140px;">Ghi chú</th>
                         <th class="text-center" style="min-width: 110px;">Thao tác</th>
@@ -154,6 +155,7 @@
                         $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                         $ngayNhapHienThi = filled($item->ngay_nhap) ? $item->ngay_nhap : '—';
                         $ghiChuRutGon = filled($item->ghi_chu) ? \Illuminate\Support\Str::limit($item->ghi_chu, 40) : '—';
+                        $luotDung = (int) ($item->luot_dung_thue ?? 0) + (int) ($item->luot_dung_cuoi ?? 0);
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -173,6 +175,7 @@
                         <td class="text-wrap"><span class="fw-medium">{{ $item->ten_san_pham ?? '—' }}</span></td>
                         <td class="text-nowrap">{{ $ngayNhapHienThi }}</td>
                         <td class="text-end text-nowrap">{{ $giaTriTxt }}</td>
+                        <td class="text-center text-nowrap">{{ number_format($luotDung, 0, ',', '.') }}</td>
                         <td class="text-center">
                             <div class="form-check form-switch d-flex justify-content-center mb-0">
                                 <input type="checkbox"
@@ -234,7 +237,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
+                        <td colspan="10" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -250,6 +253,7 @@
                     $giaTriTxt = $item->gia_tri !== null ? number_format((float)$item->gia_tri, 0, ',', '.') . ' đ' : '—';
                     $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                     $ngayNhapHienThi = filled($item->ngay_nhap) ? $item->ngay_nhap : '—';
+                    $luotDung = (int) ($item->luot_dung_thue ?? 0) + (int) ($item->luot_dung_cuoi ?? 0);
                 @endphp
                 <div class="col">
                     <div class="card h-100 san-pham-card border shadow-sm">
@@ -329,6 +333,8 @@
                             <div class="san-pham-card__info-row d-flex align-items-center justify-content-between gap-2 border-top border-light pt-1 mt-auto w-100">
                                 <span class="visually-hidden">Giá trị:</span>
                                 <span class="san-pham-card__gia-tri text-body fw-medium text-start">{{ $giaTriTxt }}</span>
+                                <span class="san-pham-card__luot-dung text-muted text-center"
+                                      title="Lượt dùng">{{ number_format($luotDung, 0, ',', '.') }} lượt</span>
                                 <span class="san-pham-card__ngay-nhap text-muted text-end"
                                       title="Ngày nhập">{{ $ngayNhapHienThi }}</span>
                             </div>
