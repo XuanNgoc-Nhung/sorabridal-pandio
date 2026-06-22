@@ -157,8 +157,20 @@
                                 <div class="fw-semibold mb-3" id="wsAddWorkHopDongTitle">Thông tin điều phối</div>
                                 <div class="row g-3">
                                     <div class="col-12 col-sm-6 col-lg-3">
+                                        <label class="form-label" for="wsAddWorkNgayChup">Ngày chụp chính thức</label>
+                                        <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayChup" name="ngay_chup_thuc_te" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-lg-3">
                                         <label class="form-label" for="wsAddWorkGioChup">Giờ chụp</label>
                                         <input type="text" class="form-control flatpickr-time-admin" id="wsAddWorkGioChup" name="gio_chup" placeholder="HH:mm" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-lg-3">
+                                        <label class="form-label" for="wsAddWorkNgayCuoi">Ngày cưới chính thức</label>
+                                        <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayCuoi" name="ngay_cuoi_chinh_thuc" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-lg-3">
+                                        <label class="form-label" for="wsAddWorkDiaDiem">Địa điểm chụp</label>
+                                        <input type="text" class="form-control" id="wsAddWorkDiaDiem" name="dia_diem_chup" placeholder="Nhập địa điểm chụp">
                                     </div>
                                     <div class="col-12 col-sm-6 col-lg-3">
                                         <label class="form-label" for="wsAddWorkNgayTraDemo">Ngày trả link demo chính thức</label>
@@ -166,41 +178,80 @@
                                         <div class="form-text d-none" id="wsAddWorkNgayShopHintCreate">Theo ngày đã chọn trên lịch.</div>
                                     </div>
                                     <div class="col-12 col-sm-6 col-lg-3">
-                                        <label class="form-label" for="wsAddWorkNgayChup">Ngày chụp chính thức</label>
-                                        <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayChup" name="ngay_chup_thuc_te" placeholder="dd/mm/yyyy" autocomplete="off">
-                                    </div>
-                                    <div class="col-12 col-sm-6 col-lg-3">
-                                        <label class="form-label" for="wsAddWorkNgayCuoi">Ngày cưới chính thức</label>
-                                        <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayCuoi" name="ngay_cuoi_chinh_thuc" placeholder="dd/mm/yyyy" autocomplete="off">
-                                    </div>
-                                    <div class="col-12 col-sm-6 col-lg-3">
                                         <label class="form-label" for="wsAddWorkNgayTraIn">Ngày trả link in chính thức</label>
                                         <input type="text" class="form-control flatpickr-date-admin" id="wsAddWorkNgayTraIn" name="ngay_tra_link_in_chinh_thuc" placeholder="dd/mm/yyyy" autocomplete="off">
                                     </div>
-                                    <div class="col-12 col-sm-6 col-lg-6">
-                                        <label class="form-label" for="wsAddWorkDiaDiem">Địa điểm chụp</label>
-                                        <input type="text" class="form-control" id="wsAddWorkDiaDiem" name="dia_diem_chup" placeholder="Nhập địa điểm chụp">
+                                    <div class="col-12 col-sm-6 col-lg-3">
+                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                            <label class="form-label mb-0" for="wsAddWorkThoChup">Người chụp</label>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input ws-add-work-nv-ngoai-check" type="checkbox" id="wsAddWorkNvNgoaiChup" data-ws-role="chup">
+                                                <label class="form-check-label small" for="wsAddWorkNvNgoaiChup">Nv ngoài</label>
+                                            </div>
+                                        </div>
+                                        <div class="ws-add-work-staff-field" data-ws-role="chup">
+                                            <div class="ws-add-work-staff-select-wrap">
+                                                <select class="select2-admin form-select" id="wsAddWorkThoChup" name="tho_chup_id" data-placeholder="Chọn người chụp" style="width: 100%;">
+                                                    <option value="">—</option>
+                                                </select>
+                                            </div>
+                                            <input type="text"
+                                                   class="form-control d-none"
+                                                   id="wsAddWorkThoChupFreelancer"
+                                                   name="tho_chup_freelancer"
+                                                   value=""
+                                                   placeholder="Nhập tên nv ngoài"
+                                                   disabled
+                                                   autocomplete="off">
+                                        </div>
                                     </div>
                                     <div class="col-12 col-sm-6 col-lg-3">
-                                        <label class="form-label" for="wsAddWorkThoChup">Người chụp</label>
-                                        <select class="select2-admin form-select" id="wsAddWorkThoChup" name="tho_chup_id" data-placeholder="Chọn người chụp" style="width: 100%;" disabled>
-                                            <option value="">—</option>
-                                        </select>
+                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                            <label class="form-label mb-0" for="wsAddWorkThoMake">Người make</label>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input ws-add-work-nv-ngoai-check" type="checkbox" id="wsAddWorkNvNgoaiMake" data-ws-role="make">
+                                                <label class="form-check-label small" for="wsAddWorkNvNgoaiMake">Nv ngoài</label>
+                                            </div>
+                                        </div>
+                                        <div class="ws-add-work-staff-field" data-ws-role="make">
+                                            <div class="ws-add-work-staff-select-wrap">
+                                                <select class="select2-admin form-select" id="wsAddWorkThoMake" name="tho_make_id" data-placeholder="Chọn người make" style="width: 100%;">
+                                                    <option value="">—</option>
+                                                </select>
+                                            </div>
+                                            <input type="text"
+                                                   class="form-control d-none"
+                                                   id="wsAddWorkThoMakeFreelancer"
+                                                   name="tho_make_freelancer"
+                                                   value=""
+                                                   placeholder="Nhập tên nv ngoài"
+                                                   disabled
+                                                   autocomplete="off">
+                                        </div>
                                     </div>
                                     <div class="col-12 col-sm-6 col-lg-3">
-                                        <label class="form-label" for="wsAddWorkThoMake">Người make</label>
-                                        <select class="select2-admin form-select" id="wsAddWorkThoMake" name="tho_make_id" data-placeholder="Chọn người make" style="width: 100%;" disabled>
-                                            <option value="">—</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-12 col-sm-6 col-lg-3">
-                                        <label class="form-label" for="wsAddWorkThoEdit">Người edit</label>
-                                        <select class="select2-admin form-select" id="wsAddWorkThoEdit" name="tho_edit_id" data-placeholder="Chọn người edit" style="width: 100%;">
-                                            <option value="">—</option>
-                                            @foreach($danhSachNhanVienEdit ?? [] as $nv)
-                                                <option value="{{ $nv->id }}">{{ $nv->user?->name ?? ('Nhân viên #'.$nv->id) }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                            <label class="form-label mb-0" for="wsAddWorkThoEdit">Người edit</label>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input ws-add-work-nv-ngoai-check" type="checkbox" id="wsAddWorkNvNgoaiEdit" data-ws-role="edit">
+                                                <label class="form-check-label small" for="wsAddWorkNvNgoaiEdit">Nv ngoài</label>
+                                            </div>
+                                        </div>
+                                        <div class="ws-add-work-staff-field" data-ws-role="edit">
+                                            <div class="ws-add-work-staff-select-wrap">
+                                                <select class="select2-admin form-select" id="wsAddWorkThoEdit" name="tho_edit_id" data-placeholder="Chọn người edit" style="width: 100%;">
+                                                    <option value="">—</option>
+                                                </select>
+                                            </div>
+                                            <input type="text"
+                                                   class="form-control d-none"
+                                                   id="wsAddWorkThoEditFreelancer"
+                                                   name="tho_edit_freelancer"
+                                                   value=""
+                                                   placeholder="Nhập tên nv ngoài"
+                                                   disabled
+                                                   autocomplete="off">
+                                        </div>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label" for="wsAddWorkGhiChuSale">Ghi chú (sale)</label>
@@ -1570,9 +1621,13 @@
             var WS_NV_URL_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi.nhan-vien-theo-ngay', ['hopDongCuoi' => '__HDC__']));
             var WS_MA_PHONG_BAN_CHUP = @json(\App\Models\PhongBan::MA_CHUP);
             var WS_MA_PHONG_BAN_MAKE = @json(\App\Models\PhongBan::MA_MAKE);
+            var WS_MA_PHONG_BAN_EDIT = @json(\App\Models\PhongBan::MA_EDIT);
             var WS_DIEU_PHOI_DATA_TMPL = @json(route('admin.lich-shop.hop-dong-dieu-phoi-data', ['hopDongCuoi' => '__HDC__']));
             var WS_DIEU_PHOI_PUT_TMPL = @json(route('admin.khach-hang.hop-dong-cuoi.dieu-phoi', ['hopDongCuoi' => '__HDC__']));
             var wsAddWorkHopId = null;
+            var wsAddWorkFillingDieuPhoi = false;
+            var wsAddWorkPendingStaffWants = { chup: '', make: '', edit: '' };
+            var wsAddWorkStaffFetchSeq = 0;
 
             function wsAddWorkNvUrl(hopId) {
                 return WS_NV_URL_TMPL.split('__HDC__').join(String(hopId));
@@ -1623,17 +1678,21 @@
             function wsAddWorkSetNgayShopPickerEnabled(enabled) {
                 var el = document.getElementById('wsAddWorkNgayTraDemo');
                 if (!el) return;
+                // Chế độ tạo: chỉ khóa chỉnh sửa (readOnly), không disabled — disabled sẽ không gửi qua FormData.
                 if (el._flatpickr) {
                     var fp = el._flatpickr;
                     fp.set('clickOpens', enabled);
                     if (fp.altInput) {
-                        fp.altInput.disabled = !enabled;
+                        fp.altInput.disabled = false;
                         fp.altInput.readOnly = !enabled;
                     }
-                    if (fp.input) fp.input.disabled = !enabled;
+                    if (fp.input) {
+                        fp.input.disabled = false;
+                        fp.input.readOnly = !enabled;
+                    }
                     return;
                 }
-                el.disabled = !enabled;
+                el.disabled = false;
                 el.readOnly = !enabled;
             }
 
@@ -1683,13 +1742,43 @@
             function wsAddWorkGetNgayShopYmd() {
                 var el = document.getElementById('wsAddWorkNgayTraDemo');
                 if (!el) return '';
-                return (el.value || '').trim();
+                if (el._flatpickr && el._flatpickr.selectedDates && el._flatpickr.selectedDates.length) {
+                    var d = el._flatpickr.selectedDates[0];
+                    return d.getFullYear() + '-'
+                        + String(d.getMonth() + 1).padStart(2, '0') + '-'
+                        + String(d.getDate()).padStart(2, '0');
+                }
+                return wsAddWorkNormalizeYmd(el.value);
+            }
+
+            function wsAddWorkNormalizeYmd(raw) {
+                var v = (raw || '').trim();
+                if (!v) return '';
+                if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+                var m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (m) {
+                    return m[3] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+                }
+                return v;
             }
 
             function wsAddWorkGetNgayChupYmd() {
                 var el = document.getElementById('wsAddWorkNgayChup');
                 if (!el) return '';
-                return (el.value || '').trim();
+                if (el._flatpickr && el._flatpickr.selectedDates && el._flatpickr.selectedDates.length) {
+                    var d = el._flatpickr.selectedDates[0];
+                    return d.getFullYear() + '-'
+                        + String(d.getMonth() + 1).padStart(2, '0') + '-'
+                        + String(d.getDate()).padStart(2, '0');
+                }
+                return wsAddWorkNormalizeYmd(el.value);
+            }
+
+            /** Ngày tra cứu nhân sự: ưu tiên ngày chụp, sau đó ngày trả demo (lịch shop). */
+            function wsAddWorkGetNgayStaffYmd() {
+                var ngayChup = wsAddWorkGetNgayChupYmd();
+                if (ngayChup) return ngayChup;
+                return wsAddWorkGetNgayShopYmd();
             }
 
             function wsAddWorkBindSelect2($sel, placeholder) {
@@ -1719,13 +1808,82 @@
                 $sel.select2(opts);
             }
 
-            function wsAddWorkSetChupMakeDisabled(disabled) {
+            function wsAddWorkIsNvNgoai(role) {
+                var $ = window.jQuery || window.$;
+                if (!$) return false;
+                var $cb = $('#wsAddWorkNvNgoai' + (role === 'chup' ? 'Chup' : role === 'make' ? 'Make' : 'Edit'));
+                return $cb.length && $cb.prop('checked');
+            }
+
+            function wsAddWorkStaffSelect(role) {
+                var $ = window.jQuery || window.$;
+                if (!$) return $();
+                if (role === 'chup') return $('#wsAddWorkThoChup');
+                if (role === 'make') return $('#wsAddWorkThoMake');
+                return $('#wsAddWorkThoEdit');
+            }
+
+            function wsAddWorkStaffFreelancerInput(role) {
+                var $ = window.jQuery || window.$;
+                if (!$) return $();
+                if (role === 'chup') return $('#wsAddWorkThoChupFreelancer');
+                if (role === 'make') return $('#wsAddWorkThoMakeFreelancer');
+                return $('#wsAddWorkThoEditFreelancer');
+            }
+
+            function wsAddWorkStaffSelectWrap(role) {
+                return wsAddWorkStaffSelect(role).closest('.ws-add-work-staff-select-wrap');
+            }
+
+            function wsAddWorkSetNvNgoaiMode(role, isFreelancer, freelancerValue) {
                 var $ = window.jQuery || window.$;
                 if (!$) return;
-                ['#wsAddWorkThoChup', '#wsAddWorkThoMake'].forEach(function (sel) {
-                    var $el = $(sel);
-                    if ($el.length) $el.prop('disabled', disabled);
+                var roleId = role === 'chup' ? 'Chup' : role === 'make' ? 'Make' : 'Edit';
+                var $cb = $('#wsAddWorkNvNgoai' + roleId);
+                var $sel = wsAddWorkStaffSelect(role);
+                var $wrap = wsAddWorkStaffSelectWrap(role);
+                var $inp = wsAddWorkStaffFreelancerInput(role);
+                if (!$cb.length || !$sel.length || !$wrap.length || !$inp.length) return;
+
+                $cb.prop('checked', !!isFreelancer);
+
+                if (isFreelancer) {
+                    $wrap.addClass('d-none');
+                    $sel.prop('disabled', true).val('').trigger('change');
+                    $inp.removeClass('d-none').prop('disabled', false).val(freelancerValue != null ? String(freelancerValue) : '');
+                } else {
+                    $wrap.removeClass('d-none');
+                    $inp.addClass('d-none').prop('disabled', true).val('');
+                    $sel.prop('disabled', false);
+                }
+            }
+
+            function wsAddWorkResetNvNgoaiFields() {
+                ['chup', 'make', 'edit'].forEach(function (role) {
+                    wsAddWorkSetNvNgoaiMode(role, false, '');
                 });
+            }
+
+            function wsAddWorkSetStaffSelectDisabled(role, disabled) {
+                if (wsAddWorkIsNvNgoai(role)) return;
+                var $ = window.jQuery || window.$;
+                if (!$) return;
+                var $sel = wsAddWorkStaffSelect(role);
+                $sel.prop('disabled', !!disabled);
+                if ($sel.data('select2')) {
+                    $sel.trigger('change.select2');
+                }
+            }
+
+            function wsAddWorkSetStaffSelectsDisabled(disabled) {
+                wsAddWorkSetStaffSelectDisabled('chup', disabled);
+                wsAddWorkSetStaffSelectDisabled('make', disabled);
+                wsAddWorkSetStaffSelectDisabled('edit', disabled);
+            }
+
+            function wsAddWorkNormalizeStaffId(raw) {
+                if (raw == null || raw === '') return '';
+                return String(raw);
             }
 
             function wsAddWorkRebuildSelect(sel, items, ph, want) {
@@ -1733,25 +1891,45 @@
                 if (!$) return;
                 var $sel = $(sel);
                 if (!$sel.length) return;
-                var prev = want != null && want !== '' ? String(want) : '';
+                var prev = wsAddWorkNormalizeStaffId(want);
                 if ($sel.data('select2')) $sel.select2('destroy');
+                $sel.prop('disabled', false);
                 $sel.empty().append(new Option('—', '', false, false));
                 (items || []).forEach(function (it) {
                     var o = new Option(it.ten, String(it.id), false, false);
                     if (it.disabled) o.dataset.busy = '1';
                     $sel.append(o);
                 });
+                if (prev && !$sel.find('option').filter(function () {
+                    return String($(this).val()) === prev;
+                }).length) {
+                    var found = (items || []).find(function (it) {
+                        return String(it.id) === prev;
+                    });
+                    var label = found && found.ten ? String(found.ten) : ('Nhân viên #' + prev);
+                    var extra = new Option(label, prev, false, false);
+                    if (found && found.disabled) extra.dataset.busy = '1';
+                    $sel.append(extra);
+                }
                 var $match = $sel.find('option').filter(function () {
                     return String($(this).val()) === prev;
                 });
                 var pick = $match.length ? prev : '';
                 wsAddWorkBindSelect2($sel, ph);
+                $sel.prop('disabled', false);
                 $sel.val(pick || null).trigger('change');
             }
 
-            function wsAddWorkRebuildChupMake(chupItems, makeItems, wantChup, wantMake) {
-                wsAddWorkRebuildSelect('#wsAddWorkThoChup', chupItems, 'Chọn người chụp', wantChup);
-                wsAddWorkRebuildSelect('#wsAddWorkThoMake', makeItems, 'Chọn người make', wantMake);
+            function wsAddWorkRebuildStaff(chupItems, makeItems, editItems, wantChup, wantMake, wantEdit) {
+                if (!wsAddWorkIsNvNgoai('chup')) {
+                    wsAddWorkRebuildSelect('#wsAddWorkThoChup', chupItems, 'Chọn người chụp', wantChup);
+                }
+                if (!wsAddWorkIsNvNgoai('make')) {
+                    wsAddWorkRebuildSelect('#wsAddWorkThoMake', makeItems, 'Chọn người make', wantMake);
+                }
+                if (!wsAddWorkIsNvNgoai('edit')) {
+                    wsAddWorkRebuildSelect('#wsAddWorkThoEdit', editItems, 'Chọn người edit', wantEdit);
+                }
             }
 
             function wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, maPhongBan) {
@@ -1765,27 +1943,92 @@
                     });
             }
 
-            function wsAddWorkFetchChupMake(ymd, wantChup, wantMake) {
-                if (!wsAddWorkHopId || !ymd) {
-                    wsAddWorkSetChupMakeDisabled(true);
-                    wsAddWorkRebuildChupMake([], [], '', '');
-                    return;
+            function wsAddWorkFetchStaff(ymd, wantChup, wantMake, wantEdit) {
+                if (!wsAddWorkHopId) {
+                    wsAddWorkSetStaffSelectsDisabled(true);
+                    wsAddWorkRebuildStaff([], [], [], '', '', '');
+                    return Promise.resolve();
                 }
-                Promise.all([
-                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, WS_MA_PHONG_BAN_CHUP),
-                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ymd, WS_MA_PHONG_BAN_MAKE)
+                ymd = wsAddWorkNormalizeYmd(ymd);
+                var ngayApi = ymd || wsAddWorkGetNgayStaffYmd();
+                if (!ngayApi) {
+                    ngayApi = new Date().toISOString().slice(0, 10);
+                }
+                var fetchSeq = ++wsAddWorkStaffFetchSeq;
+                return Promise.all([
+                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ngayApi, WS_MA_PHONG_BAN_CHUP),
+                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ngayApi, WS_MA_PHONG_BAN_MAKE),
+                    wsAddWorkFetchNhanVienTheoNgayVaPhongBan(ngayApi, WS_MA_PHONG_BAN_EDIT)
                 ])
                     .then(function (results) {
-                        wsAddWorkSetChupMakeDisabled(false);
-                        wsAddWorkRebuildChupMake(results[0].items || [], results[1].items || [], wantChup, wantMake);
+                        if (fetchSeq !== wsAddWorkStaffFetchSeq) return;
+                        wsAddWorkSetStaffSelectsDisabled(false);
+                        wsAddWorkRebuildStaff(
+                            results[0].items || [],
+                            results[1].items || [],
+                            results[2].items || [],
+                            wantChup,
+                            wantMake,
+                            wantEdit
+                        );
                     })
                     .catch(function () {
-                        wsAddWorkSetChupMakeDisabled(true);
-                        wsAddWorkRebuildChupMake([], [], '', '');
+                        if (fetchSeq !== wsAddWorkStaffFetchSeq) return;
+                        wsAddWorkSetStaffSelectsDisabled(true);
+                        wsAddWorkRebuildStaff([], [], [], '', '', '');
                     });
             }
 
+            function wsAddWorkSyncStaffTheoNgay(ymd, wantChup, wantMake, wantEdit) {
+                var $ = window.jQuery || window.$;
+                if (!wsAddWorkHopId) {
+                    wsAddWorkSetStaffSelectsDisabled(true);
+                    wsAddWorkRebuildStaff([], [], [], '', '', '');
+                    return Promise.resolve();
+                }
+                if (arguments.length < 1 || ymd == null || ymd === '') {
+                    ymd = wsAddWorkGetNgayStaffYmd();
+                } else {
+                    ymd = wsAddWorkNormalizeYmd(ymd);
+                }
+                if (arguments.length < 2) {
+                    wantChup = $ ? ($('#wsAddWorkThoChup').val() || wsAddWorkPendingStaffWants.chup || '') : (wsAddWorkPendingStaffWants.chup || '');
+                }
+                if (arguments.length < 3) {
+                    wantMake = $ ? ($('#wsAddWorkThoMake').val() || wsAddWorkPendingStaffWants.make || '') : (wsAddWorkPendingStaffWants.make || '');
+                }
+                if (arguments.length < 4) {
+                    wantEdit = $ ? ($('#wsAddWorkThoEdit').val() || wsAddWorkPendingStaffWants.edit || '') : (wsAddWorkPendingStaffWants.edit || '');
+                }
+                wantChup = wsAddWorkNormalizeStaffId(wantChup);
+                wantMake = wsAddWorkNormalizeStaffId(wantMake);
+                wantEdit = wsAddWorkNormalizeStaffId(wantEdit);
+                return wsAddWorkFetchStaff(ymd, wantChup, wantMake, wantEdit);
+            }
+
+            function wsAddWorkAttachStaffDateListenersOnce() {
+                ['wsAddWorkNgayChup', 'wsAddWorkNgayTraDemo'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (!el || el._wsStaffDateBound) return;
+                    el._wsStaffDateBound = true;
+                    var deb;
+                    function scheduleSync() {
+                        if (wsAddWorkFillingDieuPhoi) return;
+                        clearTimeout(deb);
+                        deb = setTimeout(function () {
+                            if (wsAddWorkFillingDieuPhoi || !wsAddWorkHopId) return;
+                            wsAddWorkSyncStaffTheoNgay(wsAddWorkGetNgayStaffYmd());
+                        }, 20);
+                    }
+                    el.addEventListener('change', scheduleSync);
+                    el.addEventListener('input', scheduleSync);
+                });
+            }
+
             function wsAddWorkResetDieuPhoiFields() {
+                wsAddWorkFillingDieuPhoi = false;
+                wsAddWorkPendingStaffWants = { chup: '', make: '', edit: '' };
+                wsAddWorkStaffFetchSeq++;
                 var panel = document.getElementById('wsAddWorkDieuPhoiFields');
                 if (panel) panel.classList.add('d-none');
                 wsAddWorkHopId = null;
@@ -1817,13 +2060,20 @@
                 if (diaDiemEl) diaDiemEl.value = '';
                 var ghiChuEl = document.getElementById('wsAddWorkGhiChuSale');
                 if (ghiChuEl) ghiChuEl.value = '';
-                wsAddWorkSetChupMakeDisabled(true);
-                wsAddWorkRebuildChupMake([], [], '', '');
-                var $ = window.jQuery || window.$;
-                if ($) $('#wsAddWorkThoEdit').val('').trigger('change');
+                wsAddWorkResetNvNgoaiFields();
+                wsAddWorkSetStaffSelectsDisabled(true);
+                wsAddWorkRebuildStaff([], [], [], '', '', '');
+            }
+
+            function wsAddWorkFinishFillDieuPhoiFields() {
+                setTimeout(function () {
+                    wsAddWorkFillingDieuPhoi = false;
+                    wsAddWorkPendingStaffWants = { chup: '', make: '', edit: '' };
+                }, 50);
             }
 
             function wsAddWorkFillDieuPhoiFields(payload, scheduleDate) {
+                wsAddWorkFillingDieuPhoi = true;
                 var panel = document.getElementById('wsAddWorkDieuPhoiFields');
                 if (panel) panel.classList.remove('d-none');
                 var titleEl = document.getElementById('wsAddWorkHopDongTitle');
@@ -1835,6 +2085,9 @@
                     titleEl.textContent = 'Điều phối: ' + ma + (ten ? (' — ' + ten) : '');
                 }
                 var ngayShopYmd = (payload.ngay_tra_link_demo_chinh_thuc || scheduleDate || '').trim();
+                var ngayStaffYmd = wsAddWorkNormalizeYmd(payload.ngay_chup_thuc_te || '')
+                    || wsAddWorkNormalizeYmd(ngayShopYmd)
+                    || '';
                 wsAddWorkSetNgayShop(ngayShopYmd);
                 if (window.setAdminTimeInput) window.setAdminTimeInput('wsAddWorkGioChup', payload.gio_chup != null ? String(payload.gio_chup) : '');
                 if (window.setAdminDateInput) {
@@ -1846,11 +2099,19 @@
                 if (diaDiemEl) diaDiemEl.value = payload.dia_diem_chup != null ? String(payload.dia_diem_chup) : '';
                 var ghiChuEl = document.getElementById('wsAddWorkGhiChuSale');
                 if (ghiChuEl) ghiChuEl.value = payload.ghi_chu_sale != null ? String(payload.ghi_chu_sale) : '';
-                var $ = window.jQuery || window.$;
-                if ($) {
-                    $('#wsAddWorkThoEdit').val(payload.tho_edit_id != null && payload.tho_edit_id !== '' ? String(payload.tho_edit_id) : '').trigger('change');
+                wsAddWorkSetNvNgoaiMode('chup', !!(payload.tho_chup_freelancer && String(payload.tho_chup_freelancer).trim()), payload.tho_chup_freelancer || '');
+                wsAddWorkSetNvNgoaiMode('make', !!(payload.tho_make_freelancer && String(payload.tho_make_freelancer).trim()), payload.tho_make_freelancer || '');
+                wsAddWorkSetNvNgoaiMode('edit', !!(payload.tho_edit_freelancer && String(payload.tho_edit_freelancer).trim()), payload.tho_edit_freelancer || '');
+                var wantChup = wsAddWorkIsNvNgoai('chup') ? '' : wsAddWorkNormalizeStaffId(payload.tho_chup_id);
+                var wantMake = wsAddWorkIsNvNgoai('make') ? '' : wsAddWorkNormalizeStaffId(payload.tho_make_id);
+                var wantEdit = wsAddWorkIsNvNgoai('edit') ? '' : wsAddWorkNormalizeStaffId(payload.tho_edit_id);
+                wsAddWorkPendingStaffWants = { chup: wantChup, make: wantMake, edit: wantEdit };
+                var syncPromise = wsAddWorkSyncStaffTheoNgay(ngayStaffYmd, wantChup, wantMake, wantEdit);
+                if (syncPromise && typeof syncPromise.finally === 'function') {
+                    syncPromise.finally(wsAddWorkFinishFillDieuPhoiFields);
+                } else {
+                    wsAddWorkFinishFillDieuPhoiFields();
                 }
-                wsAddWorkFetchChupMake(payload.ngay_chup_thuc_te || '', payload.tho_chup_id, payload.tho_make_id);
             }
 
             function wsAddWorkLoadHopDongDieuPhoi(hopId, scheduleDate, capNhat) {
@@ -1911,8 +2172,8 @@
                     errEl.classList.add('d-none');
                     errEl.textContent = '';
                 }
-                wsAddWorkSetNgayShop(dateStr);
                 wsAddWorkResetDieuPhoiFields();
+                wsAddWorkSetNgayShop(dateStr);
                 hopDongEl.innerHTML = '<option value="">— Chọn hợp đồng —</option>';
                 hopDongEl.disabled = true;
                 var $ = window.jQuery || window.$;
@@ -1989,7 +2250,9 @@
             (function bindAddWorkModalSelect2() {
                 var modalEl = document.getElementById('wsAddWorkModal');
                 if (!modalEl) return;
+                wsAddWorkAttachStaffDateListenersOnce();
                 modalEl.addEventListener('shown.bs.modal', function () {
+                    wsAddWorkAttachStaffDateListenersOnce();
                     var $ = window.jQuery || window.$;
                     if (!$ || !$.fn.select2) return;
                     var $targets = $(modalEl).find('select.select2-admin');
@@ -2021,23 +2284,33 @@
                     wsAddWorkLoadHopDongDieuPhoi(hopId, scheduleDate);
                 }
 
-                function onNgayChupChanged() {
-                    if (modalEl.dataset.wsMode !== 'edit' || !wsAddWorkHopId) return;
-                    var ymd = wsAddWorkGetNgayChupYmd();
-                    var $ = window.jQuery || window.$;
-                    var wantChup = $ ? ($('#wsAddWorkThoChup').val() || '') : '';
-                    var wantMake = $ ? ($('#wsAddWorkThoMake').val() || '') : '';
-                    wsAddWorkFetchChupMake(ymd, wantChup, wantMake);
+                function onStaffDateChanged() {
+                    if (wsAddWorkFillingDieuPhoi || !wsAddWorkHopId) return;
+                    wsAddWorkSyncStaffTheoNgay(wsAddWorkGetNgayStaffYmd());
                 }
 
                 var $ = window.jQuery || window.$;
                 if ($) {
                     $(hopDongEl).on('change.wsAddWorkHopDong', onHopDongSelected);
+                    $(modalEl).on('change.wsAddWorkNvNgoai', '.ws-add-work-nv-ngoai-check', function () {
+                        var role = this.getAttribute('data-ws-role');
+                        if (!role) return;
+                        var isFreelancer = this.checked;
+                        var currentFreelancer = wsAddWorkStaffFreelancerInput(role).val();
+                        wsAddWorkSetNvNgoaiMode(role, isFreelancer, isFreelancer ? currentFreelancer : '');
+                        if (!isFreelancer && wsAddWorkHopId) {
+                            wsAddWorkSyncStaffTheoNgay(wsAddWorkGetNgayStaffYmd());
+                        }
+                    });
                 } else {
                     hopDongEl.addEventListener('change', onHopDongSelected);
                 }
                 if (ngayChupEl) {
-                    ngayChupEl.addEventListener('change', onNgayChupChanged);
+                    ngayChupEl.addEventListener('change', onStaffDateChanged);
+                }
+                var ngayTraDemoEl = document.getElementById('wsAddWorkNgayTraDemo');
+                if (ngayTraDemoEl) {
+                    ngayTraDemoEl.addEventListener('change', onStaffDateChanged);
                 }
             })();
 
@@ -2068,6 +2341,12 @@
                         }
                         fd.delete('hop_dong_id');
                         fetchUrl = wsAddWorkDieuPhoiPutUrl(editHopId);
+                    } else {
+                        var ngayShopSubmit = wsAddWorkGetNgayShopYmd()
+                            || (modalEl && modalEl.dataset.wsScheduleDate ? String(modalEl.dataset.wsScheduleDate).trim() : '');
+                        if (ngayShopSubmit) {
+                            fd.set('ngay_tra_link_demo_chinh_thuc', ngayShopSubmit);
+                        }
                     }
 
                     RestApi.request(fetchUrl, {
