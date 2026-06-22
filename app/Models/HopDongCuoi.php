@@ -327,6 +327,67 @@ class HopDongCuoi extends Model
         return $this->belongsTo(NhanVien::class, 'tho_edit_id');
     }
 
+    public function daPhanThoChup(): bool
+    {
+        return (bool) $this->tho_chup_id || $this->coThoFreelancer('tho_chup_freelancer');
+    }
+
+    public function daPhanThoMake(): bool
+    {
+        return (bool) $this->tho_make_id || $this->coThoFreelancer('tho_make_freelancer');
+    }
+
+    public function daPhanThoEdit(): bool
+    {
+        return (bool) $this->tho_edit_id || $this->coThoFreelancer('tho_edit_freelancer');
+    }
+
+    public function daPhanCong(): bool
+    {
+        return $this->daPhanThoChup() || $this->daPhanThoMake() || $this->daPhanThoEdit();
+    }
+
+    public function tenThoChup(): ?string
+    {
+        $ten = trim((string) ($this->thoChup?->user?->name ?? ''));
+        if ($ten !== '') {
+            return $ten;
+        }
+
+        $freelancer = trim((string) ($this->tho_chup_freelancer ?? ''));
+
+        return $freelancer !== '' ? $freelancer : null;
+    }
+
+    public function tenThoMake(): ?string
+    {
+        $ten = trim((string) ($this->thoMake?->user?->name ?? ''));
+        if ($ten !== '') {
+            return $ten;
+        }
+
+        $freelancer = trim((string) ($this->tho_make_freelancer ?? ''));
+
+        return $freelancer !== '' ? $freelancer : null;
+    }
+
+    public function tenThoEdit(): ?string
+    {
+        $ten = trim((string) ($this->thoEdit?->user?->name ?? ''));
+        if ($ten !== '') {
+            return $ten;
+        }
+
+        $freelancer = trim((string) ($this->tho_edit_freelancer ?? ''));
+
+        return $freelancer !== '' ? $freelancer : null;
+    }
+
+    private function coThoFreelancer(string $column): bool
+    {
+        return trim((string) ($this->{$column} ?? '')) !== '';
+    }
+
     /**
      * Chuẩn hóa SĐT (0xxxxxxxxx) từ chuỗi liên hệ; null nếu không trích được số hợp lệ.
      */

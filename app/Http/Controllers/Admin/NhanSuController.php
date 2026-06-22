@@ -85,10 +85,10 @@ class NhanSuController extends Controller
     private function lichLamViecRoleKeys(HopDongCuoi $hd, ?int $nhanVienId, bool $isAdmin): array
     {
         $assigned = array_filter([
-            'chup' => $hd->tho_chup_id ? (int) $hd->tho_chup_id : null,
-            'make' => $hd->tho_make_id ? (int) $hd->tho_make_id : null,
-            'edit' => $hd->tho_edit_id ? (int) $hd->tho_edit_id : null,
-        ]);
+            'chup' => $hd->daPhanThoChup() ? ($hd->tho_chup_id ? (int) $hd->tho_chup_id : 0) : null,
+            'make' => $hd->daPhanThoMake() ? ($hd->tho_make_id ? (int) $hd->tho_make_id : 0) : null,
+            'edit' => $hd->daPhanThoEdit() ? ($hd->tho_edit_id ? (int) $hd->tho_edit_id : 0) : null,
+        ], fn ($assignedId) => $assignedId !== null);
 
         if ($isAdmin || ! $nhanVienId) {
             return array_values(array_keys($assigned));
@@ -182,13 +182,13 @@ class NhanSuController extends Controller
         if ($hd->ngay_up_link_demo_gan_nhat || trim((string) ($hd->link_demo ?? '')) !== '') {
             return 'up_link_demo';
         }
-        if ($hd->tho_edit_id) {
+        if ($hd->daPhanThoEdit()) {
             return 'phan_edit';
         }
-        if ($hd->tho_make_id) {
+        if ($hd->daPhanThoMake()) {
             return 'phan_make';
         }
-        if ($hd->tho_chup_id) {
+        if ($hd->daPhanThoChup()) {
             return 'phan_chup';
         }
 
@@ -301,7 +301,7 @@ class NhanSuController extends Controller
     /** @return array<string, string> */
     private function lichLamViecBriefFields(HopDongCuoi $hd, string $tz): array
     {
-        $nguoiChup = trim((string) ($hd->thoChup?->user?->name ?? ''));
+        $nguoiChup = trim((string) ($hd->tenThoChup() ?? ''));
         $diaDiem = trim((string) ($hd->dia_diem_chup ?? ''));
         $ghiChu = $this->lichLamViecGhiChu($hd);
 
@@ -338,9 +338,9 @@ class NhanSuController extends Controller
             'roles' => $roleKeys,
             'role_labels' => $this->lichLamViecRoleLabels($roleKeys),
             'phan_cong' => [
-                'chup' => $hd->thoChup?->user?->name,
-                'make' => $hd->thoMake?->user?->name,
-                'edit' => $hd->thoEdit?->user?->name,
+                'chup' => $hd->tenThoChup(),
+                'make' => $hd->tenThoMake(),
+                'edit' => $hd->tenThoEdit(),
             ],
             'ngay_up_link_demo_gan_nhat' => $hd->ngay_up_link_demo_gan_nhat
                 ? $hd->ngay_up_link_demo_gan_nhat->copy()->timezone($tz)->format('d/m/Y H:i')

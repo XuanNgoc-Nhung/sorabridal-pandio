@@ -41,15 +41,15 @@ class HopDongCuoiLocTienDoFilter
 
     public static function matchesChuaPhanCong(HopDongCuoi $hd): bool
     {
-        return ! $hd->tho_chup_id && ! $hd->tho_make_id && ! $hd->tho_edit_id;
+        return ! $hd->daPhanCong();
     }
 
     /** Chưa phân chụp, make và edit. @param Builder<\App\Models\HopDongCuoi> $query */
     public static function applyChuaPhanCong(Builder $query): void
     {
-        $query->whereNull('tho_chup_id')
-            ->whereNull('tho_make_id')
-            ->whereNull('tho_edit_id');
+        self::whereChuaPhanThoChup($query);
+        self::whereChuaPhanThoMake($query);
+        self::whereChuaPhanThoEdit($query);
     }
 
     /** @param Builder<\App\Models\HopDongCuoi> $query @param list<string> $filters */
@@ -65,16 +65,16 @@ class HopDongCuoiLocTienDoFilter
                     match ($key) {
                         'chua_xep_lich_soft' => $q->whereNull('ngay_tra_link_demo_chinh_thuc'),
                         'chua_phan_cong' => $q->tap(fn ($qq) => self::applyChuaPhanCong($qq)),
-                        'phan_chup' => $q->whereNotNull('tho_chup_id')
-                            ->whereNull('tho_make_id')
-                            ->whereNull('tho_edit_id')
+                        'phan_chup' => $q->tap(fn ($qq) => self::whereDaPhanThoChup($qq))
+                            ->tap(fn ($qq) => self::whereChuaPhanThoMake($qq))
+                            ->tap(fn ($qq) => self::whereChuaPhanThoEdit($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkDemo($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkIn($qq)),
-                        'phan_make' => $q->whereNotNull('tho_make_id')
-                            ->whereNull('tho_edit_id')
+                        'phan_make' => $q->tap(fn ($qq) => self::whereDaPhanThoMake($qq))
+                            ->tap(fn ($qq) => self::whereChuaPhanThoEdit($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkDemo($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkIn($qq)),
-                        'phan_edit' => $q->whereNotNull('tho_edit_id')
+                        'phan_edit' => $q->tap(fn ($qq) => self::whereDaPhanThoEdit($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkDemo($qq))
                             ->tap(fn ($qq) => self::whereChuaUpLinkIn($qq)),
                         'up_link_demo' => $q->tap(fn ($qq) => self::whereDaUpLinkDemo($qq))
@@ -90,6 +90,72 @@ class HopDongCuoiLocTienDoFilter
                     };
                 });
             }
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereChuaPhanThoChup(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNull('tho_chup_id')
+                ->where(function ($q2) {
+                    $q2->whereNull('tho_chup_freelancer')->orWhere('tho_chup_freelancer', '');
+                });
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereChuaPhanThoMake(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNull('tho_make_id')
+                ->where(function ($q2) {
+                    $q2->whereNull('tho_make_freelancer')->orWhere('tho_make_freelancer', '');
+                });
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereChuaPhanThoEdit(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNull('tho_edit_id')
+                ->where(function ($q2) {
+                    $q2->whereNull('tho_edit_freelancer')->orWhere('tho_edit_freelancer', '');
+                });
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereDaPhanThoChup(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNotNull('tho_chup_id')
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('tho_chup_freelancer')->where('tho_chup_freelancer', '!=', '');
+                });
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereDaPhanThoMake(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNotNull('tho_make_id')
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('tho_make_freelancer')->where('tho_make_freelancer', '!=', '');
+                });
+        });
+    }
+
+    /** @param Builder<\App\Models\HopDongCuoi> $query */
+    private static function whereDaPhanThoEdit(Builder $query): void
+    {
+        $query->where(function ($q) {
+            $q->whereNotNull('tho_edit_id')
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('tho_edit_freelancer')->where('tho_edit_freelancer', '!=', '');
+                });
         });
     }
 
