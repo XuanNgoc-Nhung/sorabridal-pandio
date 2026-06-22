@@ -579,17 +579,16 @@ class TrangPhucController extends Controller
         ]);
 
         $productIds = array_values(array_unique(array_map('intval', $validated['trang_phuc'])));
+        $ngayBatDau = Carbon::parse($validated['thoi_gian_thue_bat_dau'])->startOfDay();
+        $ngayDuKienTra = Carbon::parse($validated['thoi_gian_du_kien_tra'])->startOfDay();
 
         foreach ($productIds as $trangPhucId) {
-            if ($this->tonKhoKhaDungChoThue($trangPhucId) < 1) {
+            if ($this->tonKhoKhaDungChoThue($trangPhucId, null, $ngayBatDau, $ngayDuKienTra) < 1) {
                 return redirect()->back()
-                    ->withErrors(['trang_phuc' => 'Sản phẩm id '.$trangPhucId.' đang được cho thuê, không thể thêm vào hợp đồng.'])
+                    ->withErrors(['trang_phuc' => 'Sản phẩm id '.$trangPhucId.' đang được cho thuê trong khoảng thời gian này, không thể thêm vào hợp đồng.'])
                     ->withInput();
             }
         }
-
-        $ngayBatDau = Carbon::parse($validated['thoi_gian_thue_bat_dau'])->startOfDay();
-        $ngayDuKienTra = Carbon::parse($validated['thoi_gian_du_kien_tra'])->startOfDay();
         $tongTien = round((float) $validated['tong_tien'], 2);
         $tienCoc = round((float) ($validated['tien_coc'] ?? 0), 2);
 
@@ -652,17 +651,16 @@ class TrangPhucController extends Controller
         ]);
 
         $productIds = array_values(array_unique(array_map('intval', $validated['trang_phuc'])));
+        $ngayBatDau = Carbon::parse($validated['thoi_gian_thue_bat_dau'])->startOfDay();
+        $ngayDuKienTra = Carbon::parse($validated['thoi_gian_du_kien_tra'])->startOfDay();
 
         foreach ($productIds as $trangPhucId) {
-            if ($this->tonKhoKhaDungChoThue($trangPhucId, (int) $hopDong->id) < 1) {
+            if ($this->tonKhoKhaDungChoThue($trangPhucId, (int) $hopDong->id, $ngayBatDau, $ngayDuKienTra) < 1) {
                 return redirect()->back()
-                    ->withErrors(['trang_phuc' => 'Sản phẩm id '.$trangPhucId.' đang được cho thuê, không thể thêm vào hợp đồng.'])
+                    ->withErrors(['trang_phuc' => 'Sản phẩm id '.$trangPhucId.' đang được cho thuê trong khoảng thời gian này, không thể thêm vào hợp đồng.'])
                     ->withInput();
             }
         }
-
-        $ngayBatDau = Carbon::parse($validated['thoi_gian_thue_bat_dau'])->startOfDay();
-        $ngayDuKienTra = Carbon::parse($validated['thoi_gian_du_kien_tra'])->startOfDay();
         $tongTien = round((float) $validated['tong_tien'], 2);
         $tienCoc = round((float) ($validated['tien_coc'] ?? 0), 2);
 
@@ -757,16 +755,34 @@ class TrangPhucController extends Controller
     }
 
     /**
-     * Số đơn vị còn cho thuê: mỗi sản phẩm tối đa 1, trừ hợp đồng còn hiệu lực (trạng thái 0).
+     * Số đơn vị còn cho thuê: mỗi sản phẩm tối đa 1.
+     * Chỉ tính HĐ còn hiệu lực (trạng thái 0); nếu có khoảng ngày thì chỉ HĐ trùng thời gian thuê.
      */
-    private function tonKhoKhaDungChoThue(int $trangPhucId, ?int $excludeHopDongId = null): int
-    {
+    private function tonKhoKhaDungChoThue(
+        int $trangPhucId,
+        ?int $excludeHopDongId = null,
+        ?Carbon $ngayBatDau = null,
+        ?Carbon $ngayKetThuc = null,
+    ): int {
         $q = SanPhamChoThue::query()
             ->where('san_pham_id', $trangPhucId)
-            ->whereHas('hopDong', function ($qb) use ($excludeHopDongId): void {
+            ->whereHas('hopDong', function ($qb) use ($excludeHopDongId, $ngayBatDau, $ngayKetThuc): void {
                 $qb->where('trang_thai', 0);
                 if ($excludeHopDongId !== null) {
                     $qb->where('id', '<>', $excludeHopDongId);
+                }
+                if ($ngayBatDau !== null && $ngayKetThuc !== null) {
+                    $batDau = $ngayBatDau->copy()->startOfDay()->format('Y-m-d');
+                    $ketThuc = $ngayKetThuc->copy()->startOfDay()->format('Y-m-d');
+                    // Trùng khoảng: ngay_thue <= ketThuc và ngày kết thúc HĐ >= batDau
+                    $qb->whereDate('ngay_thue', '<=', $ketThuc)
+                        ->where(function ($q2) use ($batDau): void {
+                            $q2->whereDate('ngay_tra_chinh_thuc', '>=', $batDau)
+                                ->orWhere(function ($q3) use ($batDau): void {
+                                    $q3->whereNull('ngay_tra_chinh_thuc')
+                                        ->whereDate('ngay_tra_du_kien', '>=', $batDau);
+                                });
+                        });
                 }
             });
         $dangThue = (int) $q->count();
