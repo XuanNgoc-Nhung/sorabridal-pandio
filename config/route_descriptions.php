@@ -14,6 +14,7 @@ return [
     'admin.khach-hang.tao-hop-dong' => 'Tạo hợp đồng cưới',
     'admin.khach-hang.tao-hop-dong-canh-bao' => 'Cảnh báo mã hợp đồng tạo hợp đồng',
     'admin.tu-van.danh-sach' => 'Danh sách đăng ký tư vấn',
+    'admin.trang-phuc.loai-trang-phuc' => 'Loại trang phục',
     'admin.trang-phuc.san-pham' => 'Sản phẩm trang phục',
     'admin.trang-phuc.hop-dong' => 'Hợp đồng trang phục',
     'admin.dich-vu.dich-vu-le' => 'Dịch vụ lễ',

@@ -86,6 +86,7 @@ return [
         'stt' => 8,
         'type' => 'group',
         'routes' => [
+            'admin.trang-phuc.loai-trang-phuc',
             'admin.trang-phuc.san-pham',
             'admin.concept.concept',
             'admin.dich-vu.dich-vu-le',
@@ -95,10 +96,11 @@ return [
         'label' => 'Sản phẩm',
         'icon' => 'ti tabler-package',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.trang-phuc.san-pham', 'label' => 'Trang phục', 'icon' => 'ti tabler-hanger'],
-            ['stt' => 2, 'route' => 'admin.concept.concept', 'label' => 'Concept', 'icon' => 'ti tabler-photo'],
-            ['stt' => 3, 'route' => 'admin.dich-vu.dich-vu-le', 'label' => 'Dịch vụ lẻ', 'icon' => 'ti tabler-puzzle'],
-            ['stt' => 4, 'route' => 'admin.dich-vu.nhom-dich-vu', 'label' => 'Nhóm dịch vụ', 'icon' => 'ti tabler-stack-2'],
+            ['stt' => 1, 'route' => 'admin.trang-phuc.loai-trang-phuc', 'label' => 'Loại trang phục', 'icon' => 'ti tabler-category'],
+            ['stt' => 2, 'route' => 'admin.trang-phuc.san-pham', 'label' => 'Trang phục', 'icon' => 'ti tabler-hanger'],
+            ['stt' => 3, 'route' => 'admin.concept.concept', 'label' => 'Concept', 'icon' => 'ti tabler-photo'],
+            ['stt' => 4, 'route' => 'admin.dich-vu.dich-vu-le', 'label' => 'Dịch vụ lẻ', 'icon' => 'ti tabler-puzzle'],
+            ['stt' => 5, 'route' => 'admin.dich-vu.nhom-dich-vu', 'label' => 'Nhóm dịch vụ', 'icon' => 'ti tabler-stack-2'],
         ],
     ],
     [

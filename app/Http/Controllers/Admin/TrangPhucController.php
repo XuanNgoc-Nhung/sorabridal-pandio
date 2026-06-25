@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DanhMucTrangPhuc;
 use App\Models\HopDongChoThueTrangPhuc;
 use App\Models\HopDongCuoi;
 use App\Models\HopDongCuoiTrangPhuc;
@@ -43,6 +44,7 @@ class TrangPhucController extends Controller
         ]);
 
         $query = TrangPhuc::query()
+            ->with('loaiTrangPhuc')
             ->withCount([
                 'sanPhamChoThue as luot_dung_thue',
                 'hopDongCuoiTrangPhuc as luot_dung_cuoi',
@@ -88,7 +90,9 @@ class TrangPhucController extends Controller
 
         $danhSach = $query->paginate(TrangPhuc::perPageSanPham($request))->withQueryString();
 
-        return view('admin.trang-phuc.san-pham', compact('danhSach'));
+        $danhMucTrangPhucs = DanhMucTrangPhuc::query()->orderBy('ten_danh_muc')->get();
+
+        return view('admin.trang-phuc.san-pham', compact('danhSach', 'danhMucTrangPhucs'));
     }
 
     public function storeSanPham(Request $request)
@@ -98,6 +102,7 @@ class TrangPhucController extends Controller
             'ma_san_pham' => 'required|string|max:255|unique:trang_phuc,ma_san_pham',
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'ngay_nhap' => 'nullable|string|max:255',
+            'loai_trang_phuc' => ['nullable', 'integer', Rule::exists('danh_muc_trang_phuc', 'id')],
             'ghi_chu' => 'nullable|string|max:500',
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
@@ -112,6 +117,7 @@ class TrangPhucController extends Controller
         TrangPhuc::create([
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
+            'loai_trang_phuc' => filled($validated['loai_trang_phuc'] ?? null) ? (int) $validated['loai_trang_phuc'] : null,
             'ngay_nhap' => $ngayNhap !== '' ? $ngayNhap : null,
             'hinh_anh' => $hinhAnhPath,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
@@ -252,6 +258,7 @@ class TrangPhucController extends Controller
             'hinh_anh' => 'nullable|image|mimes:jpeg,png,gif,webp|max:5120',
             'hinh_anh_duong_dan' => 'nullable|string|max:500',
             'ngay_nhap' => 'nullable|string|max:255',
+            'loai_trang_phuc' => ['nullable', 'integer', Rule::exists('danh_muc_trang_phuc', 'id')],
             'ghi_chu' => 'nullable|string|max:500',
             'gia_tri' => 'nullable|numeric|min:0',
         ]);
@@ -261,6 +268,7 @@ class TrangPhucController extends Controller
         $updateData = [
             'ten_san_pham' => $validated['ten_san_pham'],
             'ma_san_pham' => $validated['ma_san_pham'],
+            'loai_trang_phuc' => filled($validated['loai_trang_phuc'] ?? null) ? (int) $validated['loai_trang_phuc'] : null,
             'ngay_nhap' => $ngayNhap !== '' ? $ngayNhap : null,
             'ghi_chu' => $validated['ghi_chu'] ?? null,
             'gia_tri' => $validated['gia_tri'] ?? 0,

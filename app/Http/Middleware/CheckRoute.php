@@ -74,6 +74,11 @@ class CheckRoute
             'admin.trang-phuc.hop-dong.tim-san-pham',
             'admin.trang-phuc.update-hop-dong-trang-thai',
         ],
+        'admin.trang-phuc.loai-trang-phuc' => [
+            'admin.trang-phuc.loai-trang-phuc.store',
+            'admin.trang-phuc.loai-trang-phuc.update',
+            'admin.trang-phuc.loai-trang-phuc.destroy',
+        ],
         'admin.concept.concept' => [
             'admin.concept.concept.store',
             'admin.concept.concept.update',

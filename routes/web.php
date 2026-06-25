@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\NhanSuController as AdminNhanSu;
 use App\Http\Controllers\Admin\DichVuController as AdminDichVu;
 use App\Http\Controllers\Admin\KhachHangController as AdminKhachHang;
 use App\Http\Controllers\Admin\TrangPhucController as AdminTrangPhuc;
+use App\Http\Controllers\Admin\DanhMucTrangPhucController as AdminDanhMucTrangPhuc;
 use App\Http\Controllers\Admin\TaiChinhKeToanController as AdminTaiChinhKeToan;
 use App\Http\Controllers\Admin\DiemDanhController as AdminDiemDanh;
 use App\Http\Controllers\Admin\ConceptController as AdminConcept;
@@ -68,6 +69,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
 
     // Trang phục & hợp đồng thuê
     Route::group(['prefix' => 'trang-phuc'], function () {
+        Route::get('/loai-trang-phuc', [AdminDanhMucTrangPhuc::class, 'index'])->name('trang-phuc.loai-trang-phuc');
+        Route::post('/loai-trang-phuc', [AdminDanhMucTrangPhuc::class, 'store'])->name('trang-phuc.loai-trang-phuc.store');
+        Route::put('/loai-trang-phuc/{danhMucTrangPhuc}', [AdminDanhMucTrangPhuc::class, 'update'])->name('trang-phuc.loai-trang-phuc.update');
+        Route::delete('/loai-trang-phuc/{danhMucTrangPhuc}', [AdminDanhMucTrangPhuc::class, 'destroy'])->name('trang-phuc.loai-trang-phuc.destroy');
         Route::get('/san-pham', [AdminTrangPhuc::class, 'sanPham'])->name('trang-phuc.san-pham');
         Route::post('/san-pham', [AdminTrangPhuc::class, 'storeSanPham'])->name('trang-phuc.san-pham.store');
         Route::post('/san-pham/import-json', [AdminTrangPhuc::class, 'importSanPhamJson'])->name('trang-phuc.san-pham.import-json');

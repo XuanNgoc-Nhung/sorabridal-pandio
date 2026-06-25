@@ -138,6 +138,7 @@
                         <th style="width: 64px;">Ảnh</th>
                         <th style="min-width: 110px;">Mã SP</th>
                         <th style="min-width: 180px;">Tên sản phẩm</th>
+                        <th style="min-width: 140px;">Loại trang phục</th>
                         <th style="min-width: 120px;">Ngày nhập</th>
                         <th class="text-end" style="min-width: 110px;">Giá trị</th>
                         <th class="text-center" style="min-width: 90px;">Lượt dùng</th>
@@ -155,6 +156,7 @@
                         $maHienThi = filled($item->ma_san_pham) ? $item->ma_san_pham : '—';
                         $ngayNhapHienThi = filled($item->ngay_nhap) ? $item->ngay_nhap : '—';
                         $ghiChuRutGon = filled($item->ghi_chu) ? \Illuminate\Support\Str::limit($item->ghi_chu, 40) : '—';
+                        $loaiTrangPhucHienThi = $item->loaiTrangPhuc?->ten_danh_muc ?? '—';
                         $luotDung = (int) ($item->luot_dung_thue ?? 0) + (int) ($item->luot_dung_cuoi ?? 0);
                     @endphp
                     <tr>
@@ -173,6 +175,7 @@
                         </td>
                         <td><span class="fw-medium">{{ $maHienThi }}</span></td>
                         <td class="text-wrap"><span class="fw-medium">{{ $item->ten_san_pham ?? '—' }}</span></td>
+                        <td class="text-wrap">{{ $loaiTrangPhucHienThi }}</td>
                         <td class="text-nowrap">{{ $ngayNhapHienThi }}</td>
                         <td class="text-end text-nowrap">{{ $giaTriTxt }}</td>
                         <td class="text-center text-nowrap">{{ number_format($luotDung, 0, ',', '.') }}</td>
@@ -211,6 +214,7 @@
                                             data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
                                             data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                             data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                            data-loai-trang-phuc="{{ $item->loai_trang_phuc ?? '' }}"
                                             data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                             data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                             data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
@@ -237,7 +241,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
+                        <td colspan="11" class="text-center py-4 text-muted">Chưa có dữ liệu sản phẩm trang phục.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -305,6 +309,7 @@
                                             data-url="{{ route('admin.trang-phuc.san-pham.update', $item) }}"
                                             data-ten="{{ e($item->ten_san_pham ?? '') }}"
                                             data-ma="{{ e($item->ma_san_pham ?? '') }}"
+                                            data-loai-trang-phuc="{{ $item->loai_trang_phuc ?? '' }}"
                                             data-ngay-nhap="{{ e($item->ngay_nhap ?? '') }}"
                                             data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}"
                                             data-hinh-anh-duong-dan="{{ e($item->hinh_anh ?? '') }}"
@@ -556,6 +561,15 @@
                                     <input type="text" class="form-control" id="them_ma_san_pham" name="ma_san_pham" value="{{ old('ma_san_pham') }}" placeholder="Ví dụ: TP001" required>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
+                                    <label class="form-label" for="them_loai_trang_phuc">Loại trang phục</label>
+                                    <select class="select2-admin form-select" id="them_loai_trang_phuc" name="loai_trang_phuc" data-placeholder="Chọn loại trang phục">
+                                        <option value=""></option>
+                                        @foreach($danhMucTrangPhucs ?? [] as $dm)
+                                            <option value="{{ $dm->id }}" @selected((string) old('loai_trang_phuc') === (string) $dm->id)>{{ $dm->ten_danh_muc }} ({{ $dm->ma_danh_muc }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="them_ngay_nhap">Ngày nhập</label>
                                     <input type="text" class="form-control" id="them_ngay_nhap" name="ngay_nhap" value="{{ old('ngay_nhap') }}" placeholder="Ví dụ: 18/06/2026">
                                 </div>
@@ -641,6 +655,15 @@
                                 <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="sua_ma_san_pham">Mã sản phẩm <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="sua_ma_san_pham" name="ma_san_pham" placeholder="Ví dụ: TP001" required>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
+                                    <label class="form-label" for="sua_loai_trang_phuc">Loại trang phục</label>
+                                    <select class="select2-admin form-select" id="sua_loai_trang_phuc" name="loai_trang_phuc" data-placeholder="Chọn loại trang phục">
+                                        <option value=""></option>
+                                        @foreach($danhMucTrangPhucs ?? [] as $dm)
+                                            <option value="{{ $dm->id }}">{{ $dm->ten_danh_muc }} ({{ $dm->ma_danh_muc }})</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-6 col-xl-6">
                                     <label class="form-label" for="sua_ngay_nhap">Ngày nhập</label>
@@ -1309,6 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalThem) {
         modalThem.addEventListener('hidden.bs.modal', function() {
             clearPreview();
+            setAdminSelect2Value('them_loai_trang_phuc', '');
             document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
             document.body.classList.remove('modal-open');
             document.body.style.removeProperty('overflow');
@@ -1319,6 +1343,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal Sửa: gán data vào form
     var modalSua = document.getElementById('modalSuaSanPham');
     var formSua = document.getElementById('formSuaSanPham');
+    var $ = window.jQuery || window.$;
+
+    function setAdminSelect2Value(selectId, value) {
+        var el = document.getElementById(selectId);
+        if (!el) return;
+        var v = value || '';
+        el.value = v;
+        if ($ && $.fn.select2 && $(el).data('select2')) {
+            $(el).val(v || null).trigger('change');
+        }
+    }
+
     var suaInputHinhAnh = document.getElementById('sua_sp_hinh_anh');
     var suaInputHinhAnhDuongDan = document.getElementById('sua_hinh_anh_duong_dan');
     var suaPlaceholder = document.getElementById('sua_sp_hinh_anh_placeholder');
@@ -1423,6 +1459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_ngay_nhap').value = btn.getAttribute('data-ngay-nhap') || '';
             document.getElementById('sua_ghi_chu').value = btn.getAttribute('data-ghi-chu') || '';
             document.getElementById('sua_gia_tri').value = btn.getAttribute('data-gia-tri') || '';
+            setAdminSelect2Value('sua_loai_trang_phuc', btn.getAttribute('data-loai-trang-phuc'));
 
             var duongDanHinhAnh = btn.getAttribute('data-hinh-anh-duong-dan') || '';
             if (suaInputHinhAnhDuongDan) suaInputHinhAnhDuongDan.value = duongDanHinhAnh;

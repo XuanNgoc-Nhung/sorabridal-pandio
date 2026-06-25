@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TrangPhuc extends Model
@@ -69,6 +70,7 @@ class TrangPhuc extends Model
     protected $fillable = [
         'ten_san_pham',
         'ma_san_pham',
+        'loai_trang_phuc',
         'ngay_nhap',
         'hinh_anh',
         'ghi_chu',
@@ -84,9 +86,18 @@ class TrangPhuc extends Model
     protected function casts(): array
     {
         return [
+            'loai_trang_phuc' => 'integer',
             'gia_tri' => 'decimal:2',
             'trang_thai' => 'integer',
         ];
+    }
+
+    /**
+     * Loại trang phục (danh mục).
+     */
+    public function loaiTrangPhuc(): BelongsTo
+    {
+        return $this->belongsTo(DanhMucTrangPhuc::class, 'loai_trang_phuc');
     }
 
     /**
