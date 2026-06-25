@@ -57,6 +57,21 @@ class User extends Authenticatable
         'khac' => 'Khác',
     ];
 
+    public const STATUS_DA_NGHI = 0;
+
+    public const STATUS_DANG_LAM_VIEC = 1;
+
+    public const STATUS_GIOI_HAN_QUYEN = 2;
+
+    public const STATUS_MAC_DINH = self::STATUS_DANG_LAM_VIEC;
+
+    /** @var array<int, string> */
+    public const STATUS_OPTIONS = [
+        self::STATUS_DANG_LAM_VIEC => 'Đang làm việc',
+        self::STATUS_DA_NGHI => 'Đã nghỉ',
+        self::STATUS_GIOI_HAN_QUYEN => 'Giới hạn quyền truy cập',
+    ];
+
     protected $fillable = [
         'name',
         'email',

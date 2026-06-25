@@ -126,8 +126,8 @@
                         <input type="text" class="flatpickr-date-admin form-control" id="wizard_ngay_chup_du_kien" name="ngay_chup_du_kien" value="{{ old('ngay_chup_du_kien', optional($hopDongCuoi->ngay_chup_du_kien)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
-                        <label class="form-label" for="wizard_ngay_cuoi_du_kien">Ngày cưới dự kiến</label>
-                        <input type="text" class="flatpickr-date-admin form-control" id="wizard_ngay_cuoi_du_kien" name="ngay_cuoi_du_kien" value="{{ old('ngay_cuoi_du_kien', optional($hopDongCuoi->ngay_cuoi_du_kien)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                        <label class="form-label" for="wizard_ngay_cuoi_chinh_thuc">Ngày cưới</label>
+                        <input type="text" class="flatpickr-date-admin form-control" id="wizard_ngay_cuoi_chinh_thuc" name="ngay_cuoi_chinh_thuc" value="{{ old('ngay_cuoi_chinh_thuc', optional($hopDongCuoi->ngay_cuoi_chinh_thuc)->format('Y-m-d')) }}" placeholder="dd/mm/yyyy" autocomplete="off">
                     </div>
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label" for="wizard_kenh_tiep_can">Kênh tiếp cận</label>
@@ -2639,7 +2639,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var soTienPhaiTraEl = document.getElementById('wizard_so_tien_phai_tra');
         var hanLan2El = document.getElementById('wizard_han_thanh_toan_lan2');
         var hanLan3El = document.getElementById('wizard_han_thanh_toan_lan3');
-        var ngayCuoiEl = document.getElementById('wizard_ngay_cuoi_du_kien');
+        var ngayCuoiEl = document.getElementById('wizard_ngay_cuoi_chinh_thuc');
         var ngayKyEl = document.getElementById('wizard_ngay_ky_hop_dong');
 
         var tongTienDichVu = 0;
@@ -3484,6 +3484,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         var hopSync = JSON.parse(formWizard.getAttribute('data-hop-dong-cuoi') || '{}') || {};
                         hopSync.loai_hop_dong = getLoaiHopDongValue() || null;
+                        var ngayCuoiInput = document.getElementById('wizard_ngay_cuoi_chinh_thuc');
+                        hopSync.ngay_cuoi_chinh_thuc = ngayCuoiInput ? String(ngayCuoiInput.value || '').trim() : '';
                         formWizard.setAttribute('data-hop-dong-cuoi', JSON.stringify(hopSync));
                     } catch (eSyncLoai) { /* ignore */ }
                     done(null);
@@ -3745,7 +3747,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (
                     e.target.id === 'wizard_chiet_khau' ||
                     e.target.id === 'wizard_ma_giam_gia' ||
-                    e.target.id === 'wizard_ngay_cuoi_du_kien'
+                    e.target.id === 'wizard_ngay_cuoi_chinh_thuc'
                 ) {
                     if (e.target.id === 'wizard_ma_giam_gia') resetVoucherDiscount('');
                     syncStep3PaymentFields();

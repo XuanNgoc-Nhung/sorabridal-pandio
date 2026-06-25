@@ -119,6 +119,7 @@
                         <th>Ngày ký hợp đồng</th>
                         <th>Loại nhân viên</th>
                         <th>Loại hợp đồng</th>
+                        <th>Trạng thái</th>
                         <th>Lương cứng</th>
                         <th>Lương mềm</th>
                         <th>Phụ cấp</th>
@@ -157,6 +158,7 @@
                         <td>{{ $nv?->ngay_ky_hop_dong ? $nv->ngay_ky_hop_dong->format('d/m/Y') : '—' }}</td>
                         <td>{{ $nv?->loai_nhan_vien ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$nv->loai_nhan_vien] ?? $nv->loai_nhan_vien) : '—' }}</td>
                         <td>{{ $nv?->loai_hop_dong ? (\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS[$nv->loai_hop_dong] ?? $nv->loai_hop_dong) : '—' }}</td>
+                        <td>{{ \App\Models\User::STATUS_OPTIONS[$item->status] ?? '—' }}</td>
                         <td>{{ $nv?->luong_cung !== null ? number_format($nv->luong_cung) : '—' }}</td>
                         <td>{{ $nv?->luong_mem !== null ? number_format($nv->luong_mem) : '—' }}</td>
                         <td>{{ $nv?->phu_cap !== null ? number_format($nv->phu_cap) : '—' }}</td>
@@ -185,6 +187,7 @@
                                        data-ngay-ky-hop-dong="{{ $nv?->ngay_ky_hop_dong?->format('Y-m-d') ?? '' }}"
                                        data-loai-nhan-vien="{{ e($nv?->loai_nhan_vien ?? '') }}"
                                        data-loai-hop-dong="{{ e($nv?->loai_hop_dong ?? '') }}"
+                                       data-status="{{ $item->status !== null ? (string) $item->status : '' }}"
                                        data-luong-cung="{{ $nv?->luong_cung ?? '' }}"
                                        data-luong-mem="{{ $nv?->luong_mem ?? '' }}"
                                        data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
@@ -214,7 +217,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="20" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
+                        <td colspan="21" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -379,6 +382,14 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_status">Trạng thái</label>
+                                    <select class="select2-admin form-select" id="them_status" name="status" data-placeholder="Chọn trạng thái">
+                                        @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" @selected((string) old('status', \App\Models\User::STATUS_MAC_DINH) === (string) $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
                                     <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ)</label>
                                     <input type="number" class="form-control" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung', 0) }}" placeholder="0" min="0" step="1000">
                                 </div>
@@ -521,6 +532,14 @@
                                     <select class="select2-admin form-select" id="sua_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
                                         <option value="">-- Chọn --</option>
                                         @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_status">Trạng thái</label>
+                                    <select class="select2-admin form-select" id="sua_status" name="status" data-placeholder="Chọn trạng thái">
+                                        @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
@@ -773,6 +792,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.setAdminDateInput) { setAdminDateInput('sua_ngay_vao_cong_ty', btn.getAttribute('data-ngay-vao-cong-ty') || ''); setAdminDateInput('sua_ngay_ky_hop_dong', btn.getAttribute('data-ngay-ky-hop-dong') || ''); } else { document.getElementById('sua_ngay_vao_cong_ty').value = btn.getAttribute('data-ngay-vao-cong-ty') || ''; document.getElementById('sua_ngay_ky_hop_dong').value = btn.getAttribute('data-ngay-ky-hop-dong') || ''; }
             setAdminSelect2Value('sua_loai_nhan_vien', btn.getAttribute('data-loai-nhan-vien'));
             setAdminSelect2Value('sua_loai_hop_dong', btn.getAttribute('data-loai-hop-dong'));
+            setAdminSelect2Value('sua_status', btn.getAttribute('data-status'));
             document.getElementById('sua_luong_cung').value = btn.getAttribute('data-luong-cung') || '';
             document.getElementById('sua_luong_mem').value = btn.getAttribute('data-luong-mem') || '';
             document.getElementById('sua_phu_cap').value = btn.getAttribute('data-phu-cap') || '';

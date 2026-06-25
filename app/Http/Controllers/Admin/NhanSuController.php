@@ -502,6 +502,7 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong' => 'nullable|date',
             'loai_nhan_vien' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_NHAN_VIEN_OPTIONS)),
             'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_HOP_DONG_OPTIONS)),
+            'status' => 'nullable|integer|in:'.implode(',', array_keys(User::STATUS_OPTIONS)),
             'luong_cung' => 'nullable|integer|min:0',
             'luong_mem' => 'nullable|integer|min:0',
             'phu_cap' => 'nullable|integer|min:0',
@@ -537,6 +538,8 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong.date' => 'Ngày ký hợp đồng không đúng định dạng.',
             'loai_nhan_vien.in' => 'Loại nhân viên không hợp lệ.',
             'loai_hop_dong.in' => 'Loại hợp đồng không hợp lệ.',
+            'status.integer' => 'Trạng thái phải là số nguyên.',
+            'status.in' => 'Trạng thái không hợp lệ.',
             'luong_cung.integer' => 'Lương cứng phải là số nguyên.',
             'luong_cung.min' => 'Lương cứng không được âm.',
             'luong_mem.integer' => 'Lương mềm phải là số nguyên.',
@@ -564,6 +567,7 @@ class NhanSuController extends Controller
                 'phone' => $request->input('phone'),
                 'password' => $validated['password'],
                 'role' => $validated['role'],
+                'status' => (int) $request->input('status', User::STATUS_MAC_DINH),
             ]);
 
             $hinhAnhPath = null;
@@ -615,6 +619,7 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong' => 'nullable|date',
             'loai_nhan_vien' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_NHAN_VIEN_OPTIONS)),
             'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_HOP_DONG_OPTIONS)),
+            'status' => 'nullable|integer|in:'.implode(',', array_keys(User::STATUS_OPTIONS)),
             'luong_cung' => 'nullable|integer|min:0',
             'luong_mem' => 'nullable|integer|min:0',
             'phu_cap' => 'nullable|integer|min:0',
@@ -644,6 +649,8 @@ class NhanSuController extends Controller
             'ngay_ky_hop_dong.date' => 'Ngày ký hợp đồng không đúng định dạng.',
             'loai_nhan_vien.in' => 'Loại nhân viên không hợp lệ.',
             'loai_hop_dong.in' => 'Loại hợp đồng không hợp lệ.',
+            'status.integer' => 'Trạng thái phải là số nguyên.',
+            'status.in' => 'Trạng thái không hợp lệ.',
             'luong_cung.integer' => 'Lương cứng phải là số nguyên.',
             'luong_cung.min' => 'Lương cứng không được âm.',
             'luong_mem.integer' => 'Lương mềm phải là số nguyên.',
@@ -667,6 +674,7 @@ class NhanSuController extends Controller
                 'email' => $validated['email'],
                 'phone' => $request->input('phone'),
                 'role' => (int) $request->input('role', $user->role),
+                'status' => (int) $request->input('status', $user->status ?? User::STATUS_MAC_DINH),
             ]);
 
             $nhanVien = $user->nhanVien;

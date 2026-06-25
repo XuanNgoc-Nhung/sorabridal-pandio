@@ -510,7 +510,7 @@ class KhachHangController extends Controller
         $merge = $request->all();
         $loaiHopDong = trim((string) ($merge['loai_hop_dong'] ?? ''));
         $merge['loai_hop_dong'] = $loaiHopDong !== '' ? $loaiHopDong : null;
-        foreach (['ngay_chup_du_kien', 'ngay_cuoi_du_kien'] as $k) {
+        foreach (['ngay_chup_du_kien', 'ngay_cuoi_chinh_thuc'] as $k) {
             if (! array_key_exists($k, $merge)) {
                 continue;
             }
@@ -529,7 +529,7 @@ class KhachHangController extends Controller
             'dia_chi_co_dau' => 'nullable|string|max:500',
             'dia_chi_chu_re' => 'nullable|string|max:500',
             'ngay_chup_du_kien' => 'nullable|date',
-            'ngay_cuoi_du_kien' => 'nullable|date',
+            'ngay_cuoi_chinh_thuc' => 'nullable|date',
             'loai_hop_dong' => ($gioiHanChinhSua ? 'nullable' : 'required').'|string|in:'.implode(',', array_keys(HopDongCuoi::LOAI_HOP_DONG)),
             'kenh_tiep_can' => 'nullable|string|max:100',
             'thanh_vien_nhan_vien_ids' => 'nullable|array',
@@ -543,7 +543,7 @@ class KhachHangController extends Controller
             'dia_chi_co_dau' => 'địa chỉ cô dâu',
             'dia_chi_chu_re' => 'địa chỉ chú rể',
             'ngay_chup_du_kien' => 'ngày chụp dự kiến',
-            'ngay_cuoi_du_kien' => 'ngày cưới dự kiến',
+            'ngay_cuoi_chinh_thuc' => 'ngày cưới',
             'loai_hop_dong' => 'loại hợp đồng',
             'kenh_tiep_can' => 'kênh tiếp cận',
             'thanh_vien_nhan_vien_ids' => 'thành viên sale',
