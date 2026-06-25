@@ -122,6 +122,34 @@ class User extends Authenticatable
         return VaiTro::isAdminMa($this->role);
     }
 
+    public function daNghiViec(): bool
+    {
+        return (int) $this->status === self::STATUS_DA_NGHI;
+    }
+
+    public function biGioiHanQuyenTruyCap(): bool
+    {
+        return (int) $this->status === self::STATUS_GIOI_HAN_QUYEN;
+    }
+
+    public function coTheDangNhap(): bool
+    {
+        return (int) ($this->status ?? self::STATUS_MAC_DINH) === self::STATUS_DANG_LAM_VIEC;
+    }
+
+    public function routeThongBaoTrangThai(): ?string
+    {
+        if ($this->daNghiViec()) {
+            return 'auth.da-nghi-viec';
+        }
+
+        if ($this->biGioiHanQuyenTruyCap()) {
+            return 'auth.gioi-han-quyen';
+        }
+
+        return null;
+    }
+
     /**
      * Quyền điều chỉnh hợp đồng cưới (từ vai_tro.dieu_chinh_hop_dong_cuoi).
      */

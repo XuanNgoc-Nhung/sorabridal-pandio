@@ -40,6 +40,13 @@ class AuthController extends Controller
             ]);
         }
 
+        $thongBaoRoute = $user->routeThongBaoTrangThai();
+        if ($thongBaoRoute !== null) {
+            throw ValidationException::withMessages([
+                'email' => [User::STATUS_OPTIONS[$user->status] ?? 'Tài khoản không được phép truy cập hệ thống.'],
+            ]);
+        }
+
         $deviceName = $request->input('device_name', 'api-client');
         $token = $user->createToken($deviceName)->plainTextToken;
 

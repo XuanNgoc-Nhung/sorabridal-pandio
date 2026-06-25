@@ -40,11 +40,13 @@ Route::get('/', HomeController::class);
 // Đăng nhập / Đăng xuất / Đăng ký (guest mới vào được login, register; auth mới vào được logout)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('guest');
+Route::get('/login/da-nghi-viec', [AuthController::class, 'showDaNghiViecThongBao'])->name('auth.da-nghi-viec');
+Route::get('/login/gioi-han-quyen-truy-cap', [AuthController::class, 'showGioiHanQuyenThongBao'])->name('auth.gioi-han-quyen');
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register')->middleware('guest');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('guest');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-Route::get('/dang-xuat', [AuthController::class, 'logout'])->name('dang-xuat')->middleware('auth');
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'checkRoute']], function () {
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware(['auth', 'checkUserStatus']);
+Route::get('/dang-xuat', [AuthController::class, 'logout'])->name('dang-xuat')->middleware(['auth', 'checkUserStatus']);
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'checkUserStatus', 'checkRoute']], function () {
     // Tổng quan
     Route::get('/', [Admin::class, 'index'])->name('index');
     Route::view('/chua-duoc-phan-quyen', 'admin.chua-duoc-phan-quyen')->name('chua-duoc-phan-quyen');

@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'checkRoute' => \App\Http\Middleware\CheckRoute::class,
+            'checkUserStatus' => \App\Http\Middleware\CheckUserStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

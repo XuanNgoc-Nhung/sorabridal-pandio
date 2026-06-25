@@ -20,6 +20,32 @@ class AuthController extends Controller
     }
 
     /**
+     * Thông báo tài khoản đã nghỉ việc.
+     */
+    public function showDaNghiViecThongBao()
+    {
+        return view('auth.trang-thai-tai-khoan', [
+            'title' => 'Tài khoản đã nghỉ việc',
+            'message' => 'Tài khoản của bạn đã được đánh dấu là đã nghỉ việc nên không thể đăng nhập vào hệ thống. Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là nhầm lẫn.',
+            'accent' => 'danger',
+            'icon' => 'tabler-user-off',
+        ]);
+    }
+
+    /**
+     * Thông báo tài khoản bị giới hạn quyền truy cập.
+     */
+    public function showGioiHanQuyenThongBao()
+    {
+        return view('auth.trang-thai-tai-khoan', [
+            'title' => 'Tài khoản bị giới hạn quyền truy cập',
+            'message' => 'Tài khoản của bạn hiện đang bị giới hạn quyền truy cập hệ thống. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
+            'accent' => 'warning',
+            'icon' => 'tabler-lock-access',
+        ]);
+    }
+
+    /**
      * Hiển thị form đăng ký.
      */
     public function showRegisterForm()
@@ -111,6 +137,13 @@ class AuthController extends Controller
         if ($user && Auth::getProvider()->validateCredentials($user, ['password' => $password])) {
             Auth::login($user);
             $request->session()->regenerate();
+
+            $user->refresh();
+            $thongBaoRoute = $user->routeThongBaoTrangThai();
+            if ($thongBaoRoute !== null) {
+                return redirect()->route($thongBaoRoute);
+            }
+
             return redirect()->intended(route('admin.index'));
         }
 
