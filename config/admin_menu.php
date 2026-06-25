@@ -131,7 +131,7 @@ return [
         'label' => 'Báo cáo',
         'icon' => 'ti tabler-report-analytics',
         'children' => [
-            ['stt' => 1, 'route' => 'admin.bao-cao.ads', 'label' => 'Báo cáo Ads', 'icon' => 'ti tabler-chart-line'],
+            ['stt' => 1, 'route' => 'admin.bao-cao.ads', 'label' => 'Quảng cáo', 'icon' => 'ti tabler-chart-line'],
         ],
     ],
     [

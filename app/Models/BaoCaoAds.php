@@ -17,6 +17,8 @@ class BaoCaoAds extends Model
 
     public const SAP_XEP_ADS_FB = 'ads_fb';
 
+    public const SAP_XEP_CPQC_GOOGLE = 'cpqc_google';
+
     public const SAP_XEP_KHACH_MOI = 'khach_moi';
 
     public const SAP_XEP_LICH_HEN = 'lich_hen';
@@ -37,8 +39,9 @@ class BaoCaoAds extends Model
     public const SAP_XEP_OPTIONS = [
         self::SAP_XEP_ID => 'Mới nhất',
         self::SAP_XEP_NGAY => 'Ngày',
-        self::SAP_XEP_ADS_TIKTOK => 'Ads TikTok',
-        self::SAP_XEP_ADS_FB => 'Ads Facebook',
+        self::SAP_XEP_ADS_TIKTOK => 'CPQC TikTok',
+        self::SAP_XEP_ADS_FB => 'CPQC Facebook',
+        self::SAP_XEP_CPQC_GOOGLE => 'CPQC Google',
         self::SAP_XEP_KHACH_MOI => 'Khách mới',
         self::SAP_XEP_LICH_HEN => 'Lịch hẹn',
         self::SAP_XEP_CPL => 'CPL',
@@ -54,6 +57,7 @@ class BaoCaoAds extends Model
         'ngay',
         'ads_tiktok',
         'ads_fb',
+        'cpqc_google',
         'khach_moi',
         'lich_hen',
         'cpl',

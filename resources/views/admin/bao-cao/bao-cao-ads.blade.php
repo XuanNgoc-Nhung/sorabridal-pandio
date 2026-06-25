@@ -89,7 +89,7 @@
 
     <div class="card mb-0">
         <h5 class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <span>Báo cáo Ads</span>
+            <span>Quảng cáo</span>
             <button type="button"
                 class="btn btn-primary btn-sm"
                 data-bs-toggle="modal"
@@ -104,8 +104,9 @@
                     <tr>
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th>Ngày</th>
-                        <th>Ads TikTok</th>
-                        <th>Ads FB</th>
+                        <th>CPQC TikTok</th>
+                        <th>CPQC Facebook</th>
+                        <th>CPQC Google</th>
                         <th>Khách mới</th>
                         <th>Lịch hẹn</th>
                         <th>CPL</th>
@@ -122,6 +123,7 @@
                         <td>{{ $item->ngay ?? '—' }}</td>
                         <td>{{ $item->ads_tiktok ?? '—' }}</td>
                         <td>{{ $item->ads_fb ?? '—' }}</td>
+                        <td>{{ $item->cpqc_google ?? '—' }}</td>
                         <td>{{ $item->khach_moi ?? '—' }}</td>
                         <td>{{ $item->lich_hen ?? '—' }}</td>
                         <td>{{ $item->cpl ?? '—' }}</td>
@@ -142,6 +144,7 @@
                                         data-ngay="{{ e($item->ngay ?? '') }}"
                                         data-ads-tiktok="{{ e($item->ads_tiktok ?? '') }}"
                                         data-ads-fb="{{ e($item->ads_fb ?? '') }}"
+                                        data-cpqc-google="{{ e($item->cpqc_google ?? '') }}"
                                         data-khach-moi="{{ e($item->khach_moi ?? '') }}"
                                         data-lich-hen="{{ e($item->lich_hen ?? '') }}"
                                         data-cpl="{{ e($item->cpl ?? '') }}"
@@ -163,13 +166,13 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="text-center py-4 text-muted">Chưa có dữ liệu báo cáo Ads.</td>
+                        <td colspan="12" class="text-center py-4 text-muted">Chưa có dữ liệu quảng cáo.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <x-pagination-info :paginator="$danhSach ?? null" label="báo cáo Ads" />
+        <x-pagination-info :paginator="$danhSach ?? null" label="quảng cáo" />
         </div>
     </div>
 </div>
@@ -178,7 +181,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-form-bao-cao-ads">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalThemBaoCaoAdsLabel">Thêm báo cáo Ads</h5>
+                <h5 class="modal-title" id="modalThemBaoCaoAdsLabel">Thêm quảng cáo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <form action="{{ route('admin.bao-cao.ads.store') }}" method="POST">
@@ -201,12 +204,16 @@
                             <input type="text" class="form-control" id="them_ngay" name="ngay" value="{{ old('ngay') }}" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="them_ads_tiktok">Ads TikTok</label>
+                            <label class="form-label" for="them_ads_tiktok">CPQC TikTok</label>
                             <input type="text" class="form-control" id="them_ads_tiktok" name="ads_tiktok" value="{{ old('ads_tiktok') }}" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="them_ads_fb">Ads Facebook</label>
+                            <label class="form-label" for="them_ads_fb">CPQC Facebook</label>
                             <input type="text" class="form-control" id="them_ads_fb" name="ads_fb" value="{{ old('ads_fb') }}" placeholder="Nhập">
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <label class="form-label" for="them_cpqc_google">CPQC Google</label>
+                            <input type="text" class="form-control" id="them_cpqc_google" name="cpqc_google" value="{{ old('cpqc_google') }}" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
                             <label class="form-label" for="them_khach_moi">Khách mới</label>
@@ -249,7 +256,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-form-bao-cao-ads">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalSuaBaoCaoAdsLabel">Chỉnh sửa báo cáo Ads</h5>
+                <h5 class="modal-title" id="modalSuaBaoCaoAdsLabel">Chỉnh sửa quảng cáo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <form id="formSuaBaoCaoAds" method="POST" action="">
@@ -262,12 +269,16 @@
                             <input type="text" class="form-control" id="sua_ngay" name="ngay" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="sua_ads_tiktok">Ads TikTok</label>
+                            <label class="form-label" for="sua_ads_tiktok">CPQC TikTok</label>
                             <input type="text" class="form-control" id="sua_ads_tiktok" name="ads_tiktok" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
-                            <label class="form-label" for="sua_ads_fb">Ads Facebook</label>
+                            <label class="form-label" for="sua_ads_fb">CPQC Facebook</label>
                             <input type="text" class="form-control" id="sua_ads_fb" name="ads_fb" placeholder="Nhập">
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <label class="form-label" for="sua_cpqc_google">CPQC Google</label>
+                            <input type="text" class="form-control" id="sua_cpqc_google" name="cpqc_google" placeholder="Nhập">
                         </div>
                         <div class="col-6 col-md-4 col-lg-3">
                             <label class="form-label" for="sua_khach_moi">Khách mới</label>
@@ -314,7 +325,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
-                Bạn có chắc muốn xóa báo cáo Ads này?
+                Bạn có chắc muốn xóa bản ghi quảng cáo này?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -378,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ['ngay', 'ngay'],
         ['ads-tiktok', 'ads_tiktok'],
         ['ads-fb', 'ads_fb'],
+        ['cpqc-google', 'cpqc_google'],
         ['khach-moi', 'khach_moi'],
         ['lich-hen', 'lich_hen'],
         ['cpl', 'cpl'],

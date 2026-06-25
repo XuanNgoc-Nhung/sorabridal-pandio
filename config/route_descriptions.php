@@ -10,7 +10,7 @@ return [
     'admin.lich-chup' => 'Lịch chụp',
     'admin.lich-shop' => 'Lịch shop',
     'admin.note-khach-moi' => 'Note khách mới',
-    'admin.bao-cao.ads' => 'Báo cáo Ads',
+    'admin.bao-cao.ads' => 'Quảng cáo',
     'admin.khach-hang.tao-hop-dong' => 'Tạo hợp đồng cưới',
     'admin.khach-hang.tao-hop-dong-canh-bao' => 'Cảnh báo mã hợp đồng tạo hợp đồng',
     'admin.tu-van.danh-sach' => 'Danh sách đăng ký tư vấn',
