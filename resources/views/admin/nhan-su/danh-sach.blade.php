@@ -112,6 +112,7 @@
                         <th colspan="7" class="text-center nhan-su-th-group">Thông tin làm việc</th>
                         <th colspan="5" class="text-center nhan-su-th-group">Lương</th>
                         <th colspan="2" class="text-center nhan-su-th-group">Hoa hồng</th>
+                        <th colspan="4" class="text-center nhan-su-th-group">Ngân hàng</th>
                         <th rowspan="2" class="text-center align-middle" style="width: 100px;">Thao tác</th>
                     </tr>
                     <tr>
@@ -134,6 +135,10 @@
                         <th>Lương tăng ca</th>
                         <th>HĐ cưới</th>
                         <th>HĐ trang phục</th>
+                        <th>Ngân hàng</th>
+                        <th>Chi nhánh</th>
+                        <th>Số tài khoản</th>
+                        <th>Chủ tài khoản</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -174,6 +179,10 @@
                         <td>{{ $nv?->luong_tang_ca !== null ? number_format($nv->luong_tang_ca) : '—' }}</td>
                         <td>{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? number_format((float) $nv->hoa_hong_hop_dong_cuoi, 2, ',', '.') : '—' }}</td>
                         <td>{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? number_format((float) $nv->hoa_hong_hop_dong_trang_phuc, 2, ',', '.') : '—' }}</td>
+                        <td>{{ $nv?->ngan_hang ?? '—' }}</td>
+                        <td>{{ $nv?->chi_nhanh ?? '—' }}</td>
+                        <td class="text-nowrap">{{ $nv?->so_tai_khoan ?? '—' }}</td>
+                        <td>{{ $nv?->chu_tai_khoan ?? '—' }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -205,6 +214,10 @@
                                        data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
                                        data-hoa-hong-hop-dong-cuoi="{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? $nv->hoa_hong_hop_dong_cuoi : '' }}"
                                        data-hoa-hong-hop-dong-trang-phuc="{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? $nv->hoa_hong_hop_dong_trang_phuc : '' }}"
+                                       data-ngan-hang="{{ e($nv?->ngan_hang ?? '') }}"
+                                       data-chi-nhanh="{{ e($nv?->chi_nhanh ?? '') }}"
+                                       data-so-tai-khoan="{{ e($nv?->so_tai_khoan ?? '') }}"
+                                       data-chu-tai-khoan="{{ e($nv?->chu_tai_khoan ?? '') }}"
                                        data-hinh-anh="{{ !empty($hinhAnh) ? asset('storage/' . $hinhAnh) : '' }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
                                     </a>
@@ -229,7 +242,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="23" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
+                        <td colspan="27" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -274,7 +287,7 @@
 
 {{-- Modal Thêm mới nhân sự --}}
 <div class="modal fade" id="modalThemNhanSu" tabindex="-1" aria-labelledby="modalThemNhanSuLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-them-nhan-su">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl modal-them-nhan-su">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalThemNhanSuLabel">Thêm nhân sự mới</h5>
@@ -294,140 +307,180 @@
                 </div>
                 @endif
                 <div class="modal-body">
-                    <div class="row g-3">
-                        {{-- Cột trái: Hình ảnh --}}
-                        <div class="col-12 col-lg-4">
-                            <div class="sticky-lg-top">
+                    <div class="row g-4 align-items-start">
+                        <div class="col-12 col-lg-3">
+                            <div class="sticky-lg-top nhan-su-form-avatar">
                                 <label class="form-label" for="them_hinh_anh">Hình ảnh</label>
-                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2" style="min-height: 210px;">
+                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2" style="min-height: 200px;">
                                     <div id="them_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
                                         <span class="small">Vui lòng chọn ảnh đại diện</span>
                                     </div>
-                                    <img id="them_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 210px; object-fit: cover;">
+                                    <img id="them_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 200px; object-fit: cover;">
                                 </div>
                                 <input type="file" class="form-control" id="them_hinh_anh" name="hinh_anh" accept="image/jpeg,image/png,image/gif,image/webp">
                                 <small class="text-muted d-block mt-1">JPEG, PNG, GIF, WebP — tối đa 5MB</small>
                                 <div id="them_hinh_anh_error" class="alert alert-danger mt-2 d-none" role="alert"></div>
                             </div>
                         </div>
-                        {{-- Cột phải: Form thông tin --}}
-                        <div class="col-12 col-lg-8">
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_ho_ten">Họ tên <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="them_ho_ten" name="name" value="{{ old('name') }}" placeholder="Nhập họ tên" required>
+                        <div class="col-12 col-lg-9 d-flex flex-column gap-4">
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Thông tin cá nhân</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_ho_ten">Họ tên <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="them_ho_ten" name="name" value="{{ old('name') }}" placeholder="Nhập họ tên" required>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_gioi_tinh">Giới tính</label>
+                                        <select class="select2-admin form-select" id="them_gioi_tinh" name="gioi_tinh" data-placeholder="Chọn giới tính">
+                                            <option value="">-- Chọn --</option>
+                                            <option value="nam" {{ old('gioi_tinh') == 'nam' ? 'selected' : '' }}>Nam</option>
+                                            <option value="nu" {{ old('gioi_tinh') == 'nu' ? 'selected' : '' }}>Nữ</option>
+                                            <option value="khac" {{ old('gioi_tinh') == 'khac' ? 'selected' : '' }}>Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_email">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="them_email" name="email" value="{{ old('email') }}" placeholder="email@example.com" required>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_so_dien_thoai">Số điện thoại</label>
+                                        <input type="text" class="form-control" id="them_so_dien_thoai" name="phone" value="{{ old('phone') }}" placeholder="0912345678" maxlength="20">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_ngay_sinh">Ngày sinh</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_sinh" name="ngay_sinh" value="{{ old('ngay_sinh') }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_cccd">CCCD</label>
+                                        <input type="text" class="form-control" id="them_cccd" name="cccd" value="{{ old('cccd') }}" placeholder="Số CCCD/CMND" maxlength="20">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_mat_khau">Mật khẩu <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="them_mat_khau" name="password" placeholder="Nhập mật khẩu" required>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_mat_khau_xac_nhan">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="them_mat_khau_xac_nhan" name="password_confirmation" placeholder="Nhập lại mật khẩu" required>
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_gioi_tinh">Giới tính</label>
-                                    <select class="select2-admin form-select" id="them_gioi_tinh" name="gioi_tinh" data-placeholder="Chọn giới tính">
-                                        <option value="">-- Chọn --</option>
-                                        <option value="nam" {{ old('gioi_tinh') == 'nam' ? 'selected' : '' }}>Nam</option>
-                                        <option value="nu" {{ old('gioi_tinh') == 'nu' ? 'selected' : '' }}>Nữ</option>
-                                        <option value="khac" {{ old('gioi_tinh') == 'khac' ? 'selected' : '' }}>Khác</option>
-                                    </select>
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Vị trí làm việc</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_vai_tro">Vai trò</label>
+                                        <select class="select2-admin form-select" id="them_vai_tro" name="role" data-placeholder="Chọn vai trò">
+                                            @foreach($dsVaiTro ?? [] as $vt)
+                                            <option value="{{ $vt->ma_vai_tro }}" {{ (string) old('role', $maVaiTroMacDinh ?? '') === (string) $vt->ma_vai_tro ? 'selected' : '' }}>{{ $vt->ten_vai_tro }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label for="them_phong_ban" class="form-label">Phòng ban <span class="text-danger">*</span></label>
+                                        <select id="them_phong_ban" name="phong_ban_id" class="select2-admin form-select" data-placeholder="Chọn phòng ban" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach($phongBans ?? [] as $pb)
+                                            <option value="{{ $pb->id }}" @selected((string) old('phong_ban_id') === (string) $pb->id)>{{ $pb->ten_phong_ban }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_ngay_vao_cong_ty">Ngày vào công ty</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_vao_cong_ty" name="ngay_vao_cong_ty" value="{{ old('ngay_vao_cong_ty') }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_ngay_ky_hop_dong">Ngày ký hợp đồng</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_ky_hop_dong" name="ngay_ky_hop_dong" value="{{ old('ngay_ky_hop_dong') }}" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
+                                        <select class="select2-admin form-select" id="them_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}" @selected(old('loai_nhan_vien') === $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_loai_hop_dong">Loại hợp đồng</label>
+                                        <select class="select2-admin form-select" id="them_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
+                                            <option value="">-- Chọn --</option>
+                                            @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}" @selected(old('loai_hop_dong') === $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_status">Trạng thái</label>
+                                        <select class="select2-admin form-select" id="them_status" name="status" data-placeholder="Chọn trạng thái">
+                                            @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}" @selected((string) old('status', \App\Models\User::STATUS_MAC_DINH) === (string) $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_email">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="them_email" name="email" value="{{ old('email') }}" placeholder="email@example.com" required>
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Lương &amp; thưởng</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ)</label>
+                                        <input type="number" class="form-control" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung', 0) }}" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_luong_mem">Lương mềm (VNĐ)</label>
+                                        <input type="number" class="form-control" id="them_luong_mem" name="luong_mem" value="{{ old('luong_mem', 0) }}" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_phu_cap">Phụ cấp (VNĐ)</label>
+                                        <input type="number" class="form-control" id="them_phu_cap" name="phu_cap" value="{{ old('phu_cap', 0) }}" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_luong_co_ban">Lương cơ bản (VNĐ)</label>
+                                        <input type="number" class="form-control" id="them_luong_co_ban" name="luong_co_ban" value="{{ old('luong_co_ban', 50000) }}" placeholder="50000" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_luong_tang_ca">Lương tăng ca (VNĐ)</label>
+                                        <input type="number" class="form-control" id="them_luong_tang_ca" name="luong_tang_ca" value="{{ old('luong_tang_ca', 80000) }}" placeholder="80000" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
+                                        <input type="number" class="form-control" id="them_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" value="{{ old('hoa_hong_hop_dong_cuoi', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
+                                        <input type="number" class="form-control" id="them_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" value="{{ old('hoa_hong_hop_dong_trang_phuc', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_so_dien_thoai">Số điện thoại</label>
-                                    <input type="text" class="form-control" id="them_so_dien_thoai" name="phone" value="{{ old('phone') }}" placeholder="0912345678" maxlength="20">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_mat_khau">Mật khẩu <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" id="them_mat_khau" name="password" placeholder="Nhập mật khẩu" required>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_mat_khau_xac_nhan">Xác nhận mật khẩu <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" id="them_mat_khau_xac_nhan" name="password_confirmation" placeholder="Nhập lại mật khẩu" required>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_ngay_sinh">Ngày sinh</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_sinh" name="ngay_sinh" value="{{ old('ngay_sinh') }}" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_cccd">CCCD</label>
-                                    <input type="text" class="form-control" id="them_cccd" name="cccd" value="{{ old('cccd') }}" placeholder="Số CCCD/CMND" maxlength="20">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_vai_tro">Vai trò</label>
-                                    <select class="select2-admin form-select" id="them_vai_tro" name="role" data-placeholder="Chọn vai trò">
-                                        @foreach($dsVaiTro ?? [] as $vt)
-                                        <option value="{{ $vt->ma_vai_tro }}" {{ (string) old('role', $maVaiTroMacDinh ?? '') === (string) $vt->ma_vai_tro ? 'selected' : '' }}>{{ $vt->ten_vai_tro }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label for="them_phong_ban" class="form-label">Phòng ban <span class="text-danger">*</span></label>
-                                    <select id="them_phong_ban" name="phong_ban_id" class="select2-admin form-select" data-placeholder="Chọn phòng ban" required>
-                                        <option value="">-- Chọn --</option>
-                                        @foreach($phongBans ?? [] as $pb)
-                                        <option value="{{ $pb->id }}" @selected((string) old('phong_ban_id') === (string) $pb->id)>{{ $pb->ten_phong_ban }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_ngay_vao_cong_ty">Ngày vào công ty</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_vao_cong_ty" name="ngay_vao_cong_ty" value="{{ old('ngay_vao_cong_ty') }}" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_ngay_ky_hop_dong">Ngày ký hợp đồng</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_ky_hop_dong" name="ngay_ky_hop_dong" value="{{ old('ngay_ky_hop_dong') }}" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
-                                    <select class="select2-admin form-select" id="them_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
-                                        <option value="">-- Chọn --</option>
-                                        @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}" @selected(old('loai_nhan_vien') === $value)>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_loai_hop_dong">Loại hợp đồng</label>
-                                    <select class="select2-admin form-select" id="them_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
-                                        <option value="">-- Chọn --</option>
-                                        @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}" @selected(old('loai_hop_dong') === $value)>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_status">Trạng thái</label>
-                                    <select class="select2-admin form-select" id="them_status" name="status" data-placeholder="Chọn trạng thái">
-                                        @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}" @selected((string) old('status', \App\Models\User::STATUS_MAC_DINH) === (string) $value)>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ)</label>
-                                    <input type="number" class="form-control" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung', 0) }}" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_luong_mem">Lương mềm (VNĐ)</label>
-                                    <input type="number" class="form-control" id="them_luong_mem" name="luong_mem" value="{{ old('luong_mem', 0) }}" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_phu_cap">Phụ cấp (VNĐ)</label>
-                                    <input type="number" class="form-control" id="them_phu_cap" name="phu_cap" value="{{ old('phu_cap', 0) }}" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_luong_co_ban">Lương cơ bản (VNĐ)</label>
-                                    <input type="number" class="form-control" id="them_luong_co_ban" name="luong_co_ban" value="{{ old('luong_co_ban', 50000) }}" placeholder="50000" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_luong_tang_ca">Lương tăng ca (VNĐ)</label>
-                                    <input type="number" class="form-control" id="them_luong_tang_ca" name="luong_tang_ca" value="{{ old('luong_tang_ca', 80000) }}" placeholder="80000" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
-                                    <input type="number" class="form-control" id="them_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" value="{{ old('hoa_hong_hop_dong_cuoi', 1) }}" placeholder="1,00" min="0" step="0.01">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
-                                    <input type="number" class="form-control" id="them_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" value="{{ old('hoa_hong_hop_dong_trang_phuc', 1) }}" placeholder="1,00" min="0" step="0.01">
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Ngân hàng</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_ngan_hang">Ngân hàng</label>
+                                        <select class="select2-admin form-select" id="them_ngan_hang" name="ngan_hang" data-placeholder="Chọn ngân hàng">
+                                            <option value=""></option>
+                                            @foreach($dsNganHang ?? [] as $bank)
+                                            <option value="{{ $bank['short_name'] }}" @selected(old('ngan_hang') === $bank['short_name'])>{{ $bank['short_name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_chi_nhanh">Chi nhánh</label>
+                                        <input type="text" class="form-control" id="them_chi_nhanh" name="chi_nhanh" value="{{ old('chi_nhanh') }}" placeholder="Chi nhánh ngân hàng" maxlength="255">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_so_tai_khoan">Số tài khoản</label>
+                                        <input type="text" class="form-control" id="them_so_tai_khoan" name="so_tai_khoan" value="{{ old('so_tai_khoan') }}" placeholder="Nhập số tài khoản" maxlength="50">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="them_chu_tai_khoan">Chủ tài khoản</label>
+                                        <input type="text" class="form-control" id="them_chu_tai_khoan" name="chu_tai_khoan" value="{{ old('chu_tai_khoan') }}" placeholder="Tên chủ tài khoản" maxlength="150">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -446,7 +499,7 @@
 
 {{-- Modal Chỉnh sửa nhân sự --}}
 <div class="modal fade" id="modalSuaNhanSu" tabindex="-1" aria-labelledby="modalSuaNhanSuLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-them-nhan-su">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl modal-them-nhan-su">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalSuaNhanSuLabel">Chỉnh sửa nhân sự</h5>
@@ -467,130 +520,172 @@
                 </div>
                 @endif
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-12 col-lg-4">
-                            <div class="sticky-lg-top">
+                    <div class="row g-4 align-items-start">
+                        <div class="col-12 col-lg-3">
+                            <div class="sticky-lg-top nhan-su-form-avatar">
                                 <label class="form-label" for="sua_hinh_anh">Hình ảnh</label>
-                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2" style="min-height: 210px;">
+                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2" style="min-height: 200px;">
                                     <div id="sua_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
                                         <span class="small">Ảnh hiện tại hoặc chọn ảnh mới</span>
                                     </div>
-                                    <img id="sua_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 210px; object-fit: cover;">
+                                    <img id="sua_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 200px; object-fit: cover;">
                                 </div>
                                 <input type="file" class="form-control" id="sua_hinh_anh" name="hinh_anh" accept="image/jpeg,image/png,image/gif,image/webp">
                                 <small class="text-muted d-block mt-1">JPEG, PNG, GIF, WebP — tối đa 5MB</small>
                                 <div id="sua_hinh_anh_error" class="alert alert-danger mt-2 d-none" role="alert"></div>
                             </div>
                         </div>
-                        <div class="col-12 col-lg-8">
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_ho_ten">Họ tên <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="sua_ho_ten" name="name" placeholder="Nhập họ tên" required>
+                        <div class="col-12 col-lg-9 d-flex flex-column gap-4">
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Thông tin cá nhân</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_ho_ten">Họ tên <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="sua_ho_ten" name="name" placeholder="Nhập họ tên" required>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_gioi_tinh">Giới tính</label>
+                                        <select class="select2-admin form-select" id="sua_gioi_tinh" name="gioi_tinh" data-placeholder="Chọn giới tính">
+                                            <option value="">-- Chọn --</option>
+                                            <option value="nam">Nam</option>
+                                            <option value="nu">Nữ</option>
+                                            <option value="khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_email">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="sua_email" name="email" placeholder="email@example.com" required>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_so_dien_thoai">Số điện thoại</label>
+                                        <input type="text" class="form-control" id="sua_so_dien_thoai" name="phone" placeholder="0912345678" maxlength="20">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_ngay_sinh">Ngày sinh</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_sinh" name="ngay_sinh" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_cccd">CCCD</label>
+                                        <input type="text" class="form-control" id="sua_cccd" name="cccd" placeholder="Số CCCD/CMND" maxlength="20">
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_gioi_tinh">Giới tính</label>
-                                    <select class="select2-admin form-select" id="sua_gioi_tinh" name="gioi_tinh" data-placeholder="Chọn giới tính">
-                                        <option value="">-- Chọn --</option>
-                                        <option value="nam">Nam</option>
-                                        <option value="nu">Nữ</option>
-                                        <option value="khac">Khác</option>
-                                    </select>
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Vị trí làm việc</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_vai_tro">Vai trò</label>
+                                        <select class="select2-admin form-select" id="sua_vai_tro" name="role" data-placeholder="Chọn vai trò">
+                                            @foreach($dsVaiTro ?? [] as $vt)
+                                            <option value="{{ $vt->ma_vai_tro }}">{{ $vt->ten_vai_tro }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_phong_ban">Phòng ban <span class="text-danger">*</span></label>
+                                        <select id="sua_phong_ban" name="phong_ban_id" class="select2-admin form-select" data-placeholder="Chọn phòng ban" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach($phongBans ?? [] as $pb)
+                                            <option value="{{ $pb->id }}">{{ $pb->ten_phong_ban }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_ngay_vao_cong_ty">Ngày vào công ty</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_vao_cong_ty" name="ngay_vao_cong_ty" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_ngay_ky_hop_dong">Ngày ký hợp đồng</label>
+                                        <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_ky_hop_dong" name="ngay_ky_hop_dong" placeholder="dd/mm/yyyy" autocomplete="off">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
+                                        <select class="select2-admin form-select" id="sua_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
+                                            <option value="">-- Chọn --</option>
+                                            @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_loai_hop_dong">Loại hợp đồng</label>
+                                        <select class="select2-admin form-select" id="sua_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
+                                            <option value="">-- Chọn --</option>
+                                            @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_status">Trạng thái</label>
+                                        <select class="select2-admin form-select" id="sua_status" name="status" data-placeholder="Chọn trạng thái">
+                                            @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_email">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="sua_email" name="email" placeholder="email@example.com" required>
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Lương &amp; thưởng</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_luong_cung">Lương cứng (VNĐ)</label>
+                                        <input type="number" class="form-control" id="sua_luong_cung" name="luong_cung" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_luong_mem">Lương mềm (VNĐ)</label>
+                                        <input type="number" class="form-control" id="sua_luong_mem" name="luong_mem" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_phu_cap">Phụ cấp (VNĐ)</label>
+                                        <input type="number" class="form-control" id="sua_phu_cap" name="phu_cap" placeholder="0" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_luong_co_ban">Lương cơ bản (VNĐ)</label>
+                                        <input type="number" class="form-control" id="sua_luong_co_ban" name="luong_co_ban" placeholder="50000" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_luong_tang_ca">Lương tăng ca (VNĐ)</label>
+                                        <input type="number" class="form-control" id="sua_luong_tang_ca" name="luong_tang_ca" placeholder="80000" min="0" step="1000">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
+                                        <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" placeholder="1,00" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
+                                        <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" placeholder="1,00" min="0" step="0.01">
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_so_dien_thoai">Số điện thoại</label>
-                                    <input type="text" class="form-control" id="sua_so_dien_thoai" name="phone" placeholder="0912345678" maxlength="20">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_ngay_sinh">Ngày sinh</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_sinh" name="ngay_sinh" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_cccd">CCCD</label>
-                                    <input type="text" class="form-control" id="sua_cccd" name="cccd" placeholder="Số CCCD/CMND" maxlength="20">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_vai_tro">Vai trò</label>
-                                    <select class="select2-admin form-select" id="sua_vai_tro" name="role" data-placeholder="Chọn vai trò">
-                                        @foreach($dsVaiTro ?? [] as $vt)
-                                        <option value="{{ $vt->ma_vai_tro }}">{{ $vt->ten_vai_tro }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_phong_ban">Phòng ban <span class="text-danger">*</span></label>
-                                    <select id="sua_phong_ban" name="phong_ban_id" class="select2-admin form-select" data-placeholder="Chọn phòng ban" required>
-                                        <option value="">-- Chọn --</option>
-                                        @foreach($phongBans ?? [] as $pb)
-                                        <option value="{{ $pb->id }}">{{ $pb->ten_phong_ban }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_ngay_vao_cong_ty">Ngày vào công ty</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_vao_cong_ty" name="ngay_vao_cong_ty" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_ngay_ky_hop_dong">Ngày ký hợp đồng</label>
-                                    <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_ky_hop_dong" name="ngay_ky_hop_dong" placeholder="dd/mm/yyyy" autocomplete="off">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
-                                    <select class="select2-admin form-select" id="sua_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
-                                        <option value="">-- Chọn --</option>
-                                        @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_loai_hop_dong">Loại hợp đồng</label>
-                                    <select class="select2-admin form-select" id="sua_loai_hop_dong" name="loai_hop_dong" data-placeholder="Chọn loại hợp đồng">
-                                        <option value="">-- Chọn --</option>
-                                        @foreach(\App\Models\NhanVien::LOAI_HOP_DONG_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_status">Trạng thái</label>
-                                    <select class="select2-admin form-select" id="sua_status" name="status" data-placeholder="Chọn trạng thái">
-                                        @foreach(\App\Models\User::STATUS_OPTIONS as $value => $label)
-                                        <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_luong_cung">Lương cứng (VNĐ)</label>
-                                    <input type="number" class="form-control" id="sua_luong_cung" name="luong_cung" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_luong_mem">Lương mềm (VNĐ)</label>
-                                    <input type="number" class="form-control" id="sua_luong_mem" name="luong_mem" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_phu_cap">Phụ cấp (VNĐ)</label>
-                                    <input type="number" class="form-control" id="sua_phu_cap" name="phu_cap" placeholder="0" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_luong_co_ban">Lương cơ bản (VNĐ)</label>
-                                    <input type="number" class="form-control" id="sua_luong_co_ban" name="luong_co_ban" placeholder="50000" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_luong_tang_ca">Lương tăng ca (VNĐ)</label>
-                                    <input type="number" class="form-control" id="sua_luong_tang_ca" name="luong_tang_ca" placeholder="80000" min="0" step="1000">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
-                                    <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" placeholder="1,00" min="0" step="0.01">
-                                </div>
-                                <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
-                                    <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" placeholder="1,00" min="0" step="0.01">
+                            </div>
+
+                            <div class="nhan-su-form-section">
+                                <h6 class="nhan-su-form-section-title">Ngân hàng</h6>
+                                <div class="row g-3">
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_ngan_hang">Ngân hàng</label>
+                                        <select class="select2-admin form-select" id="sua_ngan_hang" name="ngan_hang" data-placeholder="Chọn ngân hàng">
+                                            <option value=""></option>
+                                            @foreach($dsNganHang ?? [] as $bank)
+                                            <option value="{{ $bank['short_name'] }}">{{ $bank['short_name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_chi_nhanh">Chi nhánh</label>
+                                        <input type="text" class="form-control" id="sua_chi_nhanh" name="chi_nhanh" placeholder="Chi nhánh ngân hàng" maxlength="255">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_so_tai_khoan">Số tài khoản</label>
+                                        <input type="text" class="form-control" id="sua_so_tai_khoan" name="so_tai_khoan" placeholder="Nhập số tài khoản" maxlength="50">
+                                    </div>
+                                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                        <label class="form-label" for="sua_chu_tai_khoan">Chủ tài khoản</label>
+                                        <input type="text" class="form-control" id="sua_chu_tai_khoan" name="chu_tai_khoan" placeholder="Tên chủ tài khoản" maxlength="150">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -633,13 +728,21 @@
 <style>
 #modalThemNhanSu .modal-them-nhan-su,
 #modalSuaNhanSu .modal-them-nhan-su {
-    max-width: 90vw;
-    width: 1200px;
+    max-width: 96vw;
+    width: 1400px;
 }
 @media (min-width: 1400px) {
-    #modalThemNhanSu .modal-them-nhan-su {
-        max-width: 1200px;
+    #modalThemNhanSu .modal-them-nhan-su,
+    #modalSuaNhanSu .modal-them-nhan-su {
+        max-width: 1400px;
     }
+}
+.nhan-su-form-section .form-label {
+    font-size: 0.8125rem;
+    margin-bottom: 0.35rem;
+}
+.nhan-su-form-avatar {
+    top: 1rem;
 }
 #modalDoiMatKhau .modal-doi-mat-khau {
     max-width: 90vw;
@@ -663,7 +766,20 @@
 }
 .table-wrapper-bordered .table {
     border-collapse: collapse;
-    min-width: 1500px;
+    min-width: 1900px;
+}
+.nhan-su-form-section-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+.nhan-su-form-section:last-child {
+    margin-bottom: 0;
 }
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
@@ -837,6 +953,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_luong_tang_ca').value = btn.getAttribute('data-luong-tang-ca') || '';
             document.getElementById('sua_hoa_hong_hop_dong_cuoi').value = btn.getAttribute('data-hoa-hong-hop-dong-cuoi') || '1';
             document.getElementById('sua_hoa_hong_hop_dong_trang_phuc').value = btn.getAttribute('data-hoa-hong-hop-dong-trang-phuc') || '1';
+            setAdminSelect2Value('sua_ngan_hang', btn.getAttribute('data-ngan-hang'));
+            document.getElementById('sua_chi_nhanh').value = btn.getAttribute('data-chi-nhanh') || '';
+            document.getElementById('sua_so_tai_khoan').value = btn.getAttribute('data-so-tai-khoan') || '';
+            document.getElementById('sua_chu_tai_khoan').value = btn.getAttribute('data-chu-tai-khoan') || '';
             var imgSrc = btn.getAttribute('data-hinh-anh') || '';
             if (imgSrc) {
                 suaPreview.src = imgSrc;

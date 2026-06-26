@@ -481,8 +481,9 @@ class NhanSuController extends Controller
         $phongBans = PhongBan::orderBy('ten_phong_ban')->get();
         $dsVaiTro = VaiTro::query()->orderBy('ma_vai_tro')->get(['id', 'ma_vai_tro', 'ten_vai_tro']);
         $maVaiTroMacDinh = VaiTro::maMacDinhNhanVien();
+        $dsNganHang = config('ngan_hang.banks', []);
 
-        return view('admin.nhan-su.danh-sach', compact('danhSach', 'phongBans', 'dsVaiTro', 'maVaiTroMacDinh'));
+        return view('admin.nhan-su.danh-sach', compact('danhSach', 'phongBans', 'dsVaiTro', 'maVaiTroMacDinh', 'dsNganHang'));
     }
 
     public function store(Request $request)
@@ -510,6 +511,18 @@ class NhanSuController extends Controller
             'luong_tang_ca' => 'nullable|integer|min:0',
             'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
             'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
+            'ngan_hang' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (filled($value) && ! in_array($value, $this->nganHangShortNames(), true)) {
+                        $fail('Ngân hàng không hợp lệ.');
+                    }
+                },
+            ],
+            'chi_nhanh' => 'nullable|string|max:255',
+            'so_tai_khoan' => 'nullable|string|max:50',
+            'chu_tai_khoan' => 'nullable|string|max:150',
             'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ], [
@@ -559,6 +572,10 @@ class NhanSuController extends Controller
             'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
             'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
             'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
+            'ngan_hang.in' => 'Ngân hàng không hợp lệ.',
+            'chi_nhanh.max' => 'Chi nhánh không được quá 255 ký tự.',
+            'so_tai_khoan.max' => 'Số tài khoản không được quá 50 ký tự.',
+            'chu_tai_khoan.max' => 'Chủ tài khoản không được quá 150 ký tự.',
             'phong_ban_id.required' => 'Vui lòng chọn phòng ban.',
             'phong_ban_id.exists' => 'Phòng ban không tồn tại.',
             'hinh_anh.image' => 'File tải lên phải là ảnh (jpeg, png, bmp, gif, webp).',
@@ -603,6 +620,10 @@ class NhanSuController extends Controller
                 'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
                 'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
                 'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
+                'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
+                'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
+                'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
+                'chu_tai_khoan' => $request->filled('chu_tai_khoan') ? $request->input('chu_tai_khoan') : null,
             ]);
 
             DB::commit();
@@ -638,6 +659,18 @@ class NhanSuController extends Controller
             'luong_tang_ca' => 'nullable|integer|min:0',
             'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
             'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
+            'ngan_hang' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (filled($value) && ! in_array($value, $this->nganHangShortNames(), true)) {
+                        $fail('Ngân hàng không hợp lệ.');
+                    }
+                },
+            ],
+            'chi_nhanh' => 'nullable|string|max:255',
+            'so_tai_khoan' => 'nullable|string|max:50',
+            'chu_tai_khoan' => 'nullable|string|max:150',
             'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ], [
@@ -681,6 +714,10 @@ class NhanSuController extends Controller
             'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
             'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
             'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
+            'ngan_hang.in' => 'Ngân hàng không hợp lệ.',
+            'chi_nhanh.max' => 'Chi nhánh không được quá 255 ký tự.',
+            'so_tai_khoan.max' => 'Số tài khoản không được quá 50 ký tự.',
+            'chu_tai_khoan.max' => 'Chủ tài khoản không được quá 150 ký tự.',
             'phong_ban_id.required' => 'Vui lòng chọn phòng ban.',
             'phong_ban_id.exists' => 'Phòng ban không tồn tại.',
             'hinh_anh.image' => 'File tải lên phải là ảnh (jpeg, png, bmp, gif, webp).',
@@ -726,6 +763,10 @@ class NhanSuController extends Controller
                     'luong_tang_ca' => $request->filled('luong_tang_ca') ? (int) $request->input('luong_tang_ca') : $nhanVien->luong_tang_ca,
                     'hoa_hong_hop_dong_cuoi' => $request->filled('hoa_hong_hop_dong_cuoi') ? $request->input('hoa_hong_hop_dong_cuoi') : ($nhanVien->hoa_hong_hop_dong_cuoi ?? 1),
                     'hoa_hong_hop_dong_trang_phuc' => $request->filled('hoa_hong_hop_dong_trang_phuc') ? $request->input('hoa_hong_hop_dong_trang_phuc') : ($nhanVien->hoa_hong_hop_dong_trang_phuc ?? 1),
+                    'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
+                    'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
+                    'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
+                    'chu_tai_khoan' => $request->filled('chu_tai_khoan') ? $request->input('chu_tai_khoan') : null,
                 ]);
             } else {
                 $nhanVien = NhanVien::create([
@@ -747,6 +788,10 @@ class NhanSuController extends Controller
                     'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
                     'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
                     'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
+                    'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
+                    'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
+                    'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
+                    'chu_tai_khoan' => $request->filled('chu_tai_khoan') ? $request->input('chu_tai_khoan') : null,
                 ]);
             }
 
@@ -1489,6 +1534,14 @@ class NhanSuController extends Controller
         $hopDongCuoi->update($payload);
 
         return back()->with('success', 'Đã cập nhật link file edit.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function nganHangShortNames(): array
+    {
+        return array_column(config('ngan_hang.banks', []), 'short_name');
     }
 
 }

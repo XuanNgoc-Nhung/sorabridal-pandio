@@ -376,7 +376,7 @@ class TaiChinhKeToanController extends Controller
                 'tong_luong_thuc_nhan' => max(0, $luong['tong_luong'] - $tongPhat),
                 'ngan_hang' => (string) ($nv?->ngan_hang ?? ''),
                 'so_tai_khoan' => (string) ($nv?->so_tai_khoan ?? ''),
-                'chu_tai_khoan' => (string) ($u->name ?? ''),
+                'chu_tai_khoan' => (string) ($nv?->chu_tai_khoan ?? $u->name ?? ''),
             ];
         }
 

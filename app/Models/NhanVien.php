@@ -50,6 +50,7 @@ class NhanVien extends Model
         'ngan_hang',
         'chi_nhanh',
         'so_tai_khoan',
+        'chu_tai_khoan',
         'gioi_tinh',
         'ngay_sinh',
         'cccd',
