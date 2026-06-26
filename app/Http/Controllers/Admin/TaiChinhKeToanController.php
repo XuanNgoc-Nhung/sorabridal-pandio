@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChamCong;
 use App\Models\HopDongChoThueTrangPhuc;
 use App\Models\HopDongCuoi;
+use App\Models\NhanVien;
 use App\Models\PhieuThuChi;
 use App\Models\User;
 use App\Models\VaiTro;
@@ -322,8 +323,11 @@ class TaiChinhKeToanController extends Controller
         $chiTietHoaHongCuoi = TinhLuongThang::chiTietHoaHongHopDongCuoi($nhanVienRecords, $start, $end);
         $chiTietHoaHongTrangPhuc = TinhLuongThang::chiTietHoaHongHopDongTrangPhuc($nhanVienRecords, $start, $end);
 
+        $chamCongTheoUser = $chamCong->groupBy('user_id');
+
         $bangLuongThang = [];
         $chiTietHoaHong = [];
+        $chiTietChuyenLuong = [];
         foreach ($nhanVien as $u) {
             $nv = $u->nhanVien;
             $nvId = $nv?->id;
@@ -344,6 +348,36 @@ class TaiChinhKeToanController extends Controller
                 'hoa_hong_cuoi' => $chiTietHoaHongCuoi[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
                 'hoa_hong_trang_phuc' => $chiTietHoaHongTrangPhuc[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
             ];
+
+            $tongHopDiemDanh = TinhLuongThang::tongHopDiemDanhThang($chamCongTheoUser->get($u->id, collect()));
+            $luong = $bangLuongThang[$u->id];
+            $tongPhat = $tongHopDiemDanh['tien_phat_di_muon'] + $tongHopDiemDanh['tien_phat_ve_som'];
+            $loaiNv = $nv?->loai_nhan_vien ?? '';
+
+            $chiTietChuyenLuong[$u->id] = [
+                'ten_nhan_vien' => $u->name,
+                'loai_nhan_vien' => $loaiNv,
+                'loai_nhan_vien_label' => filled($loaiNv)
+                    ? (NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                    : 'Chưa phân loại',
+                'thang' => $month,
+                'nam' => $year,
+                'tong_gio_lam' => $tongHopDiemDanh['tong_gio_lam_co_ban'],
+                'tong_gio_tang_ca' => $tongHopDiemDanh['tong_gio_tang_ca'],
+                'tien_phat_di_muon' => $tongHopDiemDanh['tien_phat_di_muon'],
+                'tien_phat_ve_som' => $tongHopDiemDanh['tien_phat_ve_som'],
+                'tong_phat' => $tongPhat,
+                'luong_co_ban' => $luong['luong_co_ban'],
+                'luong_tang_ca' => $luong['luong_tang_ca'],
+                'phu_cap' => $luong['phu_cap'],
+                'hoa_hong_hop_dong_cuoi' => $luong['hoa_hong_hop_dong_cuoi'],
+                'hoa_hong_hop_dong_trang_phuc' => $luong['hoa_hong_hop_dong_trang_phuc'],
+                'tong_luong' => $luong['tong_luong'],
+                'tong_luong_thuc_nhan' => max(0, $luong['tong_luong'] - $tongPhat),
+                'ngan_hang' => (string) ($nv?->ngan_hang ?? ''),
+                'so_tai_khoan' => (string) ($nv?->so_tai_khoan ?? ''),
+                'chu_tai_khoan' => (string) ($u->name ?? ''),
+            ];
         }
 
         return view('admin.tai-chinh.tinh-luong', [
@@ -356,6 +390,7 @@ class TaiChinhKeToanController extends Controller
             'bangChamCong' => $bangChamCong,
             'bangLuongThang' => $bangLuongThang,
             'chiTietHoaHong' => $chiTietHoaHong,
+            'chiTietChuyenLuong' => $chiTietChuyenLuong,
         ]);
     }
 

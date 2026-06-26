@@ -11,6 +11,41 @@ use Illuminate\Support\Collection;
 class TinhLuongThang
 {
     /**
+     * Tổng hợp giờ làm và tiền phạt từ các bản ghi chấm công trong tháng.
+     *
+     * @param  iterable<int, \App\Models\ChamCong>  $chamCongRecords
+     * @return array{
+     *     tong_gio_lam_co_ban: float,
+     *     tong_gio_tang_ca: float,
+     *     tien_phat_di_muon: int,
+     *     tien_phat_ve_som: int
+     * }
+     */
+    public static function tongHopDiemDanhThang(iterable $chamCongRecords): array
+    {
+        $ketQua = [
+            'tong_gio_lam_co_ban' => 0.0,
+            'tong_gio_tang_ca' => 0.0,
+            'tien_phat_di_muon' => 0,
+            'tien_phat_ve_som' => 0,
+        ];
+
+        foreach ($chamCongRecords as $record) {
+            $diemDanh = $record->diemDanh;
+            if ($diemDanh === null) {
+                continue;
+            }
+
+            $ketQua['tong_gio_lam_co_ban'] += (float) ($diemDanh->gio_lam_co_ban ?? 0);
+            $ketQua['tong_gio_tang_ca'] += (float) ($diemDanh->gio_lam_tang_ca ?? 0);
+            $ketQua['tien_phat_di_muon'] += (int) ($diemDanh->tien_phat_di_muon ?? 0);
+            $ketQua['tien_phat_ve_som'] += (int) ($diemDanh->tien_phat_ve_som ?? 0);
+        }
+
+        return $ketQua;
+    }
+
+    /**
      * Chi tiết hoa hồng HĐ cưới theo tháng (key = nhan_vien.id).
      *
      * @param  Collection<int, NhanVien>  $nhanVienRecords

@@ -73,6 +73,7 @@
                         <th colspan="3" class="text-center text-nowrap" style="min-width: 1px;">Lương</th>
                         <th colspan="2" class="text-center text-nowrap" style="min-width: 1px;">Hoa hồng</th>
                         <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 90px;">Tổng</th>
+                        <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 110px;">Thao tác</th>
                     </tr>
                     <tr>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Cơ bản</th>
@@ -181,10 +182,17 @@
                             <td class="text-end align-middle fw-semibold">
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
                             </td>
+                            <td class="text-center align-middle">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary tinh-luong-chuyen-btn text-nowrap"
+                                        data-user-id="{{ $u->id }}">
+                                    <i class="fa-solid fa-money-bill-transfer me-1"></i>Chuyển lương
+                                </button>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 6 }}" class="text-center py-4 text-muted">
+                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 7 }}" class="text-center py-4 text-muted">
                                 Chưa có nhân viên để hiển thị.
                             </td>
                         </tr>
@@ -211,6 +219,119 @@
                         <tbody id="modalChiTietHoaHongTbody"></tbody>
                         <tfoot class="table-light" id="modalChiTietHoaHongTfoot"></tfoot>
                     </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal chuyển lương --}}
+<div class="modal fade" id="modalChuyenLuong" tabindex="-1" aria-labelledby="modalChuyenLuongLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalChuyenLuongLabel">Chuyển lương</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                    <span class="badge bg-label-primary" id="modalChuyenLuongLoaiNv"></span>
+                    <span class="text-muted small" id="modalChuyenLuongKy"></span>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-9">
+                        <div class="row g-3 tinh-luong-chuyen-fields">
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clTongGioLam">Tổng giờ làm</label>
+                                <input type="text" class="form-control" id="clTongGioLam" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clTongGioTangCa">Tổng giờ tăng ca</label>
+                                <input type="text" class="form-control" id="clTongGioTangCa" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clLuongCoBan">Lương cơ bản</label>
+                                <input type="text" class="form-control text-end" id="clLuongCoBan" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clLuongTangCa">Lương tăng ca</label>
+                                <input type="text" class="form-control text-end" id="clLuongTangCa" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clTienPhatDiMuon">Tiền phạt đi muộn</label>
+                                <input type="text" class="form-control text-end text-danger" id="clTienPhatDiMuon" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clTienPhatVeSom">Tiền phạt về sớm</label>
+                                <input type="text" class="form-control text-end text-danger" id="clTienPhatVeSom" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clPhuCap">Phụ cấp</label>
+                                <input type="text" class="form-control text-end" id="clPhuCap" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clHoaHongCuoi">Hoa hồng HĐ cưới</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control text-end" id="clHoaHongCuoi" readonly>
+                                    <button type="button"
+                                            class="btn btn-outline-primary tinh-luong-hoa-hong-trong-chuyen d-none"
+                                            id="clHoaHongCuoiBtn"
+                                            data-loai="cuoi">
+                                        Chi tiết
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clHoaHongTrangPhuc">Hoa hồng HĐ trang phục</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control text-end" id="clHoaHongTrangPhuc" readonly>
+                                    <button type="button"
+                                            class="btn btn-outline-primary tinh-luong-hoa-hong-trong-chuyen d-none"
+                                            id="clHoaHongTrangPhucBtn"
+                                            data-loai="trang_phuc">
+                                        Chi tiết
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clNganHang">Ngân hàng</label>
+                                <input type="text" class="form-control" id="clNganHang" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clSoTaiKhoan">Số tài khoản</label>
+                                <input type="text" class="form-control" id="clSoTaiKhoan" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clChuTaiKhoan">Chủ tài khoản</label>
+                                <input type="text" class="form-control" id="clChuTaiKhoan" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3 d-none" id="clTongLuongGopWrap">
+                                <label class="form-label" for="clTongLuongGop">Tổng lương (gộp)</label>
+                                <input type="text" class="form-control text-end" id="clTongLuongGop" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3 d-none" id="clTongPhatWrap">
+                                <label class="form-label" for="clTongPhat">Trừ tiền phạt</label>
+                                <input type="text" class="form-control text-end text-danger" id="clTongPhat" readonly>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                                <label class="form-label" for="clTongLuong">Tổng lương thực nhận</label>
+                                <input type="text" class="form-control text-end fw-semibold text-success tinh-luong-chuyen-tong" id="clTongLuong" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="tinh-luong-qr-wrap text-center h-100 d-flex flex-column justify-content-center" id="modalChuyenLuongQrWrap">
+                            <p class="small text-muted mb-2">Quét mã QR để chuyển khoản</p>
+                            <img src="" alt="Mã QR chuyển lương" class="img-fluid tinh-luong-qr-img mx-auto" id="modalChuyenLuongQrImg">
+                            <p class="small text-muted mt-3 mb-0" id="modalChuyenLuongQrNote"></p>
+                        </div>
+                        <div class="alert alert-warning small mb-0 d-none h-100 d-flex align-items-center justify-content-center text-center" id="modalChuyenLuongQrMissing">
+                            Chưa có đủ thông tin ngân hàng (tên ngân hàng, số tài khoản) để tạo mã QR.
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -290,6 +411,23 @@
 .tinh-luong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 .tinh-luong-hoa-hong-btn { font-weight: 500; color: var(--bs-primary); white-space: nowrap; }
 .tinh-luong-hoa-hong-btn:hover { text-decoration: underline !important; color: var(--bs-primary); }
+.tinh-luong-chuyen-fields .form-control[readonly] {
+    background-color: var(--bs-body-bg);
+    cursor: default;
+}
+.tinh-luong-chuyen-fields .form-label {
+    font-size: 0.8125rem;
+    margin-bottom: 0.35rem;
+}
+.tinh-luong-chuyen-tong { font-size: 1.05rem; }
+.tinh-luong-qr-wrap {
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: #fff;
+}
+.tinh-luong-qr-img { max-width: 280px; }
+[data-bs-theme='dark'] .tinh-luong-qr-wrap { background: #2f3349; }
 </style>
 @endpush
 
@@ -297,9 +435,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var chiTietHoaHong = @json($chiTietHoaHong ?? []);
+    var chiTietChuyenLuong = @json($chiTietChuyenLuong ?? []);
+    var chuyenLuongUserId = null;
 
     function formatMoney(value) {
         return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ';
+    }
+
+    function formatHours(value) {
+        return new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value) + ' giờ';
     }
 
     function formatPercent(value) {
@@ -310,6 +454,102 @@ document.addEventListener('DOMContentLoaded', function () {
         var div = document.createElement('div');
         div.textContent = text == null ? '' : String(text);
         return div.innerHTML;
+    }
+
+    function buildVietQrUrl(data) {
+        var params = new URLSearchParams();
+        params.set('acc', data.so_tai_khoan || '');
+        params.set('bank', data.ngan_hang || '');
+        params.set('amount', String(Math.round(data.tong_luong_thuc_nhan || 0)));
+        params.set('des', 'Luong T' + data.thang + '/' + data.nam);
+        params.set('fullacc', 'true');
+        params.set('holder', (data.chu_tai_khoan || '').toUpperCase());
+        params.set('showinfo', 'true');
+        return 'https://vietqr.app/img?' + params.toString();
+    }
+
+    function setInputValue(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.value = value == null ? '' : String(value);
+        }
+    }
+
+    function toggleEl(id, show) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('d-none', !show);
+        }
+    }
+
+    function renderChuyenLuong(userId) {
+        var data = chiTietChuyenLuong[userId];
+        if (!data) {
+            return;
+        }
+
+        chuyenLuongUserId = userId;
+        var modalEl = document.getElementById('modalChuyenLuong');
+        var titleEl = document.getElementById('modalChuyenLuongLabel');
+        var loaiEl = document.getElementById('modalChuyenLuongLoaiNv');
+        var kyEl = document.getElementById('modalChuyenLuongKy');
+        var qrWrapEl = document.getElementById('modalChuyenLuongQrWrap');
+        var qrImgEl = document.getElementById('modalChuyenLuongQrImg');
+        var qrNoteEl = document.getElementById('modalChuyenLuongQrNote');
+        var qrMissingEl = document.getElementById('modalChuyenLuongQrMissing');
+        var hoaHongCuoiBtn = document.getElementById('clHoaHongCuoiBtn');
+        var hoaHongTrangPhucBtn = document.getElementById('clHoaHongTrangPhucBtn');
+        var coPhat = (data.tong_phat || 0) > 0;
+
+        titleEl.textContent = 'Chuyển lương — ' + (data.ten_nhan_vien || '');
+        loaiEl.textContent = data.loai_nhan_vien_label || '—';
+        kyEl.textContent = 'Tháng ' + data.thang + '/' + data.nam;
+
+        setInputValue('clTongGioLam', formatHours(data.tong_gio_lam || 0));
+        setInputValue('clTongGioTangCa', formatHours(data.tong_gio_tang_ca || 0));
+        setInputValue('clLuongCoBan', formatMoney(data.luong_co_ban || 0));
+        setInputValue('clLuongTangCa', formatMoney(data.luong_tang_ca || 0));
+        setInputValue('clTienPhatDiMuon', formatMoney(data.tien_phat_di_muon || 0));
+        setInputValue('clTienPhatVeSom', formatMoney(data.tien_phat_ve_som || 0));
+        setInputValue('clPhuCap', formatMoney(data.phu_cap || 0));
+        setInputValue('clHoaHongCuoi', formatMoney(data.hoa_hong_hop_dong_cuoi || 0));
+        setInputValue('clHoaHongTrangPhuc', formatMoney(data.hoa_hong_hop_dong_trang_phuc || 0));
+        setInputValue('clNganHang', data.ngan_hang || '—');
+        setInputValue('clSoTaiKhoan', data.so_tai_khoan || '—');
+        setInputValue('clChuTaiKhoan', data.chu_tai_khoan || '—');
+        setInputValue('clTongLuongGop', formatMoney(data.tong_luong || 0));
+        setInputValue('clTongPhat', '− ' + formatMoney(data.tong_phat || 0));
+        setInputValue('clTongLuong', formatMoney(coPhat ? (data.tong_luong_thuc_nhan || 0) : (data.tong_luong || 0)));
+
+        toggleEl('clTongLuongGopWrap', coPhat);
+        toggleEl('clTongPhatWrap', coPhat);
+
+        if (hoaHongCuoiBtn) {
+            hoaHongCuoiBtn.setAttribute('data-user-id', userId);
+            hoaHongCuoiBtn.classList.toggle('d-none', !(data.hoa_hong_hop_dong_cuoi > 0));
+        }
+        if (hoaHongTrangPhucBtn) {
+            hoaHongTrangPhucBtn.setAttribute('data-user-id', userId);
+            hoaHongTrangPhucBtn.classList.toggle('d-none', !(data.hoa_hong_hop_dong_trang_phuc > 0));
+        }
+
+        var coQr = (data.so_tai_khoan || '').trim() !== '' && (data.ngan_hang || '').trim() !== '';
+        if (coQr && (data.tong_luong_thuc_nhan || 0) > 0) {
+            qrWrapEl.classList.remove('d-none');
+            qrMissingEl.classList.add('d-none');
+            qrImgEl.src = buildVietQrUrl(data);
+            qrImgEl.alt = 'QR chuyển lương ' + (data.ten_nhan_vien || '');
+            qrNoteEl.textContent = formatMoney(data.tong_luong_thuc_nhan || 0) + ' · ' + (data.ngan_hang || '') + ' · ' + (data.so_tai_khoan || '');
+        } else {
+            qrWrapEl.classList.add('d-none');
+            qrMissingEl.classList.remove('d-none');
+            qrImgEl.removeAttribute('src');
+            qrNoteEl.textContent = '';
+        }
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     function renderChiTietHoaHong(loai, userId) {
@@ -391,14 +631,45 @@ document.addEventListener('DOMContentLoaded', function () {
             + '</tr>';
 
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var chuyenModalEl = document.getElementById('modalChuyenLuong');
+            if (chuyenModalEl) {
+                var chuyenModal = bootstrap.Modal.getInstance(chuyenModalEl);
+                if (chuyenModal) {
+                    chuyenModal.hide();
+                }
+            }
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
         }
     }
+
+    document.querySelectorAll('.tinh-luong-chuyen-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            renderChuyenLuong(btn.getAttribute('data-user-id'));
+        });
+    });
 
     document.querySelectorAll('.tinh-luong-hoa-hong-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             renderChiTietHoaHong(btn.getAttribute('data-loai'), btn.getAttribute('data-user-id'));
         });
+    });
+
+    document.getElementById('modalChiTietHoaHong').addEventListener('hidden.bs.modal', function () {
+        if (chuyenLuongUserId === null) {
+            return;
+        }
+        var chuyenModalEl = document.getElementById('modalChuyenLuong');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal && chuyenModalEl) {
+            bootstrap.Modal.getOrCreateInstance(chuyenModalEl).show();
+        }
+    });
+
+    document.getElementById('modalChuyenLuong').addEventListener('click', function (event) {
+        var btn = event.target.closest('.tinh-luong-hoa-hong-trong-chuyen');
+        if (!btn) {
+            return;
+        }
+        renderChiTietHoaHong(btn.getAttribute('data-loai'), btn.getAttribute('data-user-id'));
     });
 
     if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
