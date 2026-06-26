@@ -195,8 +195,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
         Route::delete('/phieu-thu-chi/{phieuThuChi}', [AdminTaiChinhKeToan::class, 'destroyPhieuThuChi'])->name('tai-chinh.destroy-phieu-thu-chi');
         Route::get('/tinh-luong', [AdminTaiChinhKeToan::class, 'tinhLuong'])->name('tai-chinh.tinh-luong');
         Route::post('/tinh-luong', [AdminTaiChinhKeToan::class, 'storeTinhLuong'])->name('tai-chinh.store-tinh-luong');
-        Route::put('/tinh-luong/{tinhLuong}', [AdminTaiChinhKeToan::class, 'updateTinhLuong'])->name('tai-chinh.update-tinh-luong');
-        Route::delete('/tinh-luong/{tinhLuong}', [AdminTaiChinhKeToan::class, 'destroyTinhLuong'])->name('tai-chinh.destroy-tinh-luong');
+        Route::delete('/tinh-luong/chot/{chotLuongThang}', [AdminTaiChinhKeToan::class, 'destroyChotLuongThang'])->name('tai-chinh.destroy-chot-luong');
+        Route::put('/tinh-luong/chot/{chotLuongThang}/da-chuyen', [AdminTaiChinhKeToan::class, 'danhDauDaChuyenLuong'])->name('tai-chinh.danh-dau-da-chuyen-luong');
     });
 
     // Note khách mới

@@ -2,6 +2,19 @@
 
 @section('content')
 <div class="d-flex flex-column gap-3">
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-0" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    @endif
+
     <div class="card mb-0">
         <div class="card-body">
         {{-- Bộ lọc --}}
@@ -27,17 +40,29 @@
                            max="2100"
                            value="{{ (int)($year ?? now()->year) }}">
                 </div>
-                <div class="col-6 col-md-3 col-lg-2 d-flex flex-wrap gap-2 align-items-end admin-filter-actions">
+                <div class="col-6 col-md-6 col-lg-4 d-flex flex-wrap gap-2 align-items-end admin-filter-actions">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa-solid fa-filter me-1"></i> Lọc
                     </button>
-                    <a href="{{ route('admin.tai-chinh.tinh-luong') }}" class="btn btn-outline-secondary">Tháng hiện tại</a>
+                    <a href="{{ route('admin.tai-chinh.tinh-luong') }}" class="btn btn-outline-secondary">Tháng này</a>
+                    @if($trongKhungChotLuong ?? false)
+                        <a href="{{ route('admin.tai-chinh.tinh-luong', ['month' => $thangChotDuoc, 'year' => $namChotDuoc]) }}"
+                           class="btn btn-outline-primary">
+                            Tháng cần chốt
+                        </a>
+                    @endif
                 </div>
                 <div class="col-12 col-lg-auto ms-lg-auto">
                     <div class="text-muted">
                         Khoảng: <strong>{{ ($start ?? now()->startOfMonth())->format('d/m/Y') }}</strong>
                         → <strong>{{ ($end ?? now()->endOfMonth())->format('d/m/Y') }}</strong>
                     </div>
+                    @if(!($daChotLuong ?? false))
+                        <div class="small text-muted mt-1">
+                            Chốt lương tháng {{ $thangChotDuoc }}/{{ $namChotDuoc }}
+                            từ ngày {{ $khungChotLuongLabel }} hàng tháng.
+                        </div>
+                    @endif
                 </div>
             </div>
         </form>
@@ -45,7 +70,69 @@
     </div>
 
     <div class="card mb-0">
-        <h5 class="card-header">Tính lương theo tháng</h5>
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h5 class="mb-0">Tính lương theo tháng</h5>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if($daChotLuong ?? false)
+                    <span class="badge bg-label-success">
+                        <i class="fa-solid fa-lock me-1"></i>
+                        Đã chốt lương
+                        @if($chotLuong?->ngay_chot)
+                            — {{ $chotLuong->ngay_chot->format('d/m/Y H:i') }}
+                        @endif
+                    </span>
+                    <span class="small text-muted">Dữ liệu theo thời điểm chốt lương.</span>
+                    @if(($isAdmin ?? false) && $chotLuong)
+                        <form id="form-huy-chot-luong"
+                              method="POST"
+                              action="{{ route('admin.tai-chinh.destroy-chot-luong', $chotLuong) }}"
+                              class="d-none">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                        <button type="button"
+                                class="btn btn-outline-danger btn-sm btn-tinh-luong-confirm"
+                                data-form-id="form-huy-chot-luong"
+                                data-confirm-title="Hủy chốt lương"
+                                data-confirm-message="Hủy chốt lương tháng {{ $month }}/{{ $year }}? Dữ liệu lương sẽ được tính lại theo thông tin hiện tại."
+                                data-confirm-btn-class="btn-danger"
+                                data-confirm-btn-text="Hủy chốt lương"
+                                data-confirm-btn-icon="fa-lock-open">
+                            <i class="fa-solid fa-lock-open me-1"></i> Hủy chốt lương
+                        </button>
+                    @endif
+                @else
+                    @if($coTheChotLuong ?? false)
+                        <form id="form-chot-luong"
+                              method="POST"
+                              action="{{ route('admin.tai-chinh.store-tinh-luong') }}"
+                              class="d-none">
+                            @csrf
+                            <input type="hidden" name="thang" value="{{ $month }}">
+                            <input type="hidden" name="nam" value="{{ $year }}">
+                        </form>
+                        <button type="button"
+                                class="btn btn-success btn-sm btn-tinh-luong-confirm"
+                                data-form-id="form-chot-luong"
+                                data-confirm-title="Chốt lương"
+                                data-confirm-message="Chốt lương tháng {{ $month }}/{{ $year }}? Sau khi chốt, dữ liệu lương sẽ được lưu lại và không thay đổi khi cập nhật thông tin nhân viên."
+                                data-confirm-btn-class="btn-success"
+                                data-confirm-btn-text="Chốt lương"
+                                data-confirm-btn-icon="fa-lock">
+                            <i class="fa-solid fa-lock me-1"></i> Chốt lương
+                        </button>
+                    @else
+                        <span class="small text-muted">
+                            @if($trongKhungChotLuong ?? false)
+                                Chỉ được chốt lương tháng {{ $thangChotDuoc }}/{{ $namChotDuoc }}.
+                            @else
+                                Chỉ được chốt lương từ ngày {{ $khungChotLuongLabel }} hàng tháng.
+                            @endif
+                        </span>
+                    @endif
+                @endif
+            </div>
+        </div>
         <div class="card-body">
         <p class="small text-muted mb-2">
             <span class="me-3">Ghi chú:</span>
@@ -121,15 +208,22 @@
                             @foreach(($ngayTrongThang ?? []) as $day)
                                 @php
                                     $dateKey = $day->toDateString();
-                                    $record = $bangChamCong[$dateKey][$u->id] ?? null;
-                                    $diemDanh = $record?->diemDanh;
+                                    if ($daChotLuong ?? false) {
+                                        $luongNgay = $bangChamCongLuong[$u->id][$dateKey] ?? null;
+                                    } else {
+                                        $diemDanh = ($bangChamCong[$dateKey][$u->id] ?? null)?->diemDanh;
+                                        $luongNgay = $diemDanh ? [
+                                            'luong_co_ban' => (float) ($diemDanh->luong_co_ban ?? 0),
+                                            'luong_tang_ca' => (float) ($diemDanh->luong_tang_ca ?? 0),
+                                        ] : null;
+                                    }
                                     $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true); // 6=Thứ 7, 7=Chủ nhật
                                 @endphp
                                 <td class="text-center align-middle tinh-luong-ngay-col {{ $isWeekend ? 'tinh-luong-weekend' : '' }}">
-                                    @if($record && $diemDanh)
+                                    @if($luongNgay)
                                         <div class="small">
-                                            <div class="luong-co-ban" title="Lương cơ bản">{{ number_format((float)($diemDanh->luong_co_ban ?? 0), 0, ',', '.') }} đ</div>
-                                            <div class="luong-tang-ca" title="Lương tăng ca">{{ number_format((float)($diemDanh->luong_tang_ca ?? 0), 0, ',', '.') }} đ</div>
+                                            <div class="luong-co-ban" title="Lương cơ bản">{{ number_format((float)($luongNgay['luong_co_ban'] ?? 0), 0, ',', '.') }} đ</div>
+                                            <div class="luong-tang-ca" title="Lương tăng ca">{{ number_format((float)($luongNgay['luong_tang_ca'] ?? 0), 0, ',', '.') }} đ</div>
                                         </div>
                                     @else
                                         <span class="text-muted">—</span>
@@ -145,6 +239,7 @@
                                     'hoa_hong_hop_dong_trang_phuc' => 0,
                                     'tong_luong' => 0,
                                 ];
+                                $daChuyenLuong = in_array($u->id, $daChuyenUserIds ?? [], true);
                             @endphp
                             <td class="text-end align-middle">
                                 {{ number_format($luong['luong_co_ban'], 0, ',', '.') }} đ
@@ -179,15 +274,20 @@
                                     <span class="text-muted">0 đ</span>
                                 @endif
                             </td>
-                            <td class="text-end align-middle fw-semibold">
+                            <td class="text-end align-middle fw-semibold {{ $daChuyenLuong ? 'text-success tinh-luong-da-chuyen' : '' }}">
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
                             </td>
                             <td class="text-center align-middle">
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-primary tinh-luong-chuyen-btn text-nowrap"
-                                        data-user-id="{{ $u->id }}">
-                                    <i class="fa-solid fa-money-bill-transfer me-1"></i>
-                                </button>
+                                @if($daChotLuong ?? false)
+                                    <button type="button"
+                                            class="btn btn-sm text-nowrap tinh-luong-chuyen-btn {{ $daChuyenLuong ? 'btn-success' : 'btn-outline-primary' }}"
+                                            data-user-id="{{ $u->id }}"
+                                            title="{{ $daChuyenLuong ? 'Đã chuyển lương' : 'Chuyển lương' }}">
+                                        <i class="fa-solid {{ $daChuyenLuong ? 'fa-check' : 'fa-money-bill-transfer' }} me-1"></i>
+                                    </button>
+                                @else
+                                    <span class="text-muted small">—</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -339,7 +439,41 @@
                 </div>
             </div>
             <div class="modal-footer">
+                @if(($daChotLuong ?? false) && $chotLuong)
+                    <form id="formDaChuyenLuong"
+                          method="POST"
+                          action="{{ route('admin.tai-chinh.danh-dau-da-chuyen-luong', $chotLuong) }}"
+                          class="d-none">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="user_id" id="clDaChuyenUserId" value="">
+                    </form>
+                    <button type="button" class="btn btn-success" id="btnDaChuyenLuong">
+                        <i class="fa-solid fa-check me-1"></i> Đã chuyển
+                    </button>
+                @endif
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal xác nhận thao tác tính lương --}}
+<div class="modal fade" id="modalXacNhanTinhLuong" tabindex="-1" aria-labelledby="modalXacNhanTinhLuongLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-confirm-tinh-luong">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalXacNhanTinhLuongLabel">Xác nhận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body" id="modalXacNhanTinhLuongBody">
+                Bạn có chắc muốn thực hiện thao tác này?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnXacNhanTinhLuong">
+                    <i class="fa-solid fa-check me-1"></i> Xác nhận
+                </button>
             </div>
         </div>
     </div>
@@ -424,6 +558,7 @@
     margin-bottom: 0.35rem;
 }
 .tinh-luong-chuyen-tong { font-size: 1.05rem; }
+.tinh-luong-da-chuyen { color: #198754 !important; }
 .tinh-luong-qr-wrap {
     border: 1px solid var(--bs-border-color, #dee2e6);
     border-radius: 0.5rem;
@@ -433,6 +568,10 @@
 .tinh-luong-qr-img { width: 100%; height: auto; display: block; }
 .tinh-luong-hoa-hong-trong-chuyen { line-height: 1; }
 [data-bs-theme='dark'] .tinh-luong-qr-wrap { background: #2f3349; }
+#modalXacNhanTinhLuong .modal-confirm-tinh-luong {
+    max-width: 90vw;
+    width: 400px;
+}
 </style>
 @endpush
 
@@ -441,7 +580,61 @@
 document.addEventListener('DOMContentLoaded', function () {
     var chiTietHoaHong = @json($chiTietHoaHong ?? []);
     var chiTietChuyenLuong = @json($chiTietChuyenLuong ?? []);
+    var daChuyenUserIds = @json($daChuyenUserIds ?? []);
     var chuyenLuongUserId = null;
+    var modalXacNhanTinhLuong = document.getElementById('modalXacNhanTinhLuong');
+    var btnXacNhanTinhLuong = document.getElementById('btnXacNhanTinhLuong');
+    var modalXacNhanTinhLuongBody = document.getElementById('modalXacNhanTinhLuongBody');
+    var modalXacNhanTinhLuongLabel = document.getElementById('modalXacNhanTinhLuongLabel');
+    var formIdCanSubmit = null;
+    var moLaiModalChuyenLuongKhiHuy = false;
+    var xacNhanTinhLuongDaDongY = false;
+
+    function donDepModalBackdrop() {
+        document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+            el.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+    }
+
+    function moXacNhanTinhLuong(opts) {
+        if (!modalXacNhanTinhLuong || !btnXacNhanTinhLuong) {
+            return;
+        }
+
+        formIdCanSubmit = opts.formId || null;
+        moLaiModalChuyenLuongKhiHuy = !!opts.moLaiModalChuyenLuongKhiHuy;
+        xacNhanTinhLuongDaDongY = false;
+
+        if (modalXacNhanTinhLuongLabel) {
+            modalXacNhanTinhLuongLabel.textContent = opts.title || 'Xác nhận';
+        }
+        if (modalXacNhanTinhLuongBody) {
+            modalXacNhanTinhLuongBody.textContent = opts.message || 'Bạn có chắc muốn thực hiện thao tác này?';
+        }
+
+        var btnClass = opts.btnClass || 'btn-primary';
+        var btnIcon = opts.btnIcon || 'fa-check';
+        var btnText = opts.btnText || 'Xác nhận';
+        btnXacNhanTinhLuong.className = 'btn ' + btnClass;
+        btnXacNhanTinhLuong.innerHTML = '<i class="fa-solid ' + btnIcon + ' me-1"></i> ' + btnText;
+
+        if (opts.anModalChuyenLuongTruoc) {
+            var chuyenModalEl = document.getElementById('modalChuyenLuong');
+            if (chuyenModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var chuyenInst = bootstrap.Modal.getInstance(chuyenModalEl);
+                if (chuyenInst) {
+                    chuyenInst.hide();
+                }
+            }
+        }
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalXacNhanTinhLuong).show();
+        }
+    }
 
     function formatMoney(value) {
         return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ';
@@ -485,6 +678,27 @@ document.addEventListener('DOMContentLoaded', function () {
         if (el) {
             el.classList.toggle('d-none', !show);
         }
+    }
+
+    function isDaChuyenLuong(userId) {
+        return daChuyenUserIds.indexOf(parseInt(userId, 10)) !== -1;
+    }
+
+    function capNhatNutDaChuyen(userId) {
+        var btn = document.getElementById('btnDaChuyenLuong');
+        var input = document.getElementById('clDaChuyenUserId');
+        if (!btn || !input) {
+            return;
+        }
+
+        var daChuyen = isDaChuyenLuong(userId);
+        input.value = userId;
+        btn.disabled = daChuyen;
+        btn.classList.toggle('btn-success', !daChuyen);
+        btn.classList.toggle('btn-outline-success', daChuyen);
+        btn.innerHTML = daChuyen
+            ? '<i class="fa-solid fa-check me-1"></i> Đã chuyển'
+            : '<i class="fa-solid fa-check me-1"></i> Đã chuyển';
     }
 
     function renderChuyenLuong(userId) {
@@ -548,6 +762,8 @@ document.addEventListener('DOMContentLoaded', function () {
             qrMissingEl.classList.remove('d-none');
             qrImgEl.removeAttribute('src');
         }
+
+        capNhatNutDaChuyen(userId);
 
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -647,6 +863,71 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.tinh-luong-chuyen-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             renderChuyenLuong(btn.getAttribute('data-user-id'));
+        });
+    });
+
+    var btnDaChuyenLuong = document.getElementById('btnDaChuyenLuong');
+    if (btnDaChuyenLuong) {
+        btnDaChuyenLuong.addEventListener('click', function () {
+            if (chuyenLuongUserId === null || isDaChuyenLuong(chuyenLuongUserId)) {
+                return;
+            }
+            moXacNhanTinhLuong({
+                formId: 'formDaChuyenLuong',
+                title: 'Xác nhận chuyển lương',
+                message: 'Đánh dấu đã chuyển lương cho nhân viên này?',
+                btnClass: 'btn-success',
+                btnText: 'Đã chuyển',
+                btnIcon: 'fa-check',
+                anModalChuyenLuongTruoc: true,
+                moLaiModalChuyenLuongKhiHuy: true,
+            });
+        });
+    }
+
+    if (modalXacNhanTinhLuong) {
+        modalXacNhanTinhLuong.addEventListener('hidden.bs.modal', function () {
+            donDepModalBackdrop();
+            if (moLaiModalChuyenLuongKhiHuy && !xacNhanTinhLuongDaDongY && chuyenLuongUserId !== null) {
+                var chuyenModalEl = document.getElementById('modalChuyenLuong');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal && chuyenModalEl) {
+                    bootstrap.Modal.getOrCreateInstance(chuyenModalEl).show();
+                }
+            }
+            moLaiModalChuyenLuongKhiHuy = false;
+            xacNhanTinhLuongDaDongY = false;
+            formIdCanSubmit = null;
+        });
+    }
+
+    if (btnXacNhanTinhLuong) {
+        btnXacNhanTinhLuong.addEventListener('click', function () {
+            xacNhanTinhLuongDaDongY = true;
+            if (formIdCanSubmit) {
+                var form = document.getElementById(formIdCanSubmit);
+                if (form) {
+                    form.submit();
+                }
+            }
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal && modalXacNhanTinhLuong) {
+                var inst = bootstrap.Modal.getInstance(modalXacNhanTinhLuong);
+                if (inst) {
+                    inst.hide();
+                }
+            }
+        });
+    }
+
+    document.querySelectorAll('.btn-tinh-luong-confirm').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            moXacNhanTinhLuong({
+                formId: btn.getAttribute('data-form-id'),
+                title: btn.getAttribute('data-confirm-title'),
+                message: btn.getAttribute('data-confirm-message'),
+                btnClass: btn.getAttribute('data-confirm-btn-class') || 'btn-primary',
+                btnText: btn.getAttribute('data-confirm-btn-text') || 'Xác nhận',
+                btnIcon: btn.getAttribute('data-confirm-btn-icon') || 'fa-check',
+            });
         });
     });
 

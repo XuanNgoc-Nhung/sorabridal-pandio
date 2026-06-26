@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChamCong;
+use App\Models\ChotLuongThang;
 use App\Models\HopDongChoThueTrangPhuc;
 use App\Models\HopDongCuoi;
-use App\Models\NhanVien;
 use App\Models\PhieuThuChi;
 use App\Models\User;
 use App\Models\VaiTro;
 use App\Support\AdminCongNoList;
 use App\Support\AdminPagination;
-use App\Support\TinhLuongThang;
+use App\Support\TinhLuongThangDuLieu;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -253,6 +252,137 @@ class TaiChinhKeToanController extends Controller
 
     public function tinhLuong(Request $request)
     {
+        [$month, $year] = $this->resolveThangNamTinhLuong($request);
+
+        $chotLuong = ChotLuongThang::timTheoKy($month, $year);
+        $daChotLuong = $chotLuong !== null;
+
+        $duLieu = $daChotLuong
+            ? TinhLuongThangDuLieu::tuChotLuongThang($chotLuong)
+            : TinhLuongThangDuLieu::tinh($month, $year);
+
+        $kyChotLuong = ChotLuongThang::thangNamTruoc();
+
+        return view('admin.tai-chinh.tinh-luong', [
+            'month' => $duLieu['month'],
+            'year' => $duLieu['year'],
+            'start' => $duLieu['start'],
+            'end' => $duLieu['end'],
+            'ngayTrongThang' => $duLieu['ngayTrongThang'],
+            'nhanVien' => $duLieu['nhanVien'],
+            'bangChamCong' => $duLieu['bangChamCong'],
+            'bangChamCongLuong' => $duLieu['bangChamCongLuong'],
+            'bangLuongThang' => $duLieu['bangLuongThang'],
+            'chiTietHoaHong' => $duLieu['chiTietHoaHong'],
+            'chiTietChuyenLuong' => $duLieu['chiTietChuyenLuong'],
+            'daChotLuong' => $daChotLuong,
+            'chotLuong' => $chotLuong,
+            'isAdmin' => $request->user()?->isAdmin() ?? false,
+            'daChuyenUserIds' => $chotLuong?->daChuyenUserIds() ?? [],
+            'coTheChotLuong' => ! $daChotLuong && ChotLuongThang::coTheChotThang($month, $year),
+            'trongKhungChotLuong' => ChotLuongThang::trongKhungChotLuong(),
+            'thangChotDuoc' => $kyChotLuong['thang'],
+            'namChotDuoc' => $kyChotLuong['nam'],
+            'khungChotLuongLabel' => ChotLuongThang::khungChotLuongLabel(),
+        ]);
+    }
+
+    public function storeTinhLuong(Request $request)
+    {
+        $validated = $request->validate([
+            'thang' => 'required|integer|min:1|max:12',
+            'nam' => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $month = (int) $validated['thang'];
+        $year = (int) $validated['nam'];
+
+        $lyDoKhongDuocChot = ChotLuongThang::lyDoKhongDuocChot($month, $year);
+        if ($lyDoKhongDuocChot !== null) {
+            return redirect()
+                ->route('admin.tai-chinh.tinh-luong', ['month' => $month, 'year' => $year])
+                ->with('error', $lyDoKhongDuocChot);
+        }
+
+        if (ChotLuongThang::timTheoKy($month, $year) !== null) {
+            return redirect()
+                ->route('admin.tai-chinh.tinh-luong', ['month' => $month, 'year' => $year])
+                ->with('error', 'Tháng '.$month.'/'.$year.' đã được chốt lương.');
+        }
+
+        $duLieu = TinhLuongThangDuLieu::tinh($month, $year);
+
+        ChotLuongThang::create([
+            'thang' => $month,
+            'nam' => $year,
+            'nguoi_chot_id' => $request->user()->id,
+            'ngay_chot' => now(),
+            'du_lieu' => TinhLuongThangDuLieu::taoSnapshot($duLieu),
+        ]);
+
+        return redirect()
+            ->route('admin.tai-chinh.tinh-luong', ['month' => $month, 'year' => $year])
+            ->with('success', 'Đã chốt lương tháng '.$month.'/'.$year.'.');
+    }
+
+    public function destroyChotLuongThang(Request $request, ChotLuongThang $chotLuongThang)
+    {
+        if (! VaiTro::isAdminMa((string) $request->user()?->role)) {
+            abort(403, 'Chỉ admin mới được hủy chốt lương.');
+        }
+
+        $month = (int) $chotLuongThang->thang;
+        $year = (int) $chotLuongThang->nam;
+        $chotLuongThang->delete();
+
+        return redirect()
+            ->route('admin.tai-chinh.tinh-luong', ['month' => $month, 'year' => $year])
+            ->with('success', 'Đã hủy chốt lương tháng '.$month.'/'.$year.'. Dữ liệu lương sẽ được tính lại theo thông tin hiện tại.');
+    }
+
+    public function danhDauDaChuyenLuong(Request $request, ChotLuongThang $chotLuongThang)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $userId = (int) $validated['user_id'];
+        $nhanVienIds = array_map('intval', $chotLuongThang->du_lieu['nhanVienIds'] ?? []);
+
+        if ($nhanVienIds !== [] && ! in_array($userId, $nhanVienIds, true)) {
+            return redirect()
+                ->route('admin.tai-chinh.tinh-luong', [
+                    'month' => $chotLuongThang->thang,
+                    'year' => $chotLuongThang->nam,
+                ])
+                ->with('error', 'Nhân viên không thuộc kỳ lương đã chốt.');
+        }
+
+        if ($chotLuongThang->daChuyenChoUser($userId)) {
+            return redirect()
+                ->route('admin.tai-chinh.tinh-luong', [
+                    'month' => $chotLuongThang->thang,
+                    'year' => $chotLuongThang->nam,
+                ])
+                ->with('error', 'Lương nhân viên này đã được đánh dấu chuyển.');
+        }
+
+        $chotLuongThang->danhDauDaChuyen($userId);
+        $tenNhanVien = User::query()->whereKey($userId)->value('name') ?? 'nhân viên';
+
+        return redirect()
+            ->route('admin.tai-chinh.tinh-luong', [
+                'month' => $chotLuongThang->thang,
+                'year' => $chotLuongThang->nam,
+            ])
+            ->with('success', 'Đã đánh dấu chuyển lương cho '.$tenNhanVien.' tháng '.$chotLuongThang->thang.'/'.$chotLuongThang->nam.'.');
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function resolveThangNamTinhLuong(Request $request): array
+    {
         $month = (int) $request->query('month', now()->month);
         $year = (int) $request->query('year', now()->year);
 
@@ -263,142 +393,7 @@ class TaiChinhKeToanController extends Controller
             $year = now()->year;
         }
 
-        $start = Carbon::create($year, $month, 1)->startOfMonth();
-        $end = (clone $start)->endOfMonth();
-
-        $startStr = $start->format('Y-m-d');
-        $endStr = $end->format('Y-m-d');
-
-        $ngayTrongThang = [];
-        for ($d = (clone $start); $d->lte($end); $d->addDay()) {
-            $ngayTrongThang[] = (clone $d);
-        }
-
-        // User có chấm công trong tháng (giống màn chấm công) để dữ liệu điểm danh khớp
-        $userIdsCoChamCong = ChamCong::query()
-            ->whereBetween('ngay_diem_danh', [$startStr, $endStr])
-            ->distinct()
-            ->pluck('user_id');
-
-        $nhanVien = User::query()
-            ->where(function ($q) use ($userIdsCoChamCong) {
-                $q->where('role', (int) VaiTro::MA_NHAN_VIEN)
-                    ->orWhereIn('id', $userIdsCoChamCong);
-            })
-            ->with('nhanVien')
-            ->orderBy('name')
-            ->get();
-
-        $chamCong = ChamCong::query()
-            ->with(['user', 'diemDanh'])
-            ->whereBetween('ngay_diem_danh', [$startStr, $endStr])
-            ->whereIn('user_id', $nhanVien->pluck('id'))
-            ->get();
-
-        $bangChamCong = [];
-        $tongLuongTuDiemDanh = [];
-        foreach ($nhanVien as $u) {
-            $tongLuongTuDiemDanh[$u->id] = [
-                'luong_co_ban' => 0,
-                'luong_tang_ca' => 0,
-            ];
-        }
-        foreach ($chamCong as $record) {
-            $date = $record->ngay_diem_danh;
-            $dateKey = $date ? Carbon::parse($date)->format('Y-m-d') : null;
-            if (! $dateKey) {
-                continue;
-            }
-            $bangChamCong[$dateKey][$record->user_id] = $record;
-
-            $diemDanh = $record->diemDanh;
-            if ($diemDanh) {
-                $uid = $record->user_id;
-                $tongLuongTuDiemDanh[$uid]['luong_co_ban'] += (float) ($diemDanh->luong_co_ban ?? 0);
-                $tongLuongTuDiemDanh[$uid]['luong_tang_ca'] += (float) ($diemDanh->luong_tang_ca ?? 0);
-            }
-        }
-
-        $nhanVienRecords = $nhanVien->pluck('nhanVien')->filter();
-        $chiTietHoaHongCuoi = TinhLuongThang::chiTietHoaHongHopDongCuoi($nhanVienRecords, $start, $end);
-        $chiTietHoaHongTrangPhuc = TinhLuongThang::chiTietHoaHongHopDongTrangPhuc($nhanVienRecords, $start, $end);
-
-        $chamCongTheoUser = $chamCong->groupBy('user_id');
-
-        $bangLuongThang = [];
-        $chiTietHoaHong = [];
-        $chiTietChuyenLuong = [];
-        foreach ($nhanVien as $u) {
-            $nv = $u->nhanVien;
-            $nvId = $nv?->id;
-            $tongDiemDanh = $tongLuongTuDiemDanh[$u->id] ?? ['luong_co_ban' => 0, 'luong_tang_ca' => 0];
-            $hoaHongHopDongCuoi = (float) ($chiTietHoaHongCuoi[$nvId]['tong'] ?? 0);
-            $hoaHongHopDongTrangPhuc = (float) ($chiTietHoaHongTrangPhuc[$nvId]['tong'] ?? 0);
-
-            $bangLuongThang[$u->id] = TinhLuongThang::tongHopThang(
-                $nv,
-                $tongDiemDanh['luong_co_ban'],
-                $tongDiemDanh['luong_tang_ca'],
-                $hoaHongHopDongCuoi,
-                $hoaHongHopDongTrangPhuc
-            );
-
-            $chiTietHoaHong[$u->id] = [
-                'ten_nhan_vien' => $u->name,
-                'hoa_hong_cuoi' => $chiTietHoaHongCuoi[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
-                'hoa_hong_trang_phuc' => $chiTietHoaHongTrangPhuc[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
-            ];
-
-            $tongHopDiemDanh = TinhLuongThang::tongHopDiemDanhThang($chamCongTheoUser->get($u->id, collect()));
-            $luong = $bangLuongThang[$u->id];
-            $tongPhat = $tongHopDiemDanh['tien_phat_di_muon'] + $tongHopDiemDanh['tien_phat_ve_som'];
-            $loaiNv = $nv?->loai_nhan_vien ?? '';
-
-            $chiTietChuyenLuong[$u->id] = [
-                'ten_nhan_vien' => $u->name,
-                'loai_nhan_vien' => $loaiNv,
-                'loai_nhan_vien_label' => filled($loaiNv)
-                    ? (NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
-                    : 'Chưa phân loại',
-                'thang' => $month,
-                'nam' => $year,
-                'tong_gio_lam' => $tongHopDiemDanh['tong_gio_lam_co_ban'],
-                'tong_gio_tang_ca' => $tongHopDiemDanh['tong_gio_tang_ca'],
-                'tien_phat_di_muon' => $tongHopDiemDanh['tien_phat_di_muon'],
-                'tien_phat_ve_som' => $tongHopDiemDanh['tien_phat_ve_som'],
-                'tong_phat' => $tongPhat,
-                'luong_co_ban' => $luong['luong_co_ban'],
-                'luong_tang_ca' => $luong['luong_tang_ca'],
-                'phu_cap' => $luong['phu_cap'],
-                'hoa_hong_hop_dong_cuoi' => $luong['hoa_hong_hop_dong_cuoi'],
-                'hoa_hong_hop_dong_trang_phuc' => $luong['hoa_hong_hop_dong_trang_phuc'],
-                'tong_luong' => $luong['tong_luong'],
-                'tong_luong_thuc_nhan' => max(0, $luong['tong_luong'] - $tongPhat),
-                'ngan_hang' => (string) ($nv?->ngan_hang ?? ''),
-                'so_tai_khoan' => (string) ($nv?->so_tai_khoan ?? ''),
-                'chu_tai_khoan' => (string) ($nv?->chu_tai_khoan ?? $u->name ?? ''),
-            ];
-        }
-
-        return view('admin.tai-chinh.tinh-luong', [
-            'month' => $month,
-            'year' => $year,
-            'start' => $start,
-            'end' => $end,
-            'ngayTrongThang' => $ngayTrongThang,
-            'nhanVien' => $nhanVien,
-            'bangChamCong' => $bangChamCong,
-            'bangLuongThang' => $bangLuongThang,
-            'chiTietHoaHong' => $chiTietHoaHong,
-            'chiTietChuyenLuong' => $chiTietChuyenLuong,
-        ]);
-    }
-
-    public function storeTinhLuong(Request $request)
-    {
-        $validated = $request->validate([
-            'thang' => 'required|integer|min:1|max:12',
-        ]);
+        return [$month, $year];
     }
 
     /**
