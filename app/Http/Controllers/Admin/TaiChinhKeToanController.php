@@ -319,15 +319,17 @@ class TaiChinhKeToanController extends Controller
         }
 
         $nhanVienRecords = $nhanVien->pluck('nhanVien')->filter();
-        $hoaHongHopDongCuoiTheoNhanVienId = TinhLuongThang::tinhHoaHongHopDongCuoi($nhanVienRecords, $start, $end);
-        $hoaHongHopDongTrangPhucTheoNhanVienId = TinhLuongThang::tinhHoaHongHopDongTrangPhuc($nhanVienRecords, $start, $end);
+        $chiTietHoaHongCuoi = TinhLuongThang::chiTietHoaHongHopDongCuoi($nhanVienRecords, $start, $end);
+        $chiTietHoaHongTrangPhuc = TinhLuongThang::chiTietHoaHongHopDongTrangPhuc($nhanVienRecords, $start, $end);
 
         $bangLuongThang = [];
+        $chiTietHoaHong = [];
         foreach ($nhanVien as $u) {
             $nv = $u->nhanVien;
+            $nvId = $nv?->id;
             $tongDiemDanh = $tongLuongTuDiemDanh[$u->id] ?? ['luong_co_ban' => 0, 'luong_tang_ca' => 0];
-            $hoaHongHopDongCuoi = (float) ($hoaHongHopDongCuoiTheoNhanVienId[$nv?->id] ?? 0);
-            $hoaHongHopDongTrangPhuc = (float) ($hoaHongHopDongTrangPhucTheoNhanVienId[$nv?->id] ?? 0);
+            $hoaHongHopDongCuoi = (float) ($chiTietHoaHongCuoi[$nvId]['tong'] ?? 0);
+            $hoaHongHopDongTrangPhuc = (float) ($chiTietHoaHongTrangPhuc[$nvId]['tong'] ?? 0);
 
             $bangLuongThang[$u->id] = TinhLuongThang::tongHopThang(
                 $nv,
@@ -336,6 +338,12 @@ class TaiChinhKeToanController extends Controller
                 $hoaHongHopDongCuoi,
                 $hoaHongHopDongTrangPhuc
             );
+
+            $chiTietHoaHong[$u->id] = [
+                'ten_nhan_vien' => $u->name,
+                'hoa_hong_cuoi' => $chiTietHoaHongCuoi[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
+                'hoa_hong_trang_phuc' => $chiTietHoaHongTrangPhuc[$nvId] ?? ['tong' => 0, 'danh_sach' => []],
+            ];
         }
 
         return view('admin.tai-chinh.tinh-luong', [
@@ -347,6 +355,7 @@ class TaiChinhKeToanController extends Controller
             'nhanVien' => $nhanVien,
             'bangChamCong' => $bangChamCong,
             'bangLuongThang' => $bangLuongThang,
+            'chiTietHoaHong' => $chiTietHoaHong,
         ]);
     }
 

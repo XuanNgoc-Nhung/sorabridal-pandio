@@ -11,12 +11,12 @@ use Illuminate\Support\Collection;
 class TinhLuongThang
 {
     /**
-     * Tính hoa hồng HĐ cưới theo tháng cho từng nhân viên (key = nhan_vien.id).
+     * Chi tiết hoa hồng HĐ cưới theo tháng (key = nhan_vien.id).
      *
      * @param  Collection<int, NhanVien>  $nhanVienRecords
-     * @return array<int, float>
+     * @return array<int, array{tong: float, danh_sach: list<array<string, mixed>>}>
      */
-    public static function tinhHoaHongHopDongCuoi(Collection $nhanVienRecords, Carbon $start, Carbon $end): array
+    public static function chiTietHoaHongHopDongCuoi(Collection $nhanVienRecords, Carbon $start, Carbon $end): array
     {
         $nhanVienIds = $nhanVienRecords->pluck('id')->filter()->values()->all();
         if ($nhanVienIds === []) {
@@ -47,7 +47,7 @@ class TinhLuongThang
             ->pluck('so_nguoi', 'hop_dong_id');
 
         $nhanVienById = $nhanVienRecords->keyBy('id');
-        $hoaHongTheoNhanVienId = [];
+        $ketQua = [];
 
         foreach ($thanhVienRecords as $tv) {
             $hopDong = $tv->hopDongCuoi;
@@ -57,22 +57,38 @@ class TinhLuongThang
 
             $soNguoi = max(1, (int) ($soThanhVienTheoHopDong[$tv->hop_dong_id] ?? 1));
             $nv = $nhanVienById->get($tv->nhan_vien_id);
-            $hoaHongRate = (float) ($nv?->hoa_hong_hop_dong_cuoi ?? 0);
-            $phan = ((float) ($hopDong->tong_tien ?? 0) / $soNguoi) * $hoaHongRate / 100;
+            $tyLeHoaHong = (float) ($nv?->hoa_hong_hop_dong_cuoi ?? 0);
+            $doanhThu = (float) ($hopDong->tong_tien ?? 0);
+            $soTienNhan = ($doanhThu / $soNguoi) * $tyLeHoaHong / 100;
 
-            $hoaHongTheoNhanVienId[$tv->nhan_vien_id] = ($hoaHongTheoNhanVienId[$tv->nhan_vien_id] ?? 0) + $phan;
+            $nhanVienId = (int) $tv->nhan_vien_id;
+            if (! isset($ketQua[$nhanVienId])) {
+                $ketQua[$nhanVienId] = ['tong' => 0.0, 'danh_sach' => []];
+            }
+
+            $ketQua[$nhanVienId]['danh_sach'][] = [
+                'hop_dong_id' => (int) $hopDong->id,
+                'ma_hop_dong' => (string) ($hopDong->ma_hop_dong ?? ''),
+                'ten_hop_dong' => trim(($hopDong->ten_co_dau ?? '').' & '.($hopDong->ten_chu_re ?? '')),
+                'ngay' => $hopDong->ngay_ky_hop_dong?->format('d/m/Y') ?? '—',
+                'doanh_thu' => $doanhThu,
+                'so_nguoi_tham_gia' => $soNguoi,
+                'ty_le_hoa_hong' => $tyLeHoaHong,
+                'so_tien_nhan' => $soTienNhan,
+            ];
+            $ketQua[$nhanVienId]['tong'] += $soTienNhan;
         }
 
-        return $hoaHongTheoNhanVienId;
+        return $ketQua;
     }
 
     /**
-     * Tính hoa hồng HĐ thuê trang phục theo tháng cho từng nhân viên (key = nhan_vien.id).
+     * Chi tiết hoa hồng HĐ thuê trang phục theo tháng (key = nhan_vien.id).
      *
      * @param  Collection<int, NhanVien>  $nhanVienRecords
-     * @return array<int, float>
+     * @return array<int, array{tong: float, danh_sach: list<array<string, mixed>>}>
      */
-    public static function tinhHoaHongHopDongTrangPhuc(Collection $nhanVienRecords, Carbon $start, Carbon $end): array
+    public static function chiTietHoaHongHopDongTrangPhuc(Collection $nhanVienRecords, Carbon $start, Carbon $end): array
     {
         $userIds = $nhanVienRecords->pluck('user_id')->filter()->values()->all();
         if ($userIds === []) {
@@ -93,7 +109,7 @@ class TinhLuongThang
         }
 
         $nhanVienByUserId = $nhanVienRecords->keyBy('user_id');
-        $hoaHongTheoNhanVienId = [];
+        $ketQua = [];
 
         foreach ($hopDongs as $hopDong) {
             $nv = $nhanVienByUserId->get($hopDong->nguoi_cho_thue);
@@ -101,13 +117,28 @@ class TinhLuongThang
                 continue;
             }
 
-            $hoaHongRate = (float) ($nv->hoa_hong_hop_dong_trang_phuc ?? 0);
-            $phan = (float) ($hopDong->tong_tien ?? 0) * $hoaHongRate / 100;
+            $tyLeHoaHong = (float) ($nv->hoa_hong_hop_dong_trang_phuc ?? 0);
+            $doanhThu = (float) ($hopDong->tong_tien ?? 0);
+            $soTienNhan = $doanhThu * $tyLeHoaHong / 100;
 
-            $hoaHongTheoNhanVienId[$nv->id] = ($hoaHongTheoNhanVienId[$nv->id] ?? 0) + $phan;
+            $nhanVienId = (int) $nv->id;
+            if (! isset($ketQua[$nhanVienId])) {
+                $ketQua[$nhanVienId] = ['tong' => 0.0, 'danh_sach' => []];
+            }
+
+            $ketQua[$nhanVienId]['danh_sach'][] = [
+                'hop_dong_id' => (int) $hopDong->id,
+                'ten_khach_hang' => (string) ($hopDong->ten_khach_hang ?? ''),
+                'sdt_khach_hang' => (string) ($hopDong->sdt_khach_hang ?? ''),
+                'ngay' => $hopDong->ngay_tra_chinh_thuc?->format('d/m/Y') ?? '—',
+                'doanh_thu' => $doanhThu,
+                'ty_le_hoa_hong' => $tyLeHoaHong,
+                'so_tien_nhan' => $soTienNhan,
+            ];
+            $ketQua[$nhanVienId]['tong'] += $soTienNhan;
         }
 
-        return $hoaHongTheoNhanVienId;
+        return $ketQua;
     }
 
     /**

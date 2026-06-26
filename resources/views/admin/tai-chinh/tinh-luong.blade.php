@@ -155,10 +155,28 @@
                                 {{ number_format($luong['phu_cap'], 0, ',', '.') }} đ
                             </td>
                             <td class="text-end align-middle">
-                                {{ number_format($luong['hoa_hong_hop_dong_cuoi'], 0, ',', '.') }} đ
+                                @if($luong['hoa_hong_hop_dong_cuoi'] > 0)
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-0 text-decoration-none tinh-luong-hoa-hong-btn"
+                                            data-loai="cuoi"
+                                            data-user-id="{{ $u->id }}">
+                                        {{ number_format($luong['hoa_hong_hop_dong_cuoi'], 0, ',', '.') }} đ
+                                    </button>
+                                @else
+                                    <span class="text-muted">0 đ</span>
+                                @endif
                             </td>
                             <td class="text-end align-middle">
-                                {{ number_format($luong['hoa_hong_hop_dong_trang_phuc'], 0, ',', '.') }} đ
+                                @if($luong['hoa_hong_hop_dong_trang_phuc'] > 0)
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-0 text-decoration-none tinh-luong-hoa-hong-btn"
+                                            data-loai="trang_phuc"
+                                            data-user-id="{{ $u->id }}">
+                                        {{ number_format($luong['hoa_hong_hop_dong_trang_phuc'], 0, ',', '.') }} đ
+                                    </button>
+                                @else
+                                    <span class="text-muted">0 đ</span>
+                                @endif
                             </td>
                             <td class="text-end align-middle fw-semibold">
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
@@ -174,6 +192,30 @@
                 </tbody>
             </table>
         </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal chi tiết hoa hồng --}}
+<div class="modal fade" id="modalChiTietHoaHong" tabindex="-1" aria-labelledby="modalChiTietHoaHongLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalChiTietHoaHongLabel">Chi tiết hoa hồng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="table-light" id="modalChiTietHoaHongThead"></thead>
+                        <tbody id="modalChiTietHoaHongTbody"></tbody>
+                        <tfoot class="table-light" id="modalChiTietHoaHongTfoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
@@ -246,12 +288,119 @@
 .luong-co-ban-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #0d6e2f; vertical-align: middle; }
 .luong-tang-ca-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #c25a0a; vertical-align: middle; }
 .tinh-luong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
+.tinh-luong-hoa-hong-btn { font-weight: 500; color: var(--bs-primary); white-space: nowrap; }
+.tinh-luong-hoa-hong-btn:hover { text-decoration: underline !important; color: var(--bs-primary); }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var chiTietHoaHong = @json($chiTietHoaHong ?? []);
+
+    function formatMoney(value) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' đ';
+    }
+
+    function formatPercent(value) {
+        return new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value) + '%';
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+    }
+
+    function renderChiTietHoaHong(loai, userId) {
+        var data = chiTietHoaHong[userId];
+        if (!data) {
+            return;
+        }
+
+        var modalEl = document.getElementById('modalChiTietHoaHong');
+        var titleEl = document.getElementById('modalChiTietHoaHongLabel');
+        var theadEl = document.getElementById('modalChiTietHoaHongThead');
+        var tbodyEl = document.getElementById('modalChiTietHoaHongTbody');
+        var tfootEl = document.getElementById('modalChiTietHoaHongTfoot');
+        var detail = loai === 'cuoi' ? data.hoa_hong_cuoi : data.hoa_hong_trang_phuc;
+        var danhSach = (detail && detail.danh_sach) ? detail.danh_sach : [];
+        var tong = (detail && detail.tong) ? detail.tong : 0;
+
+        titleEl.textContent = loai === 'cuoi'
+            ? 'Chi tiết hoa hồng HĐ cưới — ' + (data.ten_nhan_vien || '')
+            : 'Chi tiết hoa hồng HĐ trang phục — ' + (data.ten_nhan_vien || '');
+
+        if (loai === 'cuoi') {
+            theadEl.innerHTML = '<tr>'
+                + '<th class="text-center" style="width:48px">STT</th>'
+                + '<th>Mã HĐ</th>'
+                + '<th>Khách hàng</th>'
+                + '<th class="text-center">Ngày ký</th>'
+                + '<th class="text-end">Doanh thu</th>'
+                + '<th class="text-center">Số người</th>'
+                + '<th class="text-end">Tỷ lệ HH</th>'
+                + '<th class="text-end">Nhận được</th>'
+                + '</tr>';
+        } else {
+            theadEl.innerHTML = '<tr>'
+                + '<th class="text-center" style="width:48px">STT</th>'
+                + '<th>Khách hàng</th>'
+                + '<th class="text-center">SĐT</th>'
+                + '<th class="text-center">Ngày trả</th>'
+                + '<th class="text-end">Doanh thu</th>'
+                + '<th class="text-end">Tỷ lệ HH</th>'
+                + '<th class="text-end">Nhận được</th>'
+                + '</tr>';
+        }
+
+        if (danhSach.length === 0) {
+            var colSpan = loai === 'cuoi' ? 8 : 7;
+            tbodyEl.innerHTML = '<tr><td colspan="' + colSpan + '" class="text-center text-muted py-4">Không có hợp đồng trong kỳ.</td></tr>';
+        } else if (loai === 'cuoi') {
+            tbodyEl.innerHTML = danhSach.map(function (item, index) {
+                return '<tr>'
+                    + '<td class="text-center">' + (index + 1) + '</td>'
+                    + '<td>' + escapeHtml(item.ma_hop_dong || '—') + '</td>'
+                    + '<td>' + escapeHtml(item.ten_hop_dong || '—') + '</td>'
+                    + '<td class="text-center text-nowrap">' + escapeHtml(item.ngay || '—') + '</td>'
+                    + '<td class="text-end text-nowrap">' + formatMoney(item.doanh_thu || 0) + '</td>'
+                    + '<td class="text-center">' + escapeHtml(item.so_nguoi_tham_gia || 0) + '</td>'
+                    + '<td class="text-end text-nowrap">' + formatPercent(item.ty_le_hoa_hong || 0) + '</td>'
+                    + '<td class="text-end text-nowrap fw-medium">' + formatMoney(item.so_tien_nhan || 0) + '</td>'
+                    + '</tr>';
+            }).join('');
+        } else {
+            tbodyEl.innerHTML = danhSach.map(function (item, index) {
+                return '<tr>'
+                    + '<td class="text-center">' + (index + 1) + '</td>'
+                    + '<td>' + escapeHtml(item.ten_khach_hang || '—') + '</td>'
+                    + '<td class="text-center text-nowrap">' + escapeHtml(item.sdt_khach_hang || '—') + '</td>'
+                    + '<td class="text-center text-nowrap">' + escapeHtml(item.ngay || '—') + '</td>'
+                    + '<td class="text-end text-nowrap">' + formatMoney(item.doanh_thu || 0) + '</td>'
+                    + '<td class="text-end text-nowrap">' + formatPercent(item.ty_le_hoa_hong || 0) + '</td>'
+                    + '<td class="text-end text-nowrap fw-medium">' + formatMoney(item.so_tien_nhan || 0) + '</td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        var footColSpan = loai === 'cuoi' ? 7 : 6;
+        tfootEl.innerHTML = '<tr>'
+            + '<th colspan="' + footColSpan + '" class="text-end">Tổng hoa hồng</th>'
+            + '<th class="text-end text-nowrap">' + formatMoney(tong) + '</th>'
+            + '</tr>';
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    document.querySelectorAll('.tinh-luong-hoa-hong-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            renderChiTietHoaHong(btn.getAttribute('data-loai'), btn.getAttribute('data-user-id'));
+        });
+    });
+
     if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
         return;
     }
