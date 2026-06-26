@@ -140,12 +140,16 @@
                                     $record = $bangChamCong[$dateKey][$u->id] ?? null;
                                     $diemDanh = $record?->diemDanh;
                                     $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
-                                    $dangKyCa = ($bangCaLam[$dateKey][$u->id] ?? [])[0] ?? null;
+                                    $dangKyCa = ($bangCaLam[$dateKey][(int) $u->id] ?? [])[0] ?? null;
                                     $caLam = $dangKyCa?->caLamViec;
                                     if ($caLam) {
-                                        $caLamTen = $caLam->ten_ca ?: '—';
-                                        $caGioBatDau = $caLam->gioBatDauHienThi();
-                                        $caGioKetThuc = $caLam->gioKetThucHienThi();
+                                        $caLamTen = $caLam->ten_ca ?: '';
+                                        $caGioBatDau = $caLam->gio_bat_dau
+                                            ? \App\Models\CaLamViec::formatGio($caLam->gio_bat_dau)
+                                            : '';
+                                        $caGioKetThuc = $caLam->gio_ket_thuc
+                                            ? \App\Models\CaLamViec::formatGio($caLam->gio_ket_thuc)
+                                            : '';
                                     } else {
                                         $caLamTen = '';
                                         $caGioBatDau = '';
@@ -182,6 +186,8 @@
                                                 data-loai-nhan-vien="{{ $loaiNv }}"
                                                 data-loai-nhan-vien-label="{{ $loaiNvLabel }}"
                                                 data-co-loai-nhan-vien="{{ $coLoaiNvHopLe ? '1' : '0' }}"
+                                                data-luong-tang-ca="{{ $nvRecord?->luong_tang_ca ?? '' }}"
+                                                data-luong-co-ban="{{ $nvRecord?->luong_co_ban ?? '' }}"
                                                 data-ngay="{{ $dateKey }}"
                                                 data-ngay-hien-thi="{{ $day->format('d/m/Y') }}"
                                                 data-ca-lam-ten="{{ $caLamTen }}"
@@ -266,6 +272,10 @@
                     </div>
                     <div id="suaDiemDanhHoCanhBaoLoaiNv" class="alert alert-warning d-none mt-3 mb-0 small" role="alert">
                         Nhân viên chưa có loại nhân viên (Full-time / Part-time). Vui lòng cập nhật trong Danh sách nhân sự trước khi điểm danh.
+                    </div>
+                    <div id="suaDiemDanhHoTomTat" class="sua-diem-danh-ho-tom-tat d-none mt-3 mb-0 small" role="status">
+                        <div class="tom-tat-tieu-de mb-2">Ước tính khi lưu</div>
+                        <div id="suaDiemDanhHoTomTatNoiDung" class="tom-tat-noi-dung"></div>
                     </div>
                     <div id="suaDiemDanhHoLoi" class="alert alert-danger d-none mt-3 mb-0 small" role="alert"></div>
                 </div>
@@ -390,6 +400,62 @@
 [data-bs-theme='dark'] .modal-sua-diem-danh-ho .form-control[readonly] {
     background-color: rgba(255, 255, 255, 0.05);
 }
+.sua-diem-danh-ho-tom-tat {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    background-color: #f5f5f9;
+    border: 1px solid #d9dee3;
+    color: #566a7f;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-tieu-de {
+    font-weight: 600;
+    color: #384551;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-noi-dung > div + div {
+    margin-top: 0.35rem;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-luong {
+    color: #198754;
+    font-weight: 600;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-phat {
+    color: #dc3545;
+    font-weight: 600;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-tong {
+    color: #0f5132;
+    font-weight: 700;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-tong-am {
+    color: #dc3545;
+    font-weight: 700;
+}
+.sua-diem-danh-ho-tom-tat .tom-tat-phu {
+    color: #697a8d;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat {
+    background-color: #2f3349;
+    border-color: #434968;
+    color: #b4b7c8;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-tieu-de {
+    color: #dbdee7;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-luong {
+    color: #71dd8a;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-phat {
+    color: #ff6b6b;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-tong {
+    color: #71dd8a;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-tong-am {
+    color: #ff6b6b;
+}
+[data-bs-theme='dark'] .sua-diem-danh-ho-tom-tat .tom-tat-phu {
+    color: #9aa0b8;
+}
 </style>
 @endpush
 
@@ -513,7 +579,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var inpGioRa = document.getElementById('suaDiemDanhHoGioRa');
     var elLoi = document.getElementById('suaDiemDanhHoLoi');
     var elCanhBaoLoaiNv = document.getElementById('suaDiemDanhHoCanhBaoLoaiNv');
+    var elTomTat = document.getElementById('suaDiemDanhHoTomTat');
+    var elTomTatNoiDung = document.getElementById('suaDiemDanhHoTomTatNoiDung');
     var urlCapNhat = @json(route('admin.diem-danh.cham-cong.diem-danh-ho'));
+    var urlThongTinCaLam = @json(route('admin.diem-danh.cham-cong.ca-lam-ngay'));
+    var phutTangCaToiThieu = @json(\App\Support\TinhLuongDiemDanh::phutTangCaToiThieu());
+    var loaiNvFullTime = @json(\App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME);
+    var loaiNvPartTime = @json(\App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME);
+    var gioChuyenTangCa = @json(config('diem_danh.gio_chuyen_tang_ca', '21:00'));
 
     if (!modalEl || !formEl) {
         return;
@@ -524,8 +597,198 @@ document.addEventListener('DOMContentLoaded', function () {
         ngay: null,
         triggerBtn: null,
         cheDo: 'tao-moi',
-        coLoaiNvHopLe: false
+        coLoaiNvHopLe: false,
+        loaiNhanVien: '',
+        luongCoBan: 0,
+        luongTangCa: 0,
+        caGioBatDau: '',
+        caGioKetThuc: ''
     };
+
+    function phutTuChuoiGio(chuoiGio) {
+        if (!chuoiGio || typeof chuoiGio !== 'string') {
+            return null;
+        }
+        var parts = chuoiGio.trim().split(':');
+        if (parts.length < 2) {
+            return null;
+        }
+        var h = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) {
+            return null;
+        }
+        return h * 60 + m;
+    }
+
+    function dinhDangTien(so) {
+        return new Intl.NumberFormat('vi-VN').format(so) + ' đ';
+    }
+
+    function tinhTienPhatTheoSoPhut(soPhut) {
+        if (soPhut <= 0) {
+            return 0;
+        }
+        return soPhut <= 30 ? 50000 : 100000;
+    }
+
+    function tinhPhutDiMuon(gioVaoPhut, gioBatDauCaPhut) {
+        if (gioVaoPhut === null || gioBatDauCaPhut === null || gioVaoPhut <= gioBatDauCaPhut) {
+            return 0;
+        }
+        return gioVaoPhut - gioBatDauCaPhut;
+    }
+
+    function tinhPhutVeSom(gioRaPhut, gioKetThucCaPhut) {
+        if (gioRaPhut === null || gioKetThucCaPhut === null || gioRaPhut >= gioKetThucCaPhut) {
+            return 0;
+        }
+        return gioKetThucCaPhut - gioRaPhut;
+    }
+
+    function tinhPhutTangCaFullTime(gioVaoPhut, gioRaPhut, gioKetThucCaPhut) {
+        if (gioVaoPhut === null || gioRaPhut === null || gioKetThucCaPhut === null || gioRaPhut <= gioKetThucCaPhut) {
+            return 0;
+        }
+        var gioBatDauTangCa = gioVaoPhut > gioKetThucCaPhut ? gioVaoPhut : gioKetThucCaPhut;
+        return gioRaPhut - gioBatDauTangCa;
+    }
+
+    function tinhLuongPartTime(gioVaoPhut, gioRaPhut) {
+        if (gioVaoPhut === null || gioRaPhut === null || gioRaPhut <= gioVaoPhut) {
+            return null;
+        }
+
+        var gioChuyenPhut = phutTuChuoiGio(gioChuyenTangCa);
+        if (gioChuyenPhut === null) {
+            return null;
+        }
+
+        var phutCoBan = 0;
+        var phutTangCa = 0;
+
+        if (gioRaPhut <= gioChuyenPhut) {
+            phutCoBan = gioRaPhut - gioVaoPhut;
+        } else if (gioVaoPhut >= gioChuyenPhut) {
+            phutTangCa = gioRaPhut - gioVaoPhut;
+        } else {
+            phutCoBan = gioChuyenPhut - gioVaoPhut;
+            phutTangCa = gioRaPhut - gioChuyenPhut;
+        }
+
+        var gioLamCoBan = Math.round((phutCoBan / 60) * 100) / 100;
+        var gioLamTangCa = Math.round((phutTangCa / 60) * 100) / 100;
+        var luongCoBan = Math.round(gioLamCoBan * state.luongCoBan);
+        var luongTangCa = phutTangCa >= phutTangCaToiThieu
+            ? Math.round(gioLamTangCa * state.luongTangCa)
+            : 0;
+
+        return {
+            phutCoBan: phutCoBan,
+            phutTangCa: phutTangCa,
+            gioLamCoBan: gioLamCoBan,
+            gioLamTangCa: gioLamTangCa,
+            luongCoBan: luongCoBan,
+            luongTangCa: luongTangCa,
+            tongLuong: luongCoBan + luongTangCa
+        };
+    }
+
+    function capNhatTomTatUocTinh() {
+        if (!elTomTat || !elTomTatNoiDung) {
+            return;
+        }
+
+        var dong = [];
+        var gioVaoPhut = inpGioVao && inpGioVao.value ? phutTuChuoiGio(inpGioVao.value) : null;
+        var gioRaPhut = inpGioRa && inpGioRa.value ? phutTuChuoiGio(inpGioRa.value) : null;
+        var gioBatDauCaPhut = phutTuChuoiGio(state.caGioBatDau);
+        var gioKetThucCaPhut = phutTuChuoiGio(state.caGioKetThuc);
+        var tienPhatDiMuon = 0;
+        var tienPhatVeSom = 0;
+        var tongThuNhap = 0;
+
+        function themDong(html) {
+            dong.push('<div>' + html + '</div>');
+        }
+
+        if (gioVaoPhut !== null) {
+            var phutDiMuon = tinhPhutDiMuon(gioVaoPhut, gioBatDauCaPhut);
+            tienPhatDiMuon = tinhTienPhatTheoSoPhut(phutDiMuon);
+            if (tienPhatDiMuon > 0) {
+                themDong(
+                    'Phạt đi muộn: <span class="tom-tat-phat">− ' + dinhDangTien(tienPhatDiMuon) + '</span>' +
+                    ' <span class="tom-tat-phu">(' + phutDiMuon + ' phút)</span>'
+                );
+            }
+        }
+
+        if (gioRaPhut !== null) {
+            var phutVeSom = tinhPhutVeSom(gioRaPhut, gioKetThucCaPhut);
+            tienPhatVeSom = tinhTienPhatTheoSoPhut(phutVeSom);
+            if (tienPhatVeSom > 0) {
+                themDong(
+                    'Phạt về sớm: <span class="tom-tat-phat">− ' + dinhDangTien(tienPhatVeSom) + '</span>' +
+                    ' <span class="tom-tat-phu">(' + phutVeSom + ' phút)</span>'
+                );
+            }
+
+            if (state.loaiNhanVien === loaiNvFullTime) {
+                var phutTangCa = tinhPhutTangCaFullTime(gioVaoPhut, gioRaPhut, gioKetThucCaPhut);
+                var gioTangCa = Math.round((phutTangCa / 60) * 100) / 100;
+                var luongTangCa = phutTangCa >= phutTangCaToiThieu
+                    ? Math.round(gioTangCa * state.luongTangCa)
+                    : 0;
+                tongThuNhap += luongTangCa;
+                if (luongTangCa > 0) {
+                    themDong(
+                        'Lương tăng ca: <span class="tom-tat-luong">' + dinhDangTien(luongTangCa) + '</span>' +
+                        ' <span class="tom-tat-phu">(' + gioTangCa + ' giờ × ' + dinhDangTien(state.luongTangCa) + '/giờ)</span>'
+                    );
+                } else if (phutTangCa > 0 && phutTangCa < phutTangCaToiThieu) {
+                    themDong('<span class="tom-tat-phu">Tăng ca ' + phutTangCa + ' phút (dưới ngưỡng ' + phutTangCaToiThieu + ' phút, chưa tính lương).</span>');
+                }
+            } else if (state.loaiNhanVien === loaiNvPartTime) {
+                var luongPt = tinhLuongPartTime(gioVaoPhut, gioRaPhut);
+                if (luongPt) {
+                    tongThuNhap += luongPt.tongLuong;
+                    if (luongPt.luongCoBan > 0) {
+                        themDong(
+                            'Lương cơ bản: <span class="tom-tat-luong">' + dinhDangTien(luongPt.luongCoBan) + '</span>' +
+                            ' <span class="tom-tat-phu">(' + luongPt.gioLamCoBan + ' giờ × ' + dinhDangTien(state.luongCoBan) + '/giờ, trước ' + gioChuyenTangCa + ')</span>'
+                        );
+                    }
+                    if (luongPt.luongTangCa > 0) {
+                        themDong(
+                            'Lương tăng ca: <span class="tom-tat-luong">' + dinhDangTien(luongPt.luongTangCa) + '</span>' +
+                            ' <span class="tom-tat-phu">(' + luongPt.gioLamTangCa + ' giờ × ' + dinhDangTien(state.luongTangCa) + '/giờ, từ ' + gioChuyenTangCa + ')</span>'
+                        );
+                    } else if (luongPt.phutTangCa > 0 && luongPt.phutTangCa < phutTangCaToiThieu) {
+                        themDong('<span class="tom-tat-phu">Tăng ca ' + luongPt.phutTangCa + ' phút (dưới ngưỡng ' + phutTangCaToiThieu + ' phút, chưa tính lương).</span>');
+                    }
+                }
+            }
+        }
+
+        var tongPhat = tienPhatDiMuon + tienPhatVeSom;
+        var tongLuongUocTinh = tongThuNhap - tongPhat;
+        if (tongThuNhap > 0 || tongPhat > 0) {
+            var lopTong = tongLuongUocTinh < 0 ? 'tom-tat-tong-am' : 'tom-tat-tong';
+            var hienThiTong = tongLuongUocTinh < 0
+                ? '− ' + dinhDangTien(Math.abs(tongLuongUocTinh))
+                : dinhDangTien(tongLuongUocTinh);
+            themDong('Tổng lương ước tính: <span class="' + lopTong + '">' + hienThiTong + '</span>');
+        }
+
+        if (dong.length === 0) {
+            elTomTat.classList.add('d-none');
+            elTomTatNoiDung.innerHTML = '';
+            return;
+        }
+
+        elTomTatNoiDung.innerHTML = dong.join('');
+        elTomTat.classList.remove('d-none');
+    }
 
     function anLoi() {
         if (!elLoi) {
@@ -565,51 +828,123 @@ document.addEventListener('DOMContentLoaded', function () {
         input.placeholder = placeholder || '—';
     }
 
-    document.querySelectorAll('.btn-sua-diem-danh-ho').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            state.userId = this.getAttribute('data-user-id');
-            state.ngay = this.getAttribute('data-ngay');
-            state.triggerBtn = this;
-            state.cheDo = this.getAttribute('data-che-do') || 'tao-moi';
+    function coGiaTriCa(value) {
+        var text = (value || '').trim();
+        return text !== '' && text !== '—';
+    }
 
-            datGiaTriReadonly(inpTenNv, this.getAttribute('data-user-name') || '');
-            datGiaTriReadonly(inpEmail, this.getAttribute('data-user-email') || '');
-            datGiaTriReadonly(inpPhone, this.getAttribute('data-user-phone') || '');
-            datGiaTriReadonly(
-                inpLoaiNv,
-                this.getAttribute('data-loai-nhan-vien-label') || '',
-                'Chưa cập nhật'
-            );
-            datGiaTriReadonly(inpNgay, this.getAttribute('data-ngay-hien-thi') || '');
+    function hienThongTinCaLam(tenCa, gioBatDau, gioKetThuc) {
+        var chuaPhanCa = !coGiaTriCa(tenCa) && !coGiaTriCa(gioBatDau) && !coGiaTriCa(gioKetThuc);
+        datGiaTriReadonly(inpCaLamTen, tenCa, chuaPhanCa ? 'Chưa phân ca làm việc' : '—');
+        datGiaTriReadonly(inpCaGioBatDau, gioBatDau);
+        datGiaTriReadonly(inpCaGioKetThuc, gioKetThuc);
+    }
 
-            capNhatTrangThaiNutLuu(this.getAttribute('data-co-loai-nhan-vien') === '1');
+    function taiThongTinCaLam() {
+        if (!state.userId || !state.ngay) {
+            return;
+        }
 
-            var caLamTen = this.getAttribute('data-ca-lam-ten') || '';
-            var caGioBatDau = this.getAttribute('data-ca-gio-bat-dau') || '';
-            var caGioKetThuc = this.getAttribute('data-ca-gio-ket-thuc') || '';
-            var chuaPhanCa = !caLamTen && !caGioBatDau && !caGioKetThuc;
+        hienThongTinCaLam('', '', '');
+        if (inpCaLamTen) {
+            inpCaLamTen.placeholder = 'Đang tải ca làm việc...';
+        }
 
-            datGiaTriReadonly(inpCaLamTen, caLamTen, chuaPhanCa ? 'Chưa phân ca làm việc' : '—');
-            datGiaTriReadonly(inpCaGioBatDau, caGioBatDau);
-            datGiaTriReadonly(inpCaGioKetThuc, caGioKetThuc);
+        RestApi.get(urlThongTinCaLam + '?' + new URLSearchParams({
+            user_id: state.userId,
+            ngay_lam: state.ngay
+        }).toString())
+            .then(function (res) {
+                var body = res.data || {};
+                if (!res.ok || !body.success) {
+                    throw new Error(body.message || 'Không thể tải ca làm việc.');
+                }
 
-            if (inpGioVao) {
-                inpGioVao.value = this.getAttribute('data-gio-vao') || '';
-            }
-            if (inpGioRa) {
-                inpGioRa.value = this.getAttribute('data-gio-ra') || '';
-            }
+                var ca = body.ca_lam || null;
+                if (ca) {
+                    state.caGioBatDau = ca.gio_bat_dau || '';
+                    state.caGioKetThuc = ca.gio_ket_thuc || '';
+                    hienThongTinCaLam(ca.ten_ca || '', state.caGioBatDau, state.caGioKetThuc);
+                } else {
+                    state.caGioBatDau = '';
+                    state.caGioKetThuc = '';
+                    hienThongTinCaLam('', '', '');
+                }
 
-            if (elTitle) {
-                elTitle.textContent = state.cheDo === 'sua' ? 'Sửa điểm danh' : 'Điểm danh hộ';
-            }
+                capNhatTomTatUocTinh();
+            })
+            .catch(function () {
+                state.caGioBatDau = '';
+                state.caGioKetThuc = '';
+                hienThongTinCaLam('', '', '');
+            });
+    }
 
-            anLoi();
-        });
+    function napModalTuNut(btn) {
+        if (!btn) {
+            return;
+        }
+
+        state.userId = btn.getAttribute('data-user-id');
+        state.ngay = btn.getAttribute('data-ngay');
+        state.triggerBtn = btn;
+        state.cheDo = btn.getAttribute('data-che-do') || 'tao-moi';
+        state.loaiNhanVien = btn.getAttribute('data-loai-nhan-vien') || '';
+        state.luongCoBan = parseInt(btn.getAttribute('data-luong-co-ban') || '0', 10) || 0;
+        state.luongTangCa = parseInt(btn.getAttribute('data-luong-tang-ca') || '0', 10) || 0;
+
+        datGiaTriReadonly(inpTenNv, btn.getAttribute('data-user-name') || '');
+        datGiaTriReadonly(inpEmail, btn.getAttribute('data-user-email') || '');
+        datGiaTriReadonly(inpPhone, btn.getAttribute('data-user-phone') || '');
+        datGiaTriReadonly(
+            inpLoaiNv,
+            btn.getAttribute('data-loai-nhan-vien-label') || '',
+            'Chưa cập nhật'
+        );
+        datGiaTriReadonly(inpNgay, btn.getAttribute('data-ngay-hien-thi') || '');
+
+        capNhatTrangThaiNutLuu(btn.getAttribute('data-co-loai-nhan-vien') === '1');
+
+        if (inpGioVao) {
+            inpGioVao.value = btn.getAttribute('data-gio-vao') || '';
+        }
+        if (inpGioRa) {
+            inpGioRa.value = btn.getAttribute('data-gio-ra') || '';
+        }
+
+        if (elTitle) {
+            elTitle.textContent = state.cheDo === 'sua' ? 'Sửa điểm danh' : 'Điểm danh hộ';
+        }
+
+        anLoi();
+        taiThongTinCaLam();
+    }
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (!btn || !btn.classList.contains('btn-sua-diem-danh-ho')) {
+            return;
+        }
+        napModalTuNut(btn);
     });
+
+    if (inpGioVao) {
+        inpGioVao.addEventListener('input', capNhatTomTatUocTinh);
+        inpGioVao.addEventListener('change', capNhatTomTatUocTinh);
+    }
+    if (inpGioRa) {
+        inpGioRa.addEventListener('input', capNhatTomTatUocTinh);
+        inpGioRa.addEventListener('change', capNhatTomTatUocTinh);
+    }
 
     modalEl.addEventListener('hidden.bs.modal', function () {
         anLoi();
+        if (elTomTat) {
+            elTomTat.classList.add('d-none');
+        }
+        if (elTomTatNoiDung) {
+            elTomTatNoiDung.innerHTML = '';
+        }
         if (elCanhBaoLoaiNv) {
             elCanhBaoLoaiNv.classList.add('d-none');
         }

@@ -285,7 +285,7 @@ class DiemDanhController extends Controller
         $bangCaLam = [];
         foreach ($dangKy as $record) {
             $dateKey = $record->ngay_lam->format('Y-m-d');
-            $bangCaLam[$dateKey][$record->nguoi_dung_id][] = $record;
+            $bangCaLam[$dateKey][(int) $record->nguoi_dung_id][] = $record;
         }
 
         $danhSachCaLamViec = CaLamViec::query()
@@ -580,7 +580,7 @@ class DiemDanhController extends Controller
         $bangCaLam = [];
         foreach ($dangKyCaLam as $record) {
             $dateKey = $record->ngay_lam->format('Y-m-d');
-            $bangCaLam[$dateKey][$record->nguoi_dung_id][] = $record;
+            $bangCaLam[$dateKey][(int) $record->nguoi_dung_id][] = $record;
         }
 
         $danhSachNhanVienLoc = User::query()
@@ -604,6 +604,35 @@ class DiemDanhController extends Controller
             'sapXepTheo' => $sapXepTheo,
             'thuTu' => $thuTu,
             'chamCongSapXepOptions' => self::CHAM_CONG_SAP_XEP_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Lấy thông tin ca làm của nhân viên theo ngày (dùng cho modal điểm danh hộ).
+     */
+    public function thongTinCaLamDiemDanhHo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'ngay_lam' => ['required', 'date'],
+        ]);
+
+        $user = User::query()
+            ->whereHas('nhanVien')
+            ->find($validated['user_id']);
+
+        if ($user === null) {
+            return $this->jsonDiemDanhError('Nhân viên không hợp lệ.', 422);
+        }
+
+        $ngay = Carbon::parse($validated['ngay_lam'])->toDateString();
+        $dangKy = $this->dangKyCaLamChoNgay((int) $user->id, $ngay);
+        $caLam = $dangKy?->caLamViec;
+
+        return response()->json([
+            'success' => true,
+            'co_ca_lam' => $caLam !== null,
+            'ca_lam' => $this->formatCaLamJson($caLam),
         ]);
     }
 
@@ -715,6 +744,10 @@ class DiemDanhController extends Controller
             'message' => 'Đã cập nhật điểm danh cho '.$user->name.'.',
             'gio_vao' => $gioVao->format('H:i'),
             'gio_ra' => $gioRa?->format('H:i'),
+            'gio_lam_tang_ca' => $payloadDiemDanh['gio_lam_tang_ca'] ?? null,
+            'luong_tang_ca' => $payloadDiemDanh['luong_tang_ca'] ?? null,
+            'tien_phat_di_muon' => $payloadDiemDanh['tien_phat_di_muon'] ?? 0,
+            'tien_phat_ve_som' => $payloadDiemDanh['tien_phat_ve_som'] ?? 0,
         ]);
     }
 

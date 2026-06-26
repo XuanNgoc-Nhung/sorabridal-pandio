@@ -72,6 +72,7 @@ class CheckRoute
         ],
         'admin.diem-danh.cham-cong' => [
             'admin.diem-danh.cham-cong.diem-danh-ho',
+            'admin.diem-danh.cham-cong.ca-lam-ngay',
         ],
         'admin.trang-phuc.hop-dong' => [
             'admin.trang-phuc.hop-dong.tim-san-pham',

@@ -26,6 +26,7 @@ return [
     'admin.concept.concept' => 'Concept',
     'admin.diem-danh.cham-cong' => 'Chấm công',
     'admin.diem-danh.cham-cong.diem-danh-ho' => 'Sửa điểm danh hộ (chấm công)',
+    'admin.diem-danh.cham-cong.ca-lam-ngay' => 'Xem ca làm theo ngày (điểm danh hộ)',
     'admin.diem-danh.check-in' => 'Check-in',
     'admin.diem-danh.check-out' => 'Check-out',
     'admin.diem-danh.nghi-phep' => 'Nghỉ phép',

@@ -126,6 +126,7 @@ body > .flatpickr-calendar.open,
 }
 .modal .modal-body{
   max-height: calc(100vh - 200px);
+  overflow-y: auto;
 }
 .select2-selection__choice__remove{
 

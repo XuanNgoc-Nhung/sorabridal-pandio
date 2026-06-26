@@ -86,7 +86,7 @@ class TinhLuongDiemDanh
     }
 
     /**
-     * Full-time: không lương cơ bản theo ngày; tăng ca khi check-in sau giờ kết thúc ca.
+     * Full-time: không lương cơ bản theo ngày; tăng ca khi check-out sau giờ kết thúc ca.
      *
      * @return array{gio_lam_co_ban: float, gio_lam_tang_ca: float, luong_co_ban: float, luong_tang_ca: float}
      */
@@ -125,10 +125,12 @@ class TinhLuongDiemDanh
         }
 
         $gioKetThucCa = Carbon::parse($gioVao->toDateString().' '.$caLam->gio_ket_thuc);
-        if ($gioVao->lte($gioKetThucCa)) {
+        if ($gioRa->lte($gioKetThucCa)) {
             return 0;
         }
 
-        return (int) $gioVao->diffInMinutes($gioRa);
+        $gioBatDauTangCa = $gioVao->gt($gioKetThucCa) ? $gioVao : $gioKetThucCa;
+
+        return (int) $gioBatDauTangCa->diffInMinutes($gioRa);
     }
 }
