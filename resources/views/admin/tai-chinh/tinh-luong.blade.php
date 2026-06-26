@@ -186,7 +186,7 @@
                                 <button type="button"
                                         class="btn btn-sm btn-outline-primary tinh-luong-chuyen-btn text-nowrap"
                                         data-user-id="{{ $u->id }}">
-                                    <i class="fa-solid fa-money-bill-transfer me-1"></i>Chuyển lương
+                                    <i class="fa-solid fa-money-bill-transfer me-1"></i>
                                 </button>
                             </td>
                         </tr>
@@ -279,8 +279,11 @@
                                     <button type="button"
                                             class="btn btn-outline-primary tinh-luong-hoa-hong-trong-chuyen d-none"
                                             id="clHoaHongCuoiBtn"
-                                            data-loai="cuoi">
-                                        Chi tiết
+                                            data-loai="cuoi"
+                                            data-bs-toggle="tooltip"
+                                            title="Chi tiết"
+                                            aria-label="Chi tiết hoa hồng HĐ cưới">
+                                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -291,8 +294,11 @@
                                     <button type="button"
                                             class="btn btn-outline-primary tinh-luong-hoa-hong-trong-chuyen d-none"
                                             id="clHoaHongTrangPhucBtn"
-                                            data-loai="trang_phuc">
-                                        Chi tiết
+                                            data-loai="trang_phuc"
+                                            data-bs-toggle="tooltip"
+                                            title="Chi tiết"
+                                            aria-label="Chi tiết hoa hồng HĐ trang phục">
+                                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -324,9 +330,7 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="tinh-luong-qr-wrap text-center h-100 d-flex flex-column justify-content-center" id="modalChuyenLuongQrWrap">
-                            <p class="small text-muted mb-2">Quét mã QR để chuyển khoản</p>
-                            <img src="" alt="Mã QR chuyển lương" class="img-fluid tinh-luong-qr-img mx-auto" id="modalChuyenLuongQrImg">
-                            <p class="small text-muted mt-3 mb-0" id="modalChuyenLuongQrNote"></p>
+                            <img src="" alt="Mã QR chuyển lương" class="tinh-luong-qr-img" id="modalChuyenLuongQrImg">
                         </div>
                         <div class="alert alert-warning small mb-0 d-none h-100 d-flex align-items-center justify-content-center text-center" id="modalChuyenLuongQrMissing">
                             Chưa có đủ thông tin ngân hàng (tên ngân hàng, số tài khoản) để tạo mã QR.
@@ -426,7 +430,8 @@
     padding: 1rem;
     background: #fff;
 }
-.tinh-luong-qr-img { max-width: 280px; }
+.tinh-luong-qr-img { width: 100%; height: auto; display: block; }
+.tinh-luong-hoa-hong-trong-chuyen { line-height: 1; }
 [data-bs-theme='dark'] .tinh-luong-qr-wrap { background: #2f3349; }
 </style>
 @endpush
@@ -495,7 +500,6 @@ document.addEventListener('DOMContentLoaded', function () {
         var kyEl = document.getElementById('modalChuyenLuongKy');
         var qrWrapEl = document.getElementById('modalChuyenLuongQrWrap');
         var qrImgEl = document.getElementById('modalChuyenLuongQrImg');
-        var qrNoteEl = document.getElementById('modalChuyenLuongQrNote');
         var qrMissingEl = document.getElementById('modalChuyenLuongQrMissing');
         var hoaHongCuoiBtn = document.getElementById('clHoaHongCuoiBtn');
         var hoaHongTrangPhucBtn = document.getElementById('clHoaHongTrangPhucBtn');
@@ -539,12 +543,10 @@ document.addEventListener('DOMContentLoaded', function () {
             qrMissingEl.classList.add('d-none');
             qrImgEl.src = buildVietQrUrl(data);
             qrImgEl.alt = 'QR chuyển lương ' + (data.ten_nhan_vien || '');
-            qrNoteEl.textContent = formatMoney(data.tong_luong_thuc_nhan || 0) + ' · ' + (data.ngan_hang || '') + ' · ' + (data.so_tai_khoan || '');
         } else {
             qrWrapEl.classList.add('d-none');
             qrMissingEl.classList.remove('d-none');
             qrImgEl.removeAttribute('src');
-            qrNoteEl.textContent = '';
         }
 
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -675,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
         return;
     }
-    [].slice.call(document.querySelectorAll('.tinh-luong-table [data-bs-toggle="tooltip"]')).forEach(function (el) {
+    [].slice.call(document.querySelectorAll('.tinh-luong-table [data-bs-toggle="tooltip"], #modalChuyenLuong [data-bs-toggle="tooltip"]')).forEach(function (el) {
         new bootstrap.Tooltip(el);
     });
 });

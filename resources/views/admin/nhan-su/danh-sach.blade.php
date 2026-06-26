@@ -113,7 +113,7 @@
                         <th colspan="5" class="text-center nhan-su-th-group">Lương</th>
                         <th colspan="2" class="text-center nhan-su-th-group">Hoa hồng</th>
                         <th colspan="4" class="text-center nhan-su-th-group">Ngân hàng</th>
-                        <th rowspan="2" class="text-center align-middle" style="width: 100px;">Thao tác</th>
+                        <th rowspan="2" class="text-center align-middle" style="width: 120px;">Thao tác</th>
                     </tr>
                     <tr>
                         <th>Giới tính</th>
@@ -183,61 +183,67 @@
                         <td>{{ $nv?->chi_nhanh ?? '—' }}</td>
                         <td class="text-nowrap">{{ $nv?->so_tai_khoan ?? '—' }}</td>
                         <td>{{ $nv?->chu_tai_khoan ?? '—' }}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item btn-sua-nhan-su"
-                                       href="javascript:void(0);"
-                                       data-bs-toggle="modal"
-                                       data-bs-target="#modalSuaNhanSu"
-                                       data-url="{{ route('admin.nhan-su.update', $item) }}"
-                                       data-name="{{ e($item->name ?? '') }}"
-                                       data-email="{{ e($item->email ?? '') }}"
-                                       data-phone="{{ e($item->phone ?? '') }}"
-                                       data-gioi-tinh="{{ e($nv?->gioi_tinh ?? '') }}"
-                                       data-ngay-sinh="{{ $nv?->ngay_sinh?->format('Y-m-d') ?? '' }}"
-                                       data-cccd="{{ e($nv?->cccd ?? '') }}"
-                                       data-role="{{ $item->role !== null && $item->role !== '' ? (string) $item->role : '' }}"
-                                       data-phong-ban-id="{{ $nv?->phongBan?->id ?? '' }}"
-                                       data-ngay-vao-cong-ty="{{ $nv?->ngay_vao_cong_ty?->format('Y-m-d') ?? '' }}"
-                                       data-ngay-ky-hop-dong="{{ $nv?->ngay_ky_hop_dong?->format('Y-m-d') ?? '' }}"
-                                       data-loai-nhan-vien="{{ e($nv?->loai_nhan_vien ?? '') }}"
-                                       data-loai-hop-dong="{{ e($nv?->loai_hop_dong ?? '') }}"
-                                       data-status="{{ $item->status !== null ? (string) $item->status : '' }}"
-                                       data-luong-cung="{{ $nv?->luong_cung ?? '' }}"
-                                       data-luong-mem="{{ $nv?->luong_mem ?? '' }}"
-                                       data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
-                                       data-luong-co-ban="{{ $nv?->luong_co_ban ?? '' }}"
-                                       data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
-                                       data-hoa-hong-hop-dong-cuoi="{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? $nv->hoa_hong_hop_dong_cuoi : '' }}"
-                                       data-hoa-hong-hop-dong-trang-phuc="{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? $nv->hoa_hong_hop_dong_trang_phuc : '' }}"
-                                       data-ngan-hang="{{ e($nv?->ngan_hang ?? '') }}"
-                                       data-chi-nhanh="{{ e($nv?->chi_nhanh ?? '') }}"
-                                       data-so-tai-khoan="{{ e($nv?->so_tai_khoan ?? '') }}"
-                                       data-chu-tai-khoan="{{ e($nv?->chu_tai_khoan ?? '') }}"
-                                       data-hinh-anh="{{ !empty($hinhAnh) ? asset('storage/' . $hinhAnh) : '' }}">
-                                        <i class="fa-solid fa-pen me-2"></i> Sửa
-                                    </a>
-                                    <a class="dropdown-item btn-doi-mat-khau"
-                                       href="javascript:void(0);"
-                                       data-bs-toggle="modal"
-                                       data-bs-target="#modalDoiMatKhau"
-                                       data-url="{{ route('admin.nhan-su.doi-mat-khau', $item) }}"
-                                       data-name="{{ e($item->name ?? '') }}">
-                                        <i class="fa-solid fa-key me-2"></i> Đổi mật khẩu
-                                    </a>
-                                    <form id="form-xoa-{{ $item->id }}" action="{{ route('admin.nhan-su.destroy', $item) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                    <button type="button" class="dropdown-item text-danger btn-xoa-nhan-su" data-form-id="form-xoa-{{ $item->id }}">
-                                        <i class="fa-solid fa-trash me-2"></i> Xoá
+                        <td class="text-center text-nowrap">
+                            <div class="nhan-su-table-actions d-inline-flex align-items-center justify-content-center gap-2" role="toolbar" aria-label="Thao tác nhân sự">
+                                <span data-bs-toggle="tooltip" title="Sửa">
+                                    <button type="button"
+                                            class="nhan-su-action-icon btn-sua-nhan-su"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalSuaNhanSu"
+                                            data-url="{{ route('admin.nhan-su.update', $item) }}"
+                                            data-name="{{ e($item->name ?? '') }}"
+                                            data-email="{{ e($item->email ?? '') }}"
+                                            data-phone="{{ e($item->phone ?? '') }}"
+                                            data-gioi-tinh="{{ e($nv?->gioi_tinh ?? '') }}"
+                                            data-ngay-sinh="{{ $nv?->ngay_sinh?->format('Y-m-d') ?? '' }}"
+                                            data-cccd="{{ e($nv?->cccd ?? '') }}"
+                                            data-role="{{ $item->role !== null && $item->role !== '' ? (string) $item->role : '' }}"
+                                            data-phong-ban-id="{{ $nv?->phongBan?->id ?? '' }}"
+                                            data-ngay-vao-cong-ty="{{ $nv?->ngay_vao_cong_ty?->format('Y-m-d') ?? '' }}"
+                                            data-ngay-ky-hop-dong="{{ $nv?->ngay_ky_hop_dong?->format('Y-m-d') ?? '' }}"
+                                            data-loai-nhan-vien="{{ e($nv?->loai_nhan_vien ?? '') }}"
+                                            data-loai-hop-dong="{{ e($nv?->loai_hop_dong ?? '') }}"
+                                            data-status="{{ $item->status !== null ? (string) $item->status : '' }}"
+                                            data-luong-cung="{{ $nv?->luong_cung ?? '' }}"
+                                            data-luong-mem="{{ $nv?->luong_mem ?? '' }}"
+                                            data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
+                                            data-luong-co-ban="{{ $nv?->luong_co_ban ?? '' }}"
+                                            data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
+                                            data-hoa-hong-hop-dong-cuoi="{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? $nv->hoa_hong_hop_dong_cuoi : '' }}"
+                                            data-hoa-hong-hop-dong-trang-phuc="{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? $nv->hoa_hong_hop_dong_trang_phuc : '' }}"
+                                            data-ngan-hang="{{ e($nv?->ngan_hang ?? '') }}"
+                                            data-chi-nhanh="{{ e($nv?->chi_nhanh ?? '') }}"
+                                            data-so-tai-khoan="{{ e($nv?->so_tai_khoan ?? '') }}"
+                                            data-chu-tai-khoan="{{ e($nv?->chu_tai_khoan ?? '') }}"
+                                            data-hinh-anh="{{ !empty($hinhAnh) ? asset('storage/' . $hinhAnh) : '' }}">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Sửa</span>
                                     </button>
-                                </div>
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Đổi mật khẩu">
+                                    <button type="button"
+                                            class="nhan-su-action-icon btn-doi-mat-khau"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalDoiMatKhau"
+                                            data-url="{{ route('admin.nhan-su.doi-mat-khau', $item) }}"
+                                            data-name="{{ e($item->name ?? '') }}">
+                                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Đổi mật khẩu</span>
+                                    </button>
+                                </span>
+                                <span data-bs-toggle="tooltip" title="Xoá">
+                                    <button type="button"
+                                            class="nhan-su-action-icon nhan-su-action-icon--danger btn-xoa-nhan-su"
+                                            data-form-id="form-xoa-{{ $item->id }}">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Xoá</span>
+                                    </button>
+                                </span>
                             </div>
+                            <form id="form-xoa-{{ $item->id }}" action="{{ route('admin.nhan-su.destroy', $item) }}" method="POST" class="d-none">
+                                @csrf
+                                @method('DELETE')
+                            </form>
                         </td>
                     </tr>
                     @empty
@@ -824,6 +830,36 @@
 [data-bs-theme='dark'] .nhan-su-table .nhan-su-sticky-ho-ten {
     box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.35);
 }
+.nhan-su-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--bs-primary);
+    font-size: 1.1rem;
+    padding: 0.15rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+.nhan-su-action-icon i {
+    font-weight: 900;
+}
+.nhan-su-action-icon:hover {
+    color: color-mix(in srgb, var(--bs-primary) 82%, #000);
+    transform: scale(1.12);
+}
+.nhan-su-action-icon--danger {
+    color: var(--bs-danger);
+}
+.nhan-su-action-icon--danger:hover {
+    color: color-mix(in srgb, var(--bs-danger) 82%, #000);
+}
+.nhan-su-table-actions [data-bs-toggle="tooltip"] {
+    display: inline-flex;
+    line-height: 0;
+}
 </style>
 @endpush
 
@@ -898,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Khởi tạo tooltip cho nút Thêm mới
+    // Khởi tạo tooltip
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
     // Mở modal khi có lỗi validation (sau redirect)
