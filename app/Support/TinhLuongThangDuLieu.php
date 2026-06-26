@@ -88,6 +88,9 @@ class TinhLuongThangDuLieu
                 $bangChamCongLuong[$uid][$dateKey] = [
                     'luong_co_ban' => $luongCoBan,
                     'luong_tang_ca' => $luongTangCa,
+                    'tien_phat_di_muon' => (int) ($diemDanh->tien_phat_di_muon ?? 0),
+                    'tien_phat_ve_som' => (int) ($diemDanh->tien_phat_ve_som ?? 0),
+                    'tong_phat' => (int) ($diemDanh->tien_phat_di_muon ?? 0) + (int) ($diemDanh->tien_phat_ve_som ?? 0),
                 ];
             }
         }
@@ -123,8 +126,12 @@ class TinhLuongThangDuLieu
             ];
 
             $tongHopDiemDanh = TinhLuongThang::tongHopDiemDanhThang($chamCongTheoUser->get($u->id, collect()));
+            $bangLuongThang[$u->id] = self::ganTienPhatVaoBangLuong(
+                $bangLuongThang[$u->id],
+                $tongHopDiemDanh['tien_phat_di_muon'] + $tongHopDiemDanh['tien_phat_ve_som']
+            );
             $luong = $bangLuongThang[$u->id];
-            $tongPhat = $tongHopDiemDanh['tien_phat_di_muon'] + $tongHopDiemDanh['tien_phat_ve_som'];
+            $tongPhat = (int) $luong['tien_phat'];
             $loaiNv = $nv?->loai_nhan_vien ?? '';
 
             $chiTietChuyenLuong[$u->id] = [
@@ -145,8 +152,9 @@ class TinhLuongThangDuLieu
                 'phu_cap' => $luong['phu_cap'],
                 'hoa_hong_hop_dong_cuoi' => $luong['hoa_hong_hop_dong_cuoi'],
                 'hoa_hong_hop_dong_trang_phuc' => $luong['hoa_hong_hop_dong_trang_phuc'],
-                'tong_luong' => $luong['tong_luong'],
-                'tong_luong_thuc_nhan' => max(0, $luong['tong_luong'] - $tongPhat),
+                'tong_luong_gop' => $luong['tong_luong_gop'],
+                'tong_luong' => $luong['tong_luong_gop'],
+                'tong_luong_thuc_nhan' => $luong['tong_luong'],
                 'ngan_hang' => (string) ($nv?->ngan_hang ?? ''),
                 'so_tai_khoan' => (string) ($nv?->so_tai_khoan ?? ''),
                 'chu_tai_khoan' => (string) ($nv?->chu_tai_khoan ?? $u->name ?? ''),
@@ -234,6 +242,15 @@ class TinhLuongThangDuLieu
 
         $snapshot = $chotLuong->du_lieu ?? [];
         $parsed = self::tuSnapshot($snapshot);
+        $bangChamCongLuong = self::normalizeUserIdKeys($parsed['bangChamCongLuong']);
+        $bangLuongThang = self::hoanThienBangLuongThang(
+            self::normalizeUserIdKeys($parsed['bangLuongThang']),
+            $bangChamCongLuong
+        );
+        $chiTietChuyenLuong = self::dongBoChiTietChuyenLuong(
+            self::normalizeUserIdKeys($parsed['chiTietChuyenLuong']),
+            $bangLuongThang
+        );
 
         return [
             'month' => $month,
@@ -243,11 +260,87 @@ class TinhLuongThangDuLieu
             'ngayTrongThang' => $ngayTrongThang,
             'nhanVien' => self::nhanVienTuSnapshot($snapshot),
             'bangChamCong' => [],
-            'bangChamCongLuong' => self::normalizeUserIdKeys($parsed['bangChamCongLuong']),
-            'bangLuongThang' => self::normalizeUserIdKeys($parsed['bangLuongThang']),
+            'bangChamCongLuong' => $bangChamCongLuong,
+            'bangLuongThang' => $bangLuongThang,
             'chiTietHoaHong' => self::normalizeUserIdKeys($parsed['chiTietHoaHong']),
-            'chiTietChuyenLuong' => self::normalizeUserIdKeys($parsed['chiTietChuyenLuong']),
+            'chiTietChuyenLuong' => $chiTietChuyenLuong,
         ];
+    }
+
+    /**
+     * @param  array<string, float|int>  $bangLuong
+     * @return array<string, float|int>
+     */
+    private static function ganTienPhatVaoBangLuong(array $bangLuong, int $tienPhat): array
+    {
+        $gross = (float) ($bangLuong['tong_luong'] ?? 0);
+
+        return array_merge($bangLuong, [
+            'tien_phat' => $tienPhat,
+            'tong_luong_gop' => $gross,
+            'tong_luong' => max(0, $gross - $tienPhat),
+        ]);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $bangLuongThang
+     * @param  array<int, array<string, array<string, mixed>>>  $bangChamCongLuong
+     * @return array<int, array<string, mixed>>
+     */
+    private static function hoanThienBangLuongThang(array $bangLuongThang, array $bangChamCongLuong): array
+    {
+        foreach ($bangLuongThang as $userId => $row) {
+            $tienPhat = array_key_exists('tien_phat', $row)
+                ? (int) $row['tien_phat']
+                : self::tongPhatTuBangChamCongLuong($bangChamCongLuong[$userId] ?? []);
+
+            $gross = array_key_exists('tong_luong_gop', $row)
+                ? (float) $row['tong_luong_gop']
+                : (float) ($row['tong_luong'] ?? 0);
+
+            $bangLuongThang[$userId] = array_merge($row, [
+                'tien_phat' => $tienPhat,
+                'tong_luong_gop' => $gross,
+                'tong_luong' => max(0, $gross - $tienPhat),
+            ]);
+        }
+
+        return $bangLuongThang;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $chiTietChuyenLuong
+     * @param  array<int, array<string, mixed>>  $bangLuongThang
+     * @return array<int, array<string, mixed>>
+     */
+    private static function dongBoChiTietChuyenLuong(array $chiTietChuyenLuong, array $bangLuongThang): array
+    {
+        foreach ($chiTietChuyenLuong as $userId => $row) {
+            $luong = $bangLuongThang[$userId] ?? null;
+            if ($luong === null) {
+                continue;
+            }
+
+            $chiTietChuyenLuong[$userId]['tong_phat'] = (int) ($luong['tien_phat'] ?? 0);
+            $chiTietChuyenLuong[$userId]['tong_luong_gop'] = (float) ($luong['tong_luong_gop'] ?? 0);
+            $chiTietChuyenLuong[$userId]['tong_luong'] = (float) ($luong['tong_luong_gop'] ?? 0);
+            $chiTietChuyenLuong[$userId]['tong_luong_thuc_nhan'] = (float) ($luong['tong_luong'] ?? 0);
+        }
+
+        return $chiTietChuyenLuong;
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $bangNgay
+     */
+    private static function tongPhatTuBangChamCongLuong(array $bangNgay): int
+    {
+        $tong = 0;
+        foreach ($bangNgay as $ngay) {
+            $tong += (int) ($ngay['tong_phat'] ?? 0);
+        }
+
+        return $tong;
     }
 
     /**

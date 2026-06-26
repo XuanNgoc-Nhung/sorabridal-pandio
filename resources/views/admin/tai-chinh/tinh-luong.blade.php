@@ -139,6 +139,8 @@
             <span class="luong-co-ban-dot me-1"></span><span class="text-body-secondary">Lương cơ bản</span>
             <span class="mx-2">·</span>
             <span class="luong-tang-ca-dot me-1"></span><span class="text-body-secondary">Lương tăng ca</span>
+            <span class="mx-2">·</span>
+            <span class="luong-tong-phat-dot me-1"></span><span class="text-body-secondary">Tiền phạt</span>
         </p>
         <div class="table-responsive text-nowrap table-wrapper-bordered tinh-luong-table-wrap">
             <table class="table table-bordered table-hover mb-0 tinh-luong-table">
@@ -153,19 +155,20 @@
                             @php
                                 $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
                             @endphp
-                            <th rowspan="2" class="text-center align-middle small text-nowrap tinh-luong-ngay-col {{ $isWeekend ? 'tinh-luong-weekend' : '' }}" style="min-width: 72px;">
+                            <th rowspan="2" class="text-center align-middle small text-nowrap tinh-luong-ngay-col {{ $isWeekend ? 'tinh-luong-weekend' : '' }}" style="min-width: 80px;">
                                 {{ $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dd') }} {{ $day->format('j/n') }}
                             </th>
                         @endforeach
-                        <th colspan="3" class="text-center text-nowrap" style="min-width: 1px;">Lương</th>
+                        <th colspan="4" class="text-center text-nowrap" style="min-width: 1px;">Lương</th>
                         <th colspan="2" class="text-center text-nowrap" style="min-width: 1px;">Hoa hồng</th>
                         <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 90px;">Tổng</th>
-                        <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 110px;">Thao tác</th>
+                        <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 96px;">Thao tác</th>
                     </tr>
                     <tr>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Cơ bản</th>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Tăng ca</th>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Phụ cấp</th>
+                        <th class="text-center text-nowrap small" style="min-width: 90px;">Tiền phạt</th>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">HĐ cưới</th>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">HĐ trang phục</th>
                     </tr>
@@ -215,6 +218,9 @@
                                         $luongNgay = $diemDanh ? [
                                             'luong_co_ban' => (float) ($diemDanh->luong_co_ban ?? 0),
                                             'luong_tang_ca' => (float) ($diemDanh->luong_tang_ca ?? 0),
+                                            'tien_phat_di_muon' => (int) ($diemDanh->tien_phat_di_muon ?? 0),
+                                            'tien_phat_ve_som' => (int) ($diemDanh->tien_phat_ve_som ?? 0),
+                                            'tong_phat' => (int) ($diemDanh->tien_phat_di_muon ?? 0) + (int) ($diemDanh->tien_phat_ve_som ?? 0),
                                         ] : null;
                                     }
                                     $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true); // 6=Thứ 7, 7=Chủ nhật
@@ -224,6 +230,9 @@
                                         <div class="small">
                                             <div class="luong-co-ban" title="Lương cơ bản">{{ number_format((float)($luongNgay['luong_co_ban'] ?? 0), 0, ',', '.') }} đ</div>
                                             <div class="luong-tang-ca" title="Lương tăng ca">{{ number_format((float)($luongNgay['luong_tang_ca'] ?? 0), 0, ',', '.') }} đ</div>
+                                            @if((int)($luongNgay['tong_phat'] ?? 0) > 0)
+                                                <div class="luong-tong-phat" title="Phạt đi muộn + về sớm">− {{ number_format((int)($luongNgay['tong_phat'] ?? 0), 0, ',', '.') }} đ</div>
+                                            @endif
                                         </div>
                                     @else
                                         <span class="text-muted">—</span>
@@ -235,8 +244,10 @@
                                     'luong_co_ban' => 0,
                                     'luong_tang_ca' => 0,
                                     'phu_cap' => 0,
+                                    'tien_phat' => 0,
                                     'hoa_hong_hop_dong_cuoi' => 0,
                                     'hoa_hong_hop_dong_trang_phuc' => 0,
+                                    'tong_luong_gop' => 0,
                                     'tong_luong' => 0,
                                 ];
                                 $daChuyenLuong = in_array($u->id, $daChuyenUserIds ?? [], true);
@@ -249,6 +260,13 @@
                             </td>
                             <td class="text-end align-middle">
                                 {{ number_format($luong['phu_cap'], 0, ',', '.') }} đ
+                            </td>
+                            <td class="text-end align-middle {{ ($luong['tien_phat'] ?? 0) > 0 ? 'text-danger' : '' }}">
+                                @if(($luong['tien_phat'] ?? 0) > 0)
+                                    − {{ number_format((int) $luong['tien_phat'], 0, ',', '.') }} đ
+                                @else
+                                    <span class="text-muted">0 đ</span>
+                                @endif
                             </td>
                             <td class="text-end align-middle">
                                 @if($luong['hoa_hong_hop_dong_cuoi'] > 0)
@@ -278,21 +296,27 @@
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
                             </td>
                             <td class="text-center align-middle">
-                                @if($daChotLuong ?? false)
+                                <div class="d-inline-flex flex-wrap gap-1 justify-content-center">
                                     <button type="button"
-                                            class="btn btn-sm text-nowrap tinh-luong-chuyen-btn {{ $daChuyenLuong ? 'btn-success' : 'btn-outline-primary' }}"
+                                            class="btn btn-sm btn-outline-secondary tinh-luong-xem-btn"
                                             data-user-id="{{ $u->id }}"
-                                            title="{{ $daChuyenLuong ? 'Đã chuyển lương' : 'Chuyển lương' }}">
-                                        <i class="fa-solid {{ $daChuyenLuong ? 'fa-check' : 'fa-money-bill-transfer' }} me-1"></i>
+                                            title="Xem lương">
+                                        <i class="fa-solid fa-eye"></i>
                                     </button>
-                                @else
-                                    <span class="text-muted small">—</span>
-                                @endif
+                                    @if($daChotLuong ?? false)
+                                        <button type="button"
+                                                class="btn btn-sm text-nowrap tinh-luong-chuyen-btn {{ $daChuyenLuong ? 'btn-success' : 'btn-outline-primary' }}"
+                                                data-user-id="{{ $u->id }}"
+                                                title="{{ $daChuyenLuong ? 'Đã chuyển lương' : 'Chuyển lương' }}">
+                                            <i class="fa-solid {{ $daChuyenLuong ? 'fa-check' : 'fa-money-bill-transfer' }}"></i>
+                                        </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 7 }}" class="text-center py-4 text-muted">
+                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 8 }}" class="text-center py-4 text-muted">
                                 Chưa có nhân viên để hiển thị.
                             </td>
                         </tr>
@@ -546,6 +570,8 @@
 /* Chấm màu cho ghi chú */
 .luong-co-ban-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #0d6e2f; vertical-align: middle; }
 .luong-tang-ca-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #c25a0a; vertical-align: middle; }
+.luong-tong-phat { color: #dc3545; font-weight: 500; }
+.luong-tong-phat-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #dc3545; vertical-align: middle; }
 .tinh-luong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 .tinh-luong-hoa-hong-btn { font-weight: 500; color: var(--bs-primary); white-space: nowrap; }
 .tinh-luong-hoa-hong-btn:hover { text-decoration: underline !important; color: var(--bs-primary); }
@@ -701,12 +727,13 @@ document.addEventListener('DOMContentLoaded', function () {
             : '<i class="fa-solid fa-check me-1"></i> Đã chuyển';
     }
 
-    function renderChuyenLuong(userId) {
+    function renderChuyenLuong(userId, cheDo) {
         var data = chiTietChuyenLuong[userId];
         if (!data) {
             return;
         }
 
+        cheDo = cheDo === 'chuyen' ? 'chuyen' : 'xem';
         chuyenLuongUserId = userId;
         var modalEl = document.getElementById('modalChuyenLuong');
         var titleEl = document.getElementById('modalChuyenLuongLabel');
@@ -717,9 +744,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var qrMissingEl = document.getElementById('modalChuyenLuongQrMissing');
         var hoaHongCuoiBtn = document.getElementById('clHoaHongCuoiBtn');
         var hoaHongTrangPhucBtn = document.getElementById('clHoaHongTrangPhucBtn');
-        var coPhat = (data.tong_phat || 0) > 0;
+        var tongGop = data.tong_luong_gop || data.tong_luong || 0;
+        var tongPhat = data.tong_phat || 0;
+        var coPhat = tongPhat > 0;
 
-        titleEl.textContent = 'Chuyển lương — ' + (data.ten_nhan_vien || '');
+        titleEl.textContent = (cheDo === 'xem' ? 'Xem lương — ' : 'Chuyển lương — ') + (data.ten_nhan_vien || '');
         loaiEl.textContent = data.loai_nhan_vien_label || '—';
         kyEl.textContent = 'Tháng ' + data.thang + '/' + data.nam;
 
@@ -735,9 +764,9 @@ document.addEventListener('DOMContentLoaded', function () {
         setInputValue('clNganHang', data.ngan_hang || '—');
         setInputValue('clSoTaiKhoan', data.so_tai_khoan || '—');
         setInputValue('clChuTaiKhoan', data.chu_tai_khoan || '—');
-        setInputValue('clTongLuongGop', formatMoney(data.tong_luong || 0));
-        setInputValue('clTongPhat', '− ' + formatMoney(data.tong_phat || 0));
-        setInputValue('clTongLuong', formatMoney(coPhat ? (data.tong_luong_thuc_nhan || 0) : (data.tong_luong || 0)));
+        setInputValue('clTongLuongGop', formatMoney(tongGop));
+        setInputValue('clTongPhat', '− ' + formatMoney(tongPhat));
+        setInputValue('clTongLuong', formatMoney(data.tong_luong_thuc_nhan ?? Math.max(0, tongGop - tongPhat)));
 
         toggleEl('clTongLuongGopWrap', coPhat);
         toggleEl('clTongPhatWrap', coPhat);
@@ -763,7 +792,13 @@ document.addEventListener('DOMContentLoaded', function () {
             qrImgEl.removeAttribute('src');
         }
 
-        capNhatNutDaChuyen(userId);
+        var btnDaChuyenLuong = document.getElementById('btnDaChuyenLuong');
+        if (btnDaChuyenLuong) {
+            btnDaChuyenLuong.classList.toggle('d-none', cheDo === 'xem');
+            if (cheDo === 'chuyen') {
+                capNhatNutDaChuyen(userId);
+            }
+        }
 
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -860,9 +895,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    document.querySelectorAll('.tinh-luong-xem-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            renderChuyenLuong(btn.getAttribute('data-user-id'), 'xem');
+        });
+    });
+
     document.querySelectorAll('.tinh-luong-chuyen-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            renderChuyenLuong(btn.getAttribute('data-user-id'));
+            renderChuyenLuong(btn.getAttribute('data-user-id'), 'chuyen');
         });
     });
 
