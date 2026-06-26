@@ -80,10 +80,37 @@
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @forelse(($nhanVien ?? []) as $u)
+                        @php
+                            $loaiNv = $u->nhanVien?->loai_nhan_vien ?? '';
+                            $loaiNvLabel = filled($loaiNv)
+                                ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                                : '';
+                        @endphp
                         <tr>
                             <td class="text-center align-middle tinh-luong-sticky tinh-luong-sticky-col-1">{{ $loop->iteration }}</td>
                             <td class="tinh-luong-sticky tinh-luong-sticky-col-2">
-                                <div class="fw-medium">{{ $u->name }}</div>
+                                <div class="fw-medium d-inline-flex align-items-center flex-wrap gap-1">
+                                    <span>{{ $u->name }}</span>
+                                    @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                        <i class="fa-solid fa-briefcase tinh-luong-loai-nv-icon text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                        <i class="fa-solid fa-clock tinh-luong-loai-nv-icon text-warning"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @else
+                                        <i class="fa-solid fa-circle-exclamation tinh-luong-loai-nv-icon text-danger"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="Chưa phân loại"
+                                           aria-label="Chưa phân loại"></i>
+                                    @endif
+                                </div>
                                 <div class="small text-muted">{{ $u->email }}</div>
                             </td>
                             @foreach(($ngayTrongThang ?? []) as $day)
@@ -198,6 +225,20 @@
 /* Chấm màu cho ghi chú */
 .luong-co-ban-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #0d6e2f; vertical-align: middle; }
 .luong-tang-ca-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #c25a0a; vertical-align: middle; }
+.tinh-luong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+        return;
+    }
+    [].slice.call(document.querySelectorAll('.tinh-luong-table [data-bs-toggle="tooltip"]')).forEach(function (el) {
+        new bootstrap.Tooltip(el);
+    });
+});
+</script>
 @endpush
 @endsection

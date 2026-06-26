@@ -283,6 +283,7 @@ class TaiChinhKeToanController extends Controller
                 $q->where('role', (int) VaiTro::MA_NHAN_VIEN)
                     ->orWhereIn('id', $userIdsCoChamCong);
             })
+            ->with('nhanVien')
             ->orderBy('name')
             ->get();
 

@@ -254,14 +254,14 @@
                             <label class="form-label" for="suaDiemDanhHoCaGioKetThuc">Giờ kết thúc ca</label>
                             <input type="text" class="form-control" id="suaDiemDanhHoCaGioKetThuc" readonly tabindex="-1" placeholder="—">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label" for="suaDiemDanhHoGioVao">Giờ vào (check-in) <span class="text-danger">*</span></label>
                             <input type="time" class="form-control" id="suaDiemDanhHoGioVao" name="gio_vao" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label" for="suaDiemDanhHoGioRa">Giờ ra (check-out)</label>
                             <input type="time" class="form-control" id="suaDiemDanhHoGioRa" name="gio_ra">
-                            <div class="form-text">Để trống nếu chưa check-out.</div>
+                            {{-- <div class="form-text">Để trống nếu chưa check-out.</div> --}}
                         </div>
                     </div>
                     <div id="suaDiemDanhHoCanhBaoLoaiNv" class="alert alert-warning d-none mt-3 mb-0 small" role="alert">
