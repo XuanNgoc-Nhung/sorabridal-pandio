@@ -376,8 +376,8 @@
                                     <input type="text" class="flatpickr-date-admin form-control" id="them_ngay_ky_hop_dong" name="ngay_ky_hop_dong" value="{{ old('ngay_ky_hop_dong') }}" placeholder="dd/mm/yyyy" autocomplete="off">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="them_loai_nhan_vien">Loại nhân viên</label>
-                                    <select class="select2-admin form-select" id="them_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên">
+                                    <label class="form-label" for="them_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
+                                    <select class="select2-admin form-select" id="them_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
                                         <option value="">-- Chọn --</option>
                                         @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
                                         <option value="{{ $value }}" @selected(old('loai_nhan_vien') === $value)>{{ $label }}</option>
@@ -539,8 +539,8 @@
                                     <input type="text" class="flatpickr-date-admin form-control" id="sua_ngay_ky_hop_dong" name="ngay_ky_hop_dong" placeholder="dd/mm/yyyy" autocomplete="off">
                                 </div>
                                 <div class="col-12 col-sm-6 col-lg-4">
-                                    <label class="form-label" for="sua_loai_nhan_vien">Loại nhân viên</label>
-                                    <select class="select2-admin form-select" id="sua_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên">
+                                    <label class="form-label" for="sua_loai_nhan_vien">Loại nhân viên <span class="text-danger">*</span></label>
+                                    <select class="select2-admin form-select" id="sua_loai_nhan_vien" name="loai_nhan_vien" data-placeholder="Chọn loại nhân viên" required>
                                         <option value="">-- Chọn --</option>
                                         @foreach(\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
