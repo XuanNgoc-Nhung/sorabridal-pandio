@@ -68,8 +68,8 @@ class User extends Authenticatable
     /** @var array<int, string> */
     public const STATUS_OPTIONS = [
         self::STATUS_DANG_LAM_VIEC => 'Đang làm việc',
-        self::STATUS_DA_NGHI => 'Đã nghỉ',
-        self::STATUS_GIOI_HAN_QUYEN => 'Giới hạn quyền truy cập',
+        self::STATUS_DA_NGHI => 'Đã nghỉ việc',
+        self::STATUS_GIOI_HAN_QUYEN => 'Hạn chế quyền',
     ];
 
     protected $fillable = [

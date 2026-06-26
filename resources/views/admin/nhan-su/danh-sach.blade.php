@@ -104,10 +104,17 @@
         <div class="table-responsive text-nowrap table-wrapper-bordered nhan-su-table-wrap">
             <table class="table table-hover table-bordered mb-0 nhan-su-table">
                 <thead class="table-light">
+                    <tr class="nhan-su-thead-group">
+                        <th rowspan="2" style="width: 60px;" class="text-center align-middle">STT</th>
+                        <th rowspan="2" style="width: 70px;" class="text-center align-middle">Hình ảnh</th>
+                        <th rowspan="2" class="nhan-su-sticky nhan-su-sticky-ho-ten align-middle" style="min-width: 160px;">Họ tên</th>
+                        <th colspan="5" class="text-center nhan-su-th-group">Thông tin cá nhân</th>
+                        <th colspan="7" class="text-center nhan-su-th-group">Thông tin làm việc</th>
+                        <th colspan="5" class="text-center nhan-su-th-group">Lương</th>
+                        <th colspan="2" class="text-center nhan-su-th-group">Hoa hồng</th>
+                        <th rowspan="2" class="text-center align-middle" style="width: 100px;">Thao tác</th>
+                    </tr>
                     <tr>
-                        <th style="width: 60px;" class="text-center">STT</th>
-                        <th style="width: 70px;" class="text-center">Hình ảnh</th>
-                        <th class="nhan-su-sticky nhan-su-sticky-ho-ten" style="min-width: 160px;">Họ tên</th>
                         <th>Giới tính</th>
                         <th>Ngày sinh</th>
                         <th>CCCD</th>
@@ -125,7 +132,8 @@
                         <th>Phụ cấp</th>
                         <th>Lương cơ bản</th>
                         <th>Lương tăng ca</th>
-                        <th class="text-center" style="width: 100px;">Thao tác</th>
+                        <th>HĐ cưới</th>
+                        <th>HĐ trang phục</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -164,6 +172,8 @@
                         <td>{{ $nv?->phu_cap !== null ? number_format($nv->phu_cap) : '—' }}</td>
                         <td>{{ $nv?->luong_co_ban !== null ? number_format($nv->luong_co_ban) : '—' }}</td>
                         <td>{{ $nv?->luong_tang_ca !== null ? number_format($nv->luong_tang_ca) : '—' }}</td>
+                        <td>{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? number_format((float) $nv->hoa_hong_hop_dong_cuoi, 2, ',', '.') : '—' }}</td>
+                        <td>{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? number_format((float) $nv->hoa_hong_hop_dong_trang_phuc, 2, ',', '.') : '—' }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" class="btn btn-sm btn-icon btn-outline-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -193,6 +203,8 @@
                                        data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
                                        data-luong-co-ban="{{ $nv?->luong_co_ban ?? '' }}"
                                        data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
+                                       data-hoa-hong-hop-dong-cuoi="{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? $nv->hoa_hong_hop_dong_cuoi : '' }}"
+                                       data-hoa-hong-hop-dong-trang-phuc="{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? $nv->hoa_hong_hop_dong_trang_phuc : '' }}"
                                        data-hinh-anh="{{ !empty($hinhAnh) ? asset('storage/' . $hinhAnh) : '' }}">
                                         <i class="fa-solid fa-pen me-2"></i> Sửa
                                     </a>
@@ -217,7 +229,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="21" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
+                        <td colspan="23" class="text-center py-4 text-muted">Chưa có dữ liệu nhân sự.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -409,6 +421,14 @@
                                     <label class="form-label" for="them_luong_tang_ca">Lương tăng ca (VNĐ)</label>
                                     <input type="number" class="form-control" id="them_luong_tang_ca" name="luong_tang_ca" value="{{ old('luong_tang_ca', 80000) }}" placeholder="80000" min="0" step="1000">
                                 </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
+                                    <input type="number" class="form-control" id="them_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" value="{{ old('hoa_hong_hop_dong_cuoi', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="them_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
+                                    <input type="number" class="form-control" id="them_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" value="{{ old('hoa_hong_hop_dong_trang_phuc', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -564,6 +584,14 @@
                                     <label class="form-label" for="sua_luong_tang_ca">Lương tăng ca (VNĐ)</label>
                                     <input type="number" class="form-control" id="sua_luong_tang_ca" name="luong_tang_ca" placeholder="80000" min="0" step="1000">
                                 </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
+                                    <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" placeholder="1,00" min="0" step="0.01">
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label class="form-label" for="sua_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
+                                    <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" placeholder="1,00" min="0" step="0.01">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -640,6 +668,15 @@
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.nhan-su-table thead .nhan-su-th-group {
+    border-bottom-width: 1px;
+}
+.nhan-su-table thead tr.nhan-su-thead-group th {
+    vertical-align: middle;
+}
+[data-bs-theme='dark'] .nhan-su-table thead .nhan-su-th-group {
+    background-color: #353a52;
 }
 .nhan-su-table .nhan-su-sticky {
     position: sticky;
@@ -798,6 +835,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('sua_phu_cap').value = btn.getAttribute('data-phu-cap') || '';
             document.getElementById('sua_luong_co_ban').value = btn.getAttribute('data-luong-co-ban') || '';
             document.getElementById('sua_luong_tang_ca').value = btn.getAttribute('data-luong-tang-ca') || '';
+            document.getElementById('sua_hoa_hong_hop_dong_cuoi').value = btn.getAttribute('data-hoa-hong-hop-dong-cuoi') || '1';
+            document.getElementById('sua_hoa_hong_hop_dong_trang_phuc').value = btn.getAttribute('data-hoa-hong-hop-dong-trang-phuc') || '1';
             var imgSrc = btn.getAttribute('data-hinh-anh') || '';
             if (imgSrc) {
                 suaPreview.src = imgSrc;

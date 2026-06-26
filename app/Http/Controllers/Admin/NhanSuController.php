@@ -508,6 +508,8 @@ class NhanSuController extends Controller
             'phu_cap' => 'nullable|integer|min:0',
             'luong_co_ban' => 'nullable|integer|min:0',
             'luong_tang_ca' => 'nullable|integer|min:0',
+            'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
+            'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
             'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ], [
@@ -550,6 +552,12 @@ class NhanSuController extends Controller
             'luong_co_ban.min' => 'Lương cơ bản không được âm.',
             'luong_tang_ca.integer' => 'Lương tăng ca phải là số nguyên.',
             'luong_tang_ca.min' => 'Lương tăng ca không được âm.',
+            'hoa_hong_hop_dong_cuoi.numeric' => 'Hoa hồng hợp đồng cưới phải là số.',
+            'hoa_hong_hop_dong_cuoi.min' => 'Hoa hồng hợp đồng cưới không được âm.',
+            'hoa_hong_hop_dong_cuoi.decimal' => 'Hoa hồng hợp đồng cưới tối đa 2 chữ số thập phân.',
+            'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
+            'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
+            'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
             'phong_ban_id.required' => 'Vui lòng chọn phòng ban.',
             'phong_ban_id.exists' => 'Phòng ban không tồn tại.',
             'hinh_anh.image' => 'File tải lên phải là ảnh (jpeg, png, bmp, gif, webp).',
@@ -592,6 +600,8 @@ class NhanSuController extends Controller
                 'phu_cap' => $request->input('phu_cap', 0),
                 'luong_co_ban' => $request->input('luong_co_ban', 50000),
                 'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
+                'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
+                'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
             ]);
 
             DB::commit();
@@ -625,6 +635,8 @@ class NhanSuController extends Controller
             'phu_cap' => 'nullable|integer|min:0',
             'luong_co_ban' => 'nullable|integer|min:0',
             'luong_tang_ca' => 'nullable|integer|min:0',
+            'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
+            'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
             'phong_ban_id' => 'required|exists:phong_ban,id',
             'hinh_anh' => 'nullable|image|max:2048',
         ], [
@@ -661,6 +673,12 @@ class NhanSuController extends Controller
             'luong_co_ban.min' => 'Lương cơ bản không được âm.',
             'luong_tang_ca.integer' => 'Lương tăng ca phải là số nguyên.',
             'luong_tang_ca.min' => 'Lương tăng ca không được âm.',
+            'hoa_hong_hop_dong_cuoi.numeric' => 'Hoa hồng hợp đồng cưới phải là số.',
+            'hoa_hong_hop_dong_cuoi.min' => 'Hoa hồng hợp đồng cưới không được âm.',
+            'hoa_hong_hop_dong_cuoi.decimal' => 'Hoa hồng hợp đồng cưới tối đa 2 chữ số thập phân.',
+            'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
+            'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
+            'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
             'phong_ban_id.required' => 'Vui lòng chọn phòng ban.',
             'phong_ban_id.exists' => 'Phòng ban không tồn tại.',
             'hinh_anh.image' => 'File tải lên phải là ảnh (jpeg, png, bmp, gif, webp).',
@@ -704,6 +722,8 @@ class NhanSuController extends Controller
                     'phu_cap' => $request->filled('phu_cap') ? (int) $request->input('phu_cap') : ($nhanVien->phu_cap ?? 0),
                     'luong_co_ban' => $request->filled('luong_co_ban') ? (int) $request->input('luong_co_ban') : $nhanVien->luong_co_ban,
                     'luong_tang_ca' => $request->filled('luong_tang_ca') ? (int) $request->input('luong_tang_ca') : $nhanVien->luong_tang_ca,
+                    'hoa_hong_hop_dong_cuoi' => $request->filled('hoa_hong_hop_dong_cuoi') ? $request->input('hoa_hong_hop_dong_cuoi') : ($nhanVien->hoa_hong_hop_dong_cuoi ?? 1),
+                    'hoa_hong_hop_dong_trang_phuc' => $request->filled('hoa_hong_hop_dong_trang_phuc') ? $request->input('hoa_hong_hop_dong_trang_phuc') : ($nhanVien->hoa_hong_hop_dong_trang_phuc ?? 1),
                 ]);
             } else {
                 $nhanVien = NhanVien::create([
@@ -723,6 +743,8 @@ class NhanSuController extends Controller
                     'phu_cap' => $request->input('phu_cap', 0),
                     'luong_co_ban' => $request->input('luong_co_ban', 50000),
                     'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
+                    'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
+                    'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
                 ]);
             }
 

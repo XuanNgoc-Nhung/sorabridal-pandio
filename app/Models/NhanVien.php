@@ -63,6 +63,8 @@ class NhanVien extends Model
         'phu_cap',
         'luong_co_ban',
         'luong_tang_ca',
+        'hoa_hong_hop_dong_cuoi',
+        'hoa_hong_hop_dong_trang_phuc',
     ];
 
     /**
@@ -81,6 +83,8 @@ class NhanVien extends Model
             'phu_cap' => 'integer',
             'luong_co_ban' => 'integer',
             'luong_tang_ca' => 'integer',
+            'hoa_hong_hop_dong_cuoi' => 'decimal:2',
+            'hoa_hong_hop_dong_trang_phuc' => 'decimal:2',
         ];
     }
 
