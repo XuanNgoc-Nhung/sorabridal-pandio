@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\VaiTro;
 use App\Support\AdminCongNoList;
 use App\Support\AdminPagination;
+use App\Support\TinhLuongThang;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -294,12 +295,11 @@ class TaiChinhKeToanController extends Controller
             ->get();
 
         $bangChamCong = [];
-        $bangLuongThang = [];
+        $tongLuongTuDiemDanh = [];
         foreach ($nhanVien as $u) {
-            $bangLuongThang[$u->id] = [
+            $tongLuongTuDiemDanh[$u->id] = [
                 'luong_co_ban' => 0,
                 'luong_tang_ca' => 0,
-                'tong_luong' => 0,
             ];
         }
         foreach ($chamCong as $record) {
@@ -313,12 +313,29 @@ class TaiChinhKeToanController extends Controller
             $diemDanh = $record->diemDanh;
             if ($diemDanh) {
                 $uid = $record->user_id;
-                $bangLuongThang[$uid]['luong_co_ban'] += (float) ($diemDanh->luong_co_ban ?? 0);
-                $bangLuongThang[$uid]['luong_tang_ca'] += (float) ($diemDanh->luong_tang_ca ?? 0);
+                $tongLuongTuDiemDanh[$uid]['luong_co_ban'] += (float) ($diemDanh->luong_co_ban ?? 0);
+                $tongLuongTuDiemDanh[$uid]['luong_tang_ca'] += (float) ($diemDanh->luong_tang_ca ?? 0);
             }
         }
-        foreach (array_keys($bangLuongThang) as $uid) {
-            $bangLuongThang[$uid]['tong_luong'] = $bangLuongThang[$uid]['luong_co_ban'] + $bangLuongThang[$uid]['luong_tang_ca'];
+
+        $nhanVienRecords = $nhanVien->pluck('nhanVien')->filter();
+        $hoaHongHopDongCuoiTheoNhanVienId = TinhLuongThang::tinhHoaHongHopDongCuoi($nhanVienRecords, $start, $end);
+        $hoaHongHopDongTrangPhucTheoNhanVienId = TinhLuongThang::tinhHoaHongHopDongTrangPhuc($nhanVienRecords, $start, $end);
+
+        $bangLuongThang = [];
+        foreach ($nhanVien as $u) {
+            $nv = $u->nhanVien;
+            $tongDiemDanh = $tongLuongTuDiemDanh[$u->id] ?? ['luong_co_ban' => 0, 'luong_tang_ca' => 0];
+            $hoaHongHopDongCuoi = (float) ($hoaHongHopDongCuoiTheoNhanVienId[$nv?->id] ?? 0);
+            $hoaHongHopDongTrangPhuc = (float) ($hoaHongHopDongTrangPhucTheoNhanVienId[$nv?->id] ?? 0);
+
+            $bangLuongThang[$u->id] = TinhLuongThang::tongHopThang(
+                $nv,
+                $tongDiemDanh['luong_co_ban'],
+                $tongDiemDanh['luong_tang_ca'],
+                $hoaHongHopDongCuoi,
+                $hoaHongHopDongTrangPhuc
+            );
         }
 
         return view('admin.tai-chinh.tinh-luong', [

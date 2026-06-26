@@ -71,11 +71,15 @@
                             </th>
                         @endforeach
                         <th colspan="3" class="text-center text-nowrap" style="min-width: 1px;">Lương</th>
+                        <th colspan="2" class="text-center text-nowrap" style="min-width: 1px;">Hoa hồng</th>
+                        <th rowspan="2" class="text-center text-nowrap small align-middle" style="min-width: 90px;">Tổng</th>
                     </tr>
                     <tr>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Cơ bản</th>
                         <th class="text-center text-nowrap small" style="min-width: 90px;">Tăng ca</th>
-                        <th class="text-center text-nowrap small" style="min-width: 90px;">Tổng</th>
+                        <th class="text-center text-nowrap small" style="min-width: 90px;">Phụ cấp</th>
+                        <th class="text-center text-nowrap small" style="min-width: 90px;">HĐ cưới</th>
+                        <th class="text-center text-nowrap small" style="min-width: 90px;">HĐ trang phục</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -132,7 +136,14 @@
                                 </td>
                             @endforeach
                             @php
-                                $luong = $bangLuongThang[$u->id] ?? ['luong_co_ban' => 0, 'luong_tang_ca' => 0, 'tong_luong' => 0];
+                                $luong = $bangLuongThang[$u->id] ?? [
+                                    'luong_co_ban' => 0,
+                                    'luong_tang_ca' => 0,
+                                    'phu_cap' => 0,
+                                    'hoa_hong_hop_dong_cuoi' => 0,
+                                    'hoa_hong_hop_dong_trang_phuc' => 0,
+                                    'tong_luong' => 0,
+                                ];
                             @endphp
                             <td class="text-end align-middle">
                                 {{ number_format($luong['luong_co_ban'], 0, ',', '.') }} đ
@@ -140,13 +151,22 @@
                             <td class="text-end align-middle">
                                 {{ number_format($luong['luong_tang_ca'], 0, ',', '.') }} đ
                             </td>
+                            <td class="text-end align-middle">
+                                {{ number_format($luong['phu_cap'], 0, ',', '.') }} đ
+                            </td>
+                            <td class="text-end align-middle">
+                                {{ number_format($luong['hoa_hong_hop_dong_cuoi'], 0, ',', '.') }} đ
+                            </td>
+                            <td class="text-end align-middle">
+                                {{ number_format($luong['hoa_hong_hop_dong_trang_phuc'], 0, ',', '.') }} đ
+                            </td>
                             <td class="text-end align-middle fw-semibold">
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 3 }}" class="text-center py-4 text-muted">
+                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 6 }}" class="text-center py-4 text-muted">
                                 Chưa có nhân viên để hiển thị.
                             </td>
                         </tr>
