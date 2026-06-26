@@ -136,6 +136,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'c
     Route::group(['prefix' => 'diem-danh'], function () {
         Route::get('/', [AdminDiemDanh::class, 'diemDanh'])->name('diem-danh.diem-danh');
         Route::get('/cham-cong', [AdminDiemDanh::class, 'chamCong'])->name('diem-danh.cham-cong');
+        Route::put('/cham-cong/diem-danh-ho', [AdminDiemDanh::class, 'capNhatDiemDanhHo'])->name('diem-danh.cham-cong.diem-danh-ho');
         Route::get('/nghi-phep', [AdminDiemDanh::class, 'nghiPhep'])->name('diem-danh.nghi-phep');
         Route::post('/nghi-phep', [AdminDiemDanh::class, 'storeNghiPhep'])->name('diem-danh.nghi-phep.store');
         Route::put('/nghi-phep/{xinNghiPhep}/duyet', [AdminDiemDanh::class, 'duyetNghiPhep'])->name('diem-danh.nghi-phep.duyet');

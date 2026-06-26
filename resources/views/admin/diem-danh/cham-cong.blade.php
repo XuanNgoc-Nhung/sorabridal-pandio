@@ -116,6 +116,12 @@
                     @forelse(($nhanVien ?? []) as $u)
                         @php
                             $coChamCongTrongThang = collect($bangChamCong ?? [])->contains(fn ($byUser) => isset($byUser[$u->id]));
+                            $nvRecord = $u->nhanVien;
+                            $loaiNv = $nvRecord?->loai_nhan_vien ?? '';
+                            $loaiNvLabel = filled($loaiNv)
+                                ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                                : '';
+                            $coLoaiNvHopLe = \App\Support\TinhLuongDiemDanh::hopLeLoaiNhanVien($nvRecord);
                         @endphp
                         <tr>
                             <td class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1">{{ $loop->iteration }}</td>
@@ -133,23 +139,61 @@
                                     $dateKey = $day->toDateString();
                                     $record = $bangChamCong[$dateKey][$u->id] ?? null;
                                     $diemDanh = $record?->diemDanh;
-                                    $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true); // 6=Thứ 7, 7=Chủ nhật
+                                    $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
+                                    $dangKyCa = ($bangCaLam[$dateKey][$u->id] ?? [])[0] ?? null;
+                                    $caLam = $dangKyCa?->caLamViec;
+                                    if ($caLam) {
+                                        $caLamTen = $caLam->ten_ca ?: '—';
+                                        $caGioBatDau = $caLam->gioBatDauHienThi();
+                                        $caGioKetThuc = $caLam->gioKetThucHienThi();
+                                    } else {
+                                        $caLamTen = '';
+                                        $caGioBatDau = '';
+                                        $caGioKetThuc = '';
+                                    }
+                                    $daCheckIn = $diemDanh && $diemDanh->gio_vao;
+                                    $daCheckOut = $diemDanh && $diemDanh->gio_ra;
+                                    $laQuaKhu = $day->lt(today()->startOfDay());
+                                    $chuaCheckout = $daCheckIn && ! $daCheckOut;
+                                    $hienIconSua = ($laQuaKhu && ! $daCheckIn) || $chuaCheckout;
+                                    $cheDoSua = $daCheckIn ? 'sua' : 'tao-moi';
                                 @endphp
                                 <td class="text-center align-middle cham-cong-ngay-col {{ $isWeekend ? 'cham-cong-weekend' : '' }}">
-                                    @if($record && $diemDanh)
-                                        <div class="small">
-                                            <span class="text-success fw-medium">{{ $diemDanh->gio_vao ? $diemDanh->gio_vao->format('H:i') : '—' }}</span>
-                                            <span class="text-muted mx-1">–</span>
-                                            <span class="gio-ra fw-medium">{{ $diemDanh->gio_ra ? $diemDanh->gio_ra->format('H:i') : '—' }}</span>
-                                        </div>
-                                        {{-- <div class="small mt-1">
-                                            <span class="text-primary" title="Giờ làm cơ bản">{{ $diemDanh->gio_lam_co_ban !== null ? number_format($diemDanh->gio_lam_co_ban, 1) . ' h' : '—' }}</span>
-                                            <span class="text-muted mx-1">/</span>
-                                            <span class="text-warning text-dark" title="Giờ tăng ca">{{ $diemDanh->gio_lam_tang_ca !== null ? number_format($diemDanh->gio_lam_tang_ca, 1) . ' h' : '—' }}</span>
-                                        </div> --}}
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
+                                    <div class="cham-cong-ngay-cell">
+                                        @if($daCheckIn)
+                                            <div class="cham-cong-ngay-times small">
+                                                <span class="text-success fw-medium cham-cong-gio-vao">{{ $diemDanh->gio_vao->format('H:i') }}</span>
+                                                <span class="text-muted mx-1">–</span>
+                                                <span class="gio-ra fw-medium cham-cong-gio-ra">{{ $daCheckOut ? $diemDanh->gio_ra->format('H:i') : '—' }}</span>
+                                            </div>
+                                        @else
+                                            <div class="cham-cong-ngay-times small text-muted cham-cong-chua-co">—</div>
+                                        @endif
+                                        @if($hienIconSua)
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-primary btn-sua-diem-danh-ho mt-1"
+                                                title="{{ $cheDoSua === 'sua' ? 'Sửa điểm danh' : 'Điểm danh hộ' }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalSuaDiemDanhHo"
+                                                data-user-id="{{ $u->id }}"
+                                                data-user-name="{{ $u->name }}"
+                                                data-user-email="{{ $u->email }}"
+                                                data-user-phone="{{ $u->phone ?? '' }}"
+                                                data-loai-nhan-vien="{{ $loaiNv }}"
+                                                data-loai-nhan-vien-label="{{ $loaiNvLabel }}"
+                                                data-co-loai-nhan-vien="{{ $coLoaiNvHopLe ? '1' : '0' }}"
+                                                data-ngay="{{ $dateKey }}"
+                                                data-ngay-hien-thi="{{ $day->format('d/m/Y') }}"
+                                                data-ca-lam-ten="{{ $caLamTen }}"
+                                                data-ca-gio-bat-dau="{{ $caGioBatDau }}"
+                                                data-ca-gio-ket-thuc="{{ $caGioKetThuc }}"
+                                                data-gio-vao="{{ $daCheckIn ? $diemDanh->gio_vao->format('H:i') : '' }}"
+                                                data-gio-ra="{{ $daCheckOut ? $diemDanh->gio_ra->format('H:i') : '' }}"
+                                                data-che-do="{{ $cheDoSua }}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        @endif
+                                    </div>
                                 </td>
                             @endforeach
                         </tr>
@@ -163,6 +207,75 @@
                 </tbody>
             </table>
         </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal sửa / điểm danh hộ --}}
+<div class="modal fade" id="modalSuaDiemDanhHo" tabindex="-1" aria-labelledby="modalSuaDiemDanhHoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-sua-diem-danh-ho">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSuaDiemDanhHoLabel">Sửa điểm danh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form id="formSuaDiemDanhHo">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoTenNv">Nhân viên</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoTenNv" readonly tabindex="-1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoLoaiNv">Loại nhân viên</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoLoaiNv" readonly tabindex="-1" placeholder="Chưa cập nhật">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoEmail">Email</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoEmail" readonly tabindex="-1" placeholder="—">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoPhone">Số điện thoại</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoPhone" readonly tabindex="-1" placeholder="—">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoNgay">Ngày làm</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoNgay" readonly tabindex="-1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoCaLamTen">Ca làm việc</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoCaLamTen" readonly tabindex="-1" placeholder="Chưa phân ca làm việc">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="suaDiemDanhHoCaGioBatDau">Giờ bắt đầu ca</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoCaGioBatDau" readonly tabindex="-1" placeholder="—">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="suaDiemDanhHoCaGioKetThuc">Giờ kết thúc ca</label>
+                            <input type="text" class="form-control" id="suaDiemDanhHoCaGioKetThuc" readonly tabindex="-1" placeholder="—">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoGioVao">Giờ vào (check-in) <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="suaDiemDanhHoGioVao" name="gio_vao" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="suaDiemDanhHoGioRa">Giờ ra (check-out)</label>
+                            <input type="time" class="form-control" id="suaDiemDanhHoGioRa" name="gio_ra">
+                            <div class="form-text">Để trống nếu chưa check-out.</div>
+                        </div>
+                    </div>
+                    <div id="suaDiemDanhHoCanhBaoLoaiNv" class="alert alert-warning d-none mt-3 mb-0 small" role="alert">
+                        Nhân viên chưa có loại nhân viên (Full-time / Part-time). Vui lòng cập nhật trong Danh sách nhân sự trước khi điểm danh.
+                    </div>
+                    <div id="suaDiemDanhHoLoi" class="alert alert-danger d-none mt-3 mb-0 small" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnLuuDiemDanhHo">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Lưu
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -229,6 +342,24 @@
     background-color: rgba(108, 117, 125, 0.2);
 }
 .gio-ra { color: #e8590c; }
+.cham-cong-ngay-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    min-height: 2.5rem;
+}
+.cham-cong-ngay-cell .btn-sua-diem-danh-ho {
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    opacity: 0.55;
+    transition: opacity 0.15s ease;
+}
+.cham-cong-ngay-col:hover .btn-sua-diem-danh-ho,
+.cham-cong-ngay-cell .btn-sua-diem-danh-ho:focus {
+    opacity: 1;
+}
 /* Chỉ chọn tháng/năm — ẩn lưới ngày (Bootstrap Daterangepicker) */
 .daterangepicker.cham-cong-thang-nam-picker .drp-calendar thead tr:not(:first-child),
 .daterangepicker.cham-cong-thang-nam-picker .drp-calendar tbody,
@@ -248,6 +379,16 @@
 .daterangepicker.cham-cong-thang-nam-picker .yearselect {
     font-size: 0.9375rem;
     padding: 0.35rem 0.5rem;
+}
+.modal-sua-diem-danh-ho {
+    max-width: 720px;
+}
+.modal-sua-diem-danh-ho .form-control[readonly] {
+    background-color: var(--bs-secondary-bg, #f5f5f9);
+    cursor: default;
+}
+[data-bs-theme='dark'] .modal-sua-diem-danh-ho .form-control[readonly] {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 </style>
 @endpush
@@ -353,6 +494,213 @@
         });
     }
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modalEl = document.getElementById('modalSuaDiemDanhHo');
+    var formEl = document.getElementById('formSuaDiemDanhHo');
+    var btnLuu = document.getElementById('btnLuuDiemDanhHo');
+    var elTitle = document.getElementById('modalSuaDiemDanhHoLabel');
+    var inpTenNv = document.getElementById('suaDiemDanhHoTenNv');
+    var inpEmail = document.getElementById('suaDiemDanhHoEmail');
+    var inpPhone = document.getElementById('suaDiemDanhHoPhone');
+    var inpLoaiNv = document.getElementById('suaDiemDanhHoLoaiNv');
+    var inpNgay = document.getElementById('suaDiemDanhHoNgay');
+    var inpCaLamTen = document.getElementById('suaDiemDanhHoCaLamTen');
+    var inpCaGioBatDau = document.getElementById('suaDiemDanhHoCaGioBatDau');
+    var inpCaGioKetThuc = document.getElementById('suaDiemDanhHoCaGioKetThuc');
+    var inpGioVao = document.getElementById('suaDiemDanhHoGioVao');
+    var inpGioRa = document.getElementById('suaDiemDanhHoGioRa');
+    var elLoi = document.getElementById('suaDiemDanhHoLoi');
+    var elCanhBaoLoaiNv = document.getElementById('suaDiemDanhHoCanhBaoLoaiNv');
+    var urlCapNhat = @json(route('admin.diem-danh.cham-cong.diem-danh-ho'));
+
+    if (!modalEl || !formEl) {
+        return;
+    }
+
+    var state = {
+        userId: null,
+        ngay: null,
+        triggerBtn: null,
+        cheDo: 'tao-moi',
+        coLoaiNvHopLe: false
+    };
+
+    function anLoi() {
+        if (!elLoi) {
+            return;
+        }
+        elLoi.classList.add('d-none');
+        elLoi.textContent = '';
+    }
+
+    function capNhatTrangThaiNutLuu(coLoaiNvHopLe) {
+        state.coLoaiNvHopLe = !!coLoaiNvHopLe;
+
+        if (btnLuu) {
+            btnLuu.disabled = !state.coLoaiNvHopLe;
+        }
+        if (elCanhBaoLoaiNv) {
+            elCanhBaoLoaiNv.classList.toggle('d-none', state.coLoaiNvHopLe);
+        }
+        if (inpLoaiNv) {
+            inpLoaiNv.classList.toggle('is-invalid', !state.coLoaiNvHopLe);
+        }
+    }
+
+    function hienLoi(message) {
+        if (!elLoi) {
+            return;
+        }
+        elLoi.textContent = message || 'Không thể lưu điểm danh.';
+        elLoi.classList.remove('d-none');
+    }
+
+    function datGiaTriReadonly(input, value, placeholder) {
+        if (!input) {
+            return;
+        }
+        input.value = value || '';
+        input.placeholder = placeholder || '—';
+    }
+
+    document.querySelectorAll('.btn-sua-diem-danh-ho').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            state.userId = this.getAttribute('data-user-id');
+            state.ngay = this.getAttribute('data-ngay');
+            state.triggerBtn = this;
+            state.cheDo = this.getAttribute('data-che-do') || 'tao-moi';
+
+            datGiaTriReadonly(inpTenNv, this.getAttribute('data-user-name') || '');
+            datGiaTriReadonly(inpEmail, this.getAttribute('data-user-email') || '');
+            datGiaTriReadonly(inpPhone, this.getAttribute('data-user-phone') || '');
+            datGiaTriReadonly(
+                inpLoaiNv,
+                this.getAttribute('data-loai-nhan-vien-label') || '',
+                'Chưa cập nhật'
+            );
+            datGiaTriReadonly(inpNgay, this.getAttribute('data-ngay-hien-thi') || '');
+
+            capNhatTrangThaiNutLuu(this.getAttribute('data-co-loai-nhan-vien') === '1');
+
+            var caLamTen = this.getAttribute('data-ca-lam-ten') || '';
+            var caGioBatDau = this.getAttribute('data-ca-gio-bat-dau') || '';
+            var caGioKetThuc = this.getAttribute('data-ca-gio-ket-thuc') || '';
+            var chuaPhanCa = !caLamTen && !caGioBatDau && !caGioKetThuc;
+
+            datGiaTriReadonly(inpCaLamTen, caLamTen, chuaPhanCa ? 'Chưa phân ca làm việc' : '—');
+            datGiaTriReadonly(inpCaGioBatDau, caGioBatDau);
+            datGiaTriReadonly(inpCaGioKetThuc, caGioKetThuc);
+
+            if (inpGioVao) {
+                inpGioVao.value = this.getAttribute('data-gio-vao') || '';
+            }
+            if (inpGioRa) {
+                inpGioRa.value = this.getAttribute('data-gio-ra') || '';
+            }
+
+            if (elTitle) {
+                elTitle.textContent = state.cheDo === 'sua' ? 'Sửa điểm danh' : 'Điểm danh hộ';
+            }
+
+            anLoi();
+        });
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        anLoi();
+        if (elCanhBaoLoaiNv) {
+            elCanhBaoLoaiNv.classList.add('d-none');
+        }
+        if (inpLoaiNv) {
+            inpLoaiNv.classList.remove('is-invalid');
+        }
+    });
+
+    formEl.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        anLoi();
+
+        if (!state.coLoaiNvHopLe) {
+            hienLoi('Không cho điểm danh. Liên hệ admin hoặc kiểm tra lại.');
+            return;
+        }
+
+        if (!state.userId || !state.ngay) {
+            hienLoi('Thiếu thông tin nhân viên hoặc ngày.');
+            return;
+        }
+
+        if (!inpGioVao || !inpGioVao.value) {
+            hienLoi('Vui lòng nhập giờ vào.');
+            return;
+        }
+
+        var payload = {
+            user_id: parseInt(state.userId, 10),
+            ngay_diem_danh: state.ngay,
+            gio_vao: inpGioVao.value
+        };
+
+        if (inpGioRa && inpGioRa.value) {
+            payload.gio_ra = inpGioRa.value;
+        }
+
+        if (btnLuu) {
+            btnLuu.disabled = true;
+        }
+
+        RestApi.put(urlCapNhat, payload)
+            .then(function (res) {
+                var body = res.data || {};
+                if (!res.ok || !body.success) {
+                    var msg = body.message;
+                    if (!msg && body.errors) {
+                        var firstKey = Object.keys(body.errors)[0];
+                        msg = firstKey && body.errors[firstKey] ? body.errors[firstKey][0] : null;
+                    }
+                    throw new Error(msg || 'Không thể lưu điểm danh.');
+                }
+
+                if (state.triggerBtn) {
+                    var cell = state.triggerBtn.closest('.cham-cong-ngay-cell');
+                    if (cell) {
+                        var timesEl = cell.querySelector('.cham-cong-ngay-times');
+                        var gioVao = body.gio_vao || inpGioVao.value;
+                        var gioRa = body.gio_ra || (inpGioRa && inpGioRa.value ? inpGioRa.value : '');
+
+                        if (timesEl) {
+                            timesEl.classList.remove('cham-cong-chua-co', 'text-muted');
+                            timesEl.innerHTML =
+                                '<span class="text-success fw-medium cham-cong-gio-vao">' + gioVao + '</span>' +
+                                '<span class="text-muted mx-1">–</span>' +
+                                '<span class="gio-ra fw-medium cham-cong-gio-ra">' + (gioRa || '—') + '</span>';
+                        }
+
+                        if (gioRa) {
+                            state.triggerBtn.remove();
+                        } else {
+                            state.triggerBtn.setAttribute('data-gio-vao', gioVao);
+                            state.triggerBtn.setAttribute('data-gio-ra', '');
+                            state.triggerBtn.setAttribute('data-che-do', 'sua');
+                            state.triggerBtn.title = 'Sửa điểm danh';
+                        }
+                    }
+                }
+
+                bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            })
+            .catch(function (err) {
+                hienLoi(err && err.message ? err.message : 'Không thể lưu điểm danh.');
+            })
+            .finally(function () {
+                if (btnLuu) {
+                    btnLuu.disabled = !state.coLoaiNvHopLe;
+                }
+            });
+    });
+});
 </script>
 @endpush
 @endsection

@@ -70,6 +70,9 @@ class CheckRoute
             'admin.diem-danh.nghi-phep.tu-choi',
             'admin.diem-danh.nghi-phep.destroy',
         ],
+        'admin.diem-danh.cham-cong' => [
+            'admin.diem-danh.cham-cong.diem-danh-ho',
+        ],
         'admin.trang-phuc.hop-dong' => [
             'admin.trang-phuc.hop-dong.tim-san-pham',
             'admin.trang-phuc.update-hop-dong-trang-thai',

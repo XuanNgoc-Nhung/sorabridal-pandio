@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\VaiTro;
 use App\Models\XinNghiPhep;
 use App\Support\AdminPagination;
+use App\Support\TinhLuongDiemDanh;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -554,7 +555,7 @@ class DiemDanhController extends Controller
             $nhanVienQuery->orderBy('id', $thuTu);
         }
 
-        $nhanVien = $nhanVienQuery->get();
+        $nhanVien = $nhanVienQuery->with('nhanVien')->get();
 
         $chamCong = ChamCong::query()
             ->with(['user', 'diemDanh'])
@@ -571,6 +572,17 @@ class DiemDanhController extends Controller
             $bangChamCong[$dateKey][$record->user_id] = $record;
         }
 
+        $dangKyCaLam = DangKyCaLamViec::query()
+            ->with('caLamViec')
+            ->whereBetween('ngay_lam', [$startStr, $endStr])
+            ->get();
+
+        $bangCaLam = [];
+        foreach ($dangKyCaLam as $record) {
+            $dateKey = $record->ngay_lam->format('Y-m-d');
+            $bangCaLam[$dateKey][$record->nguoi_dung_id][] = $record;
+        }
+
         $danhSachNhanVienLoc = User::query()
             ->whereHas('nhanVien')
             ->orderBy('name')
@@ -585,12 +597,124 @@ class DiemDanhController extends Controller
             'ngayTrongThang' => $ngayTrongThang,
             'nhanVien' => $nhanVien,
             'bangChamCong' => $bangChamCong,
+            'bangCaLam' => $bangCaLam,
             'danhSachNhanVienLoc' => $danhSachNhanVienLoc,
             'userIdLoc' => $userIdLoc,
             'trangThai' => $trangThai,
             'sapXepTheo' => $sapXepTheo,
             'thuTu' => $thuTu,
             'chamCongSapXepOptions' => self::CHAM_CONG_SAP_XEP_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Admin sửa / điểm danh hộ: cập nhật giờ vào–ra cho nhân viên theo ngày.
+     */
+    public function capNhatDiemDanhHo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'ngay_diem_danh' => ['required', 'date'],
+            'gio_vao' => ['required', 'date_format:H:i'],
+            'gio_ra' => ['nullable', 'date_format:H:i'],
+        ], [
+            'gio_vao.required' => 'Vui lòng nhập giờ vào.',
+            'gio_vao.date_format' => 'Giờ vào không hợp lệ (định dạng HH:MM).',
+            'gio_ra.date_format' => 'Giờ ra không hợp lệ (định dạng HH:MM).',
+        ]);
+
+        $user = User::query()
+            ->whereHas('nhanVien')
+            ->find($validated['user_id']);
+
+        if ($user === null) {
+            return $this->jsonDiemDanhError('Nhân viên không hợp lệ.', 422);
+        }
+
+        if ($guardLoaiNv = $this->kiemTraLoaiNhanVienChoDiemDanh($user->id)) {
+            return $guardLoaiNv;
+        }
+
+        $ngay = Carbon::parse($validated['ngay_diem_danh'])->toDateString();
+        $gioVao = Carbon::parse($ngay.' '.$validated['gio_vao'].':00');
+        $gioRa = null;
+
+        if (! empty($validated['gio_ra'])) {
+            $gioRa = Carbon::parse($ngay.' '.$validated['gio_ra'].':00');
+            if ($gioRa->lte($gioVao)) {
+                return $this->jsonDiemDanhError('Giờ ra phải sau giờ vào.', 422);
+            }
+        }
+
+        $thoiGianDiMuon = $this->tinhThoiGianDiMuon($user->id, $gioVao);
+        $tienPhatDiMuon = $this->tinhTienPhatTheoSoPhut($thoiGianDiMuon);
+
+        $payloadDiemDanh = [
+            'user_id' => $user->id,
+            'gio_vao' => $gioVao,
+            'di_muon' => $thoiGianDiMuon > 0,
+            'thoi_gian_di_muon' => $thoiGianDiMuon,
+            'tien_phat_di_muon' => $tienPhatDiMuon,
+        ];
+
+        if ($gioRa !== null) {
+            $gioLuong = $this->tinhGioLuongTuDiemDanh($gioVao, $gioRa, $user->id);
+            $thoiGianVeSom = $this->tinhThoiGianVeSom($user->id, $gioRa);
+            $payloadDiemDanh = array_merge($payloadDiemDanh, [
+                'gio_ra' => $gioRa,
+                'thoi_gian_ve_som' => $thoiGianVeSom,
+                'tien_phat_ve_som' => $this->tinhTienPhatTheoSoPhut($thoiGianVeSom),
+                'gio_lam_co_ban' => $gioLuong['gio_lam_co_ban'],
+                'gio_lam_tang_ca' => $gioLuong['gio_lam_tang_ca'],
+                'luong_co_ban' => $gioLuong['luong_co_ban'],
+                'luong_tang_ca' => $gioLuong['luong_tang_ca'],
+            ]);
+        } else {
+            $payloadDiemDanh = array_merge($payloadDiemDanh, [
+                'gio_ra' => null,
+                'thoi_gian_ve_som' => 0,
+                'tien_phat_ve_som' => 0,
+                'gio_lam_co_ban' => null,
+                'gio_lam_tang_ca' => null,
+                'luong_co_ban' => null,
+                'luong_tang_ca' => null,
+            ]);
+        }
+
+        DB::transaction(function () use ($user, $ngay, $payloadDiemDanh) {
+            $chamCong = ChamCong::query()
+                ->where('user_id', $user->id)
+                ->whereDate('ngay_diem_danh', $ngay)
+                ->first();
+
+            $diemDanh = $chamCong?->diemDanh
+                ?? DiemDanh::query()
+                    ->where('user_id', $user->id)
+                    ->whereDate('gio_vao', $ngay)
+                    ->first();
+
+            if ($diemDanh !== null) {
+                $diemDanh->update($payloadDiemDanh);
+            } else {
+                $diemDanh = DiemDanh::create($payloadDiemDanh);
+            }
+
+            ChamCong::query()->updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'ngay_diem_danh' => $ngay,
+                ],
+                [
+                    'diem_danh_id' => $diemDanh->id,
+                ]
+            );
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã cập nhật điểm danh cho '.$user->name.'.',
+            'gio_vao' => $gioVao->format('H:i'),
+            'gio_ra' => $gioRa?->format('H:i'),
         ]);
     }
 
@@ -616,6 +740,10 @@ class DiemDanhController extends Controller
 
         if (! $this->userCoDangKyCaLamHomNay($userId)) {
             return $this->jsonDiemDanhError('Bạn chưa được phân ca làm việc hôm nay. Không thể điểm danh.');
+        }
+
+        if ($guardLoaiNv = $this->kiemTraLoaiNhanVienChoDiemDanh($userId)) {
+            return $guardLoaiNv;
         }
 
         $validated = $request->validate([
@@ -672,8 +800,7 @@ class DiemDanhController extends Controller
 
     /**
      * Ghi nhận giờ ra (check-out) cho user đăng nhập.
-     * Tính giờ làm cơ bản (từ giờ vào đến 21:00), giờ tăng ca (từ 21:00 đến giờ ra),
-     * và lương cơ bản, lương tăng ca theo đơn giá ở bảng nhan_vien.
+     * Tính lương ngày theo loại nhân viên (full-time / part-time) và ngưỡng phút tăng ca N.
      */
     public function checkOut(Request $request): JsonResponse
     {
@@ -700,6 +827,10 @@ class DiemDanhController extends Controller
             return $this->jsonDiemDanhError('Chưa có bản ghi check-in hôm nay hoặc đã check-out rồi.');
         }
 
+        if ($guardLoaiNv = $this->kiemTraLoaiNhanVienChoDiemDanh((int) $record->user_id)) {
+            return $guardLoaiNv;
+        }
+
         $validated = $request->validate([
             'client_ip' => 'required|string|max:45',
         ]);
@@ -716,24 +847,8 @@ class DiemDanhController extends Controller
 
         $gioRa = Carbon::now();
         $gioVao = Carbon::parse($record->gio_vao);
-        $cuoiGioCoBan = Carbon::parse($gioVao->toDateString().' 21:00:00');
 
-        // Giờ làm cơ bản: từ gio_vao đến min(gio_ra, 21:00). Nếu ra trước 21:00 thì toàn bộ là cơ bản.
-        if ($gioRa->lte($cuoiGioCoBan)) {
-            $gioLamCoBan = round($gioVao->diffInMinutes($gioRa) / 60, 2);
-            $gioLamTangCa = 0.0;
-        } else {
-            $gioLamCoBan = round($gioVao->diffInMinutes($cuoiGioCoBan) / 60, 2);
-            $gioLamTangCa = round($cuoiGioCoBan->diffInMinutes($gioRa) / 60, 2);
-        }
-
-        // Lấy đơn giá lương từ nhan_vien (theo user_id)
-        $nhanVien = NhanVien::query()->where('user_id', $record->user_id)->first();
-        $donGiaLuongCoBan = $nhanVien ? (float) $nhanVien->luong_co_ban : 0;
-        $donGiaLuongTangCa = $nhanVien ? (float) $nhanVien->luong_tang_ca : 0;
-
-        $luongCoBan = round($gioLamCoBan * $donGiaLuongCoBan, 2);
-        $luongTangCa = round($gioLamTangCa * $donGiaLuongTangCa, 2);
+        $gioLuong = $this->tinhGioLuongTuDiemDanh($gioVao, $gioRa, $record->user_id);
         $thoiGianVeSom = $this->tinhThoiGianVeSom($record->user_id, $gioRa);
         $tienPhatVeSom = $this->tinhTienPhatTheoSoPhut($thoiGianVeSom);
         $clientIp = trim($validated['client_ip']);
@@ -743,10 +858,10 @@ class DiemDanhController extends Controller
             'thoi_gian_ve_som' => $thoiGianVeSom,
             'tien_phat_ve_som' => $tienPhatVeSom,
             'ip_checkout' => $clientIp,
-            'gio_lam_co_ban' => $gioLamCoBan,
-            'gio_lam_tang_ca' => $gioLamTangCa,
-            'luong_co_ban' => $luongCoBan,
-            'luong_tang_ca' => $luongTangCa,
+            'gio_lam_co_ban' => $gioLuong['gio_lam_co_ban'],
+            'gio_lam_tang_ca' => $gioLuong['gio_lam_tang_ca'],
+            'luong_co_ban' => $gioLuong['luong_co_ban'],
+            'luong_tang_ca' => $gioLuong['luong_tang_ca'],
         ]);
 
         Log::info('Check-out: thành công', [
@@ -754,10 +869,10 @@ class DiemDanhController extends Controller
             'diem_danh_id' => $record->id,
             'gio_vao' => $gioVao->toDateTimeString(),
             'gio_ra' => $gioRa->toDateTimeString(),
-            'gio_lam_co_ban' => $gioLamCoBan,
-            'gio_lam_tang_ca' => $gioLamTangCa,
-            'luong_co_ban' => $luongCoBan,
-            'luong_tang_ca' => $luongTangCa,
+            'gio_lam_co_ban' => $gioLuong['gio_lam_co_ban'],
+            'gio_lam_tang_ca' => $gioLuong['gio_lam_tang_ca'],
+            'luong_co_ban' => $gioLuong['luong_co_ban'],
+            'luong_tang_ca' => $gioLuong['luong_tang_ca'],
         ]);
 
         return response()->json([
@@ -972,11 +1087,46 @@ class DiemDanhController extends Controller
 
     private function dangKyCaLamHomNay(int $userId): ?DangKyCaLamViec
     {
+        return $this->dangKyCaLamChoNgay($userId, today()->toDateString());
+    }
+
+    private function dangKyCaLamChoNgay(int $userId, string $ngay): ?DangKyCaLamViec
+    {
         return DangKyCaLamViec::query()
             ->with('caLamViec')
             ->where('nguoi_dung_id', $userId)
-            ->whereDate('ngay_lam', today())
+            ->whereDate('ngay_lam', $ngay)
             ->first();
+    }
+
+    /**
+     * @return array{gio_lam_co_ban: float, gio_lam_tang_ca: float, luong_co_ban: float, luong_tang_ca: float}
+     */
+    private function tinhGioLuongTuDiemDanh(Carbon $gioVao, Carbon $gioRa, int $userId): array
+    {
+        $nhanVien = NhanVien::query()->where('user_id', $userId)->first();
+
+        if ($nhanVien === null || ! TinhLuongDiemDanh::hopLeLoaiNhanVien($nhanVien)) {
+            return [
+                'gio_lam_co_ban' => 0.0,
+                'gio_lam_tang_ca' => 0.0,
+                'luong_co_ban' => 0.0,
+                'luong_tang_ca' => 0.0,
+            ];
+        }
+
+        return TinhLuongDiemDanh::tinh($gioVao, $gioRa, $nhanVien);
+    }
+
+    private function kiemTraLoaiNhanVienChoDiemDanh(int $userId): ?JsonResponse
+    {
+        $nhanVien = NhanVien::query()->where('user_id', $userId)->first();
+
+        if (! TinhLuongDiemDanh::hopLeLoaiNhanVien($nhanVien)) {
+            return $this->jsonDiemDanhError(TinhLuongDiemDanh::THONG_BAO_LOAI_NHAN_VIEN);
+        }
+
+        return null;
     }
 
     /**
@@ -984,7 +1134,7 @@ class DiemDanhController extends Controller
      */
     private function tinhThoiGianDiMuon(int $userId, Carbon $gioVao): int
     {
-        $dangKy = $this->dangKyCaLamHomNay($userId);
+        $dangKy = $this->dangKyCaLamChoNgay($userId, $gioVao->toDateString());
         $caLam = $dangKy?->caLamViec;
 
         if ($caLam === null || $caLam->gio_bat_dau === null) {
@@ -1005,7 +1155,7 @@ class DiemDanhController extends Controller
      */
     private function tinhThoiGianVeSom(int $userId, Carbon $gioRa): int
     {
-        $dangKy = $this->dangKyCaLamHomNay($userId);
+        $dangKy = $this->dangKyCaLamChoNgay($userId, $gioRa->toDateString());
         $caLam = $dangKy?->caLamViec;
 
         if ($caLam === null || $caLam->gio_ket_thuc === null) {
