@@ -292,7 +292,7 @@
                                     <span class="text-muted">0 đ</span>
                                 @endif
                             </td>
-                            <td class="text-end align-middle fw-semibold {{ $daChuyenLuong ? 'text-success tinh-luong-da-chuyen' : '' }}">
+                            <td class="text-end align-middle {{ $daChuyenLuong ? 'text-success tinh-luong-da-chuyen' : '' }}">
                                 {{ number_format($luong['tong_luong'], 0, ',', '.') }} đ
                             </td>
                             <td class="text-center align-middle">

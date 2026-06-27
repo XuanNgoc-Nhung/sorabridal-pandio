@@ -97,8 +97,8 @@
             <table class="table table-bordered table-hover mb-0 cham-cong-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1" style="min-width: 48px;">STT</th>
-                        <th class="cham-cong-sticky cham-cong-sticky-col-2" style="min-width: 220px;">Nhân viên</th>
+                        <th rowspan="2" class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1" style="min-width: 48px;">STT</th>
+                        <th rowspan="2" class="align-middle cham-cong-sticky cham-cong-sticky-col-2" style="min-width: 220px;">Nhân viên</th>
                         @php
                             $thuLabel = ['1' => 'T2', '2' => 'T3', '3' => 'T4', '4' => 'T5', '5' => 'T6', '6' => 'T7', '7' => 'CN'];
                         @endphp
@@ -106,10 +106,15 @@
                             @php
                                 $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
                             @endphp
-                            <th class="text-center small text-nowrap cham-cong-ngay-col {{ $isWeekend ? 'cham-cong-weekend' : '' }}" style="min-width: 72px;">
+                            <th rowspan="2" class="text-center align-middle small text-nowrap cham-cong-ngay-col {{ $isWeekend ? 'cham-cong-weekend' : '' }}" style="min-width: 72px;">
                                 {{ $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dd') }} {{ $day->format('j/n') }}
                             </th>
                         @endforeach
+                        <th colspan="2" class="text-center text-nowrap cham-cong-tong-col">Tổng công</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center text-nowrap small cham-cong-tong-col" style="min-width: 72px;">Cơ bản</th>
+                        <th class="text-center text-nowrap small cham-cong-tong-col" style="min-width: 72px;">Tăng ca</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -122,6 +127,24 @@
                                 ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
                                 : '';
                             $coLoaiNvHopLe = \App\Support\TinhLuongDiemDanh::hopLeLoaiNhanVien($nvRecord);
+                            $tongCoBan = 0;
+                            $tongTangCa = 0.0;
+                            foreach (($ngayTrongThang ?? []) as $dayTong) {
+                                $dateKeyTong = $dayTong->toDateString();
+                                $recordTong = $bangChamCong[$dateKeyTong][$u->id] ?? null;
+                                $diemDanhTong = $recordTong?->diemDanh;
+                                if ($diemDanhTong === null) {
+                                    continue;
+                                }
+                                $tongTangCa += (float) ($diemDanhTong->gio_lam_tang_ca ?? 0);
+                                if ($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME) {
+                                    $tongCoBan += (float) ($diemDanhTong->gio_lam_co_ban ?? 0);
+                                } elseif ($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME) {
+                                    if ($diemDanhTong->gio_vao && $diemDanhTong->gio_ra) {
+                                        $tongCoBan++;
+                                    }
+                                }
+                            }
                         @endphp
                         <tr>
                             <td class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1">{{ $loop->iteration }}</td>
@@ -202,10 +225,26 @@
                                     </div>
                                 </td>
                             @endforeach
+                            <td class="text-center align-middle cham-cong-tong-col fw-medium">
+                                @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                    {{ $tongCoBan }} ngày
+                                @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                    {{ rtrim(rtrim(number_format($tongCoBan, 2, ',', '.'), '0'), ',') }} giờ
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td class="text-center align-middle cham-cong-tong-col">
+                                @if($tongTangCa > 0)
+                                    <span class="fw-medium">{{ rtrim(rtrim(number_format($tongTangCa, 2, ',', '.'), '0'), ',') }} giờ</span>
+                                @else
+                                    <span class="text-muted">0 giờ</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) }}" class="text-center py-4 text-muted">
+                            <td colspan="{{ 2 + count($ngayTrongThang ?? []) + 2 }}" class="text-center py-4 text-muted">
                                 Không có nhân viên phù hợp bộ lọc.
                             </td>
                         </tr>
@@ -350,6 +389,18 @@
 }
 [data-bs-theme='dark'] .cham-cong-table thead .cham-cong-ngay-col.cham-cong-weekend {
     background-color: rgba(108, 117, 125, 0.2);
+}
+.cham-cong-table .cham-cong-tong-col {
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.08);
+}
+.cham-cong-table thead .cham-cong-tong-col {
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.14);
+}
+[data-bs-theme='dark'] .cham-cong-table .cham-cong-tong-col {
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
+}
+[data-bs-theme='dark'] .cham-cong-table thead .cham-cong-tong-col {
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.18);
 }
 .gio-ra { color: #e8590c; }
 .cham-cong-ngay-cell {
