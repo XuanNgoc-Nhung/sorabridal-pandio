@@ -100,11 +100,36 @@
                     @forelse(($nhanVien ?? []) as $u)
                         @php
                             $caLamDaChon = $caLamTheoNhanVien[$u->id] ?? null;
+                            $loaiNv = $u->nhanVien?->loai_nhan_vien ?? '';
+                            $loaiNvLabel = filled($loaiNv)
+                                ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                                : '';
                         @endphp
                         <tr data-user-id="{{ $u->id }}">
                             <td class="text-center align-middle ca-lam-sticky ca-lam-sticky-col-1">{{ $loop->iteration }}</td>
                             <td class="ca-lam-sticky ca-lam-sticky-col-2">
-                                <div class="fw-medium">{{ $u->name }}</div>
+                                <div class="fw-medium d-inline-flex align-items-center flex-wrap gap-1">
+                                    <span>{{ $u->name }}</span>
+                                    @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                        <i class="fa-solid fa-briefcase ca-lam-loai-nv-icon text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                        <i class="fa-solid fa-clock ca-lam-loai-nv-icon text-warning"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @else
+                                        <i class="fa-solid fa-circle-exclamation ca-lam-loai-nv-icon text-danger"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="Chưa phân loại"
+                                           aria-label="Chưa phân loại"></i>
+                                    @endif
+                                </div>
                                 <div class="small text-muted">{{ $u->email }}</div>
                             </td>
                             <td class="align-middle">
@@ -217,6 +242,7 @@
     padding-right: 1.5rem;
     font-size: 14px;
 }
+.ca-lam-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 </style>
 @endpush
 
@@ -427,6 +453,16 @@
         });
     }
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+        return;
+    }
+    [].slice.call(document.querySelectorAll('.ca-lam-table [data-bs-toggle="tooltip"]')).forEach(function (el) {
+        new bootstrap.Tooltip(el);
+    });
+});
 </script>
 @endpush
 @endsection

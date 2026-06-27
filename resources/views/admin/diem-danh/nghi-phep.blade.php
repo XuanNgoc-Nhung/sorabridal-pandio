@@ -109,10 +109,39 @@
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @forelse($danhSach as $index => $item)
+                    @php
+                        $loaiNv = $item->user?->nhanVien?->loai_nhan_vien ?? '';
+                        $loaiNvLabel = filled($loaiNv)
+                            ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                            : '';
+                    @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
                         @if($coQuyenDuyet ?? false)
-                        <td class="text-nowrap nghi-phep-sticky nghi-phep-sticky-nhan-vien"><span class="fw-medium">{{ $item->user?->name ?? '—' }}</span></td>
+                        <td class="text-nowrap nghi-phep-sticky nghi-phep-sticky-nhan-vien">
+                            <span class="fw-medium d-inline-flex align-items-center flex-wrap gap-1">
+                                <span>{{ $item->user?->name ?? '—' }}</span>
+                                @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                    <i class="fa-solid fa-briefcase nghi-phep-loai-nv-icon text-primary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ $loaiNvLabel }}"
+                                       aria-label="{{ $loaiNvLabel }}"></i>
+                                @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                    <i class="fa-solid fa-clock nghi-phep-loai-nv-icon text-warning"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ $loaiNvLabel }}"
+                                       aria-label="{{ $loaiNvLabel }}"></i>
+                                @else
+                                    <i class="fa-solid fa-circle-exclamation nghi-phep-loai-nv-icon text-danger"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Chưa phân loại"
+                                       aria-label="Chưa phân loại"></i>
+                                @endif
+                            </span>
+                        </td>
                         @endif
                         <td class="text-nowrap">{{ $item->loaiNghiPhepLabel() }}</td>
                         <td class="text-nowrap">{{ $item->buoiNghiLabel() }}</td>
@@ -380,6 +409,7 @@
     font-size: 1.125rem;
     line-height: 1;
 }
+.nghi-phep-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 </style>
 @endpush
 

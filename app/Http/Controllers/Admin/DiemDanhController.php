@@ -84,7 +84,7 @@ class DiemDanhController extends Controller
         $coQuyenDuyet = VaiTro::isAdminMa((string) Auth::user()?->role);
 
         $query = XinNghiPhep::query()
-            ->with(['user', 'nguoiDuyet']);
+            ->with(['user.nhanVien', 'nguoiDuyet']);
 
         if (! $coQuyenDuyet) {
             $query->where('user_id', Auth::id());
@@ -275,7 +275,7 @@ class DiemDanhController extends Controller
             });
         }
 
-        $nhanVien = $nhanVienQuery->orderBy('name')->get();
+        $nhanVien = $nhanVienQuery->with('nhanVien')->orderBy('name')->get();
 
         $dangKy = DangKyCaLamViec::query()
             ->with('caLamViec')

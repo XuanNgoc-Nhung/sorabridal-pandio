@@ -149,12 +149,33 @@
                         <tr>
                             <td class="text-center align-middle cham-cong-sticky cham-cong-sticky-col-1">{{ $loop->iteration }}</td>
                             <td class="cham-cong-sticky cham-cong-sticky-col-2">
-                                <div class="fw-medium">{{ $u->name }}</div>
+                                <div class="fw-medium d-inline-flex align-items-center flex-wrap gap-1">
+                                    <span>{{ $u->name }}</span>
+                                    @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                        <i class="fa-solid fa-briefcase cham-cong-loai-nv-icon text-primary"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                        <i class="fa-solid fa-clock cham-cong-loai-nv-icon text-warning"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="{{ $loaiNvLabel }}"
+                                           aria-label="{{ $loaiNvLabel }}"></i>
+                                    @else
+                                        <i class="fa-solid fa-circle-exclamation cham-cong-loai-nv-icon text-danger"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="top"
+                                           title="Chưa phân loại"
+                                           aria-label="Chưa phân loại"></i>
+                                    @endif
+                                </div>
                                 <div class="small text-muted">{{ $u->email }}</div>
                                 @if($coChamCongTrongThang)
-                                    <span class="badge bg-label-success mt-1">Đã chấm công</span>
+                                    {{-- <span class="badge bg-label-success mt-1">Đã chấm công</span> --}}
                                 @else
-                                    <span class="badge bg-label-secondary mt-1">Chưa chấm công</span>
+                                    {{-- <span class="badge bg-label-secondary mt-1">Chưa chấm công</span> --}}
                                 @endif
                             </td>
                             @foreach(($ngayTrongThang ?? []) as $day)
@@ -194,7 +215,7 @@
                                                 <span class="gio-ra fw-medium cham-cong-gio-ra">{{ $daCheckOut ? $diemDanh->gio_ra->format('H:i') : '—' }}</span>
                                             </div>
                                         @else
-                                            <div class="cham-cong-ngay-times small text-muted cham-cong-chua-co">—</div>
+                                            {{-- <div class="cham-cong-ngay-times small text-muted cham-cong-chua-co">—</div> --}}
                                         @endif
                                         @if($hienIconSua)
                                         <button type="button"
@@ -403,6 +424,7 @@
     background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.18);
 }
 .gio-ra { color: #e8590c; }
+.cham-cong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 .cham-cong-ngay-cell {
     display: flex;
     flex-direction: column;
@@ -1085,6 +1107,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     btnLuu.disabled = !state.coLoaiNvHopLe;
                 }
             });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+        return;
+    }
+    [].slice.call(document.querySelectorAll('.cham-cong-table [data-bs-toggle="tooltip"]')).forEach(function (el) {
+        new bootstrap.Tooltip(el);
     });
 });
 </script>

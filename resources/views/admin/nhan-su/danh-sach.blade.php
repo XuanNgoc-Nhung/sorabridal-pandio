@@ -107,7 +107,7 @@
                     <tr class="nhan-su-thead-group">
                         <th rowspan="2" style="width: 60px;" class="text-center align-middle">STT</th>
                         <th rowspan="2" style="width: 70px;" class="text-center align-middle">Hình ảnh</th>
-                        <th rowspan="2" class="nhan-su-sticky nhan-su-sticky-ho-ten align-middle" style="min-width: 160px;">Họ tên</th>
+                        <th rowspan="2" class="nhan-su-sticky nhan-su-sticky-ho-ten align-middle" style="min-width: 180px;">Họ tên</th>
                         <th colspan="5" class="text-center nhan-su-th-group">Thông tin cá nhân</th>
                         <th colspan="7" class="text-center nhan-su-th-group">Thông tin làm việc</th>
                         <th colspan="5" class="text-center nhan-su-th-group">Lương</th>
@@ -147,6 +147,10 @@
                         $nv = $item->nhanVien;
                         $hinhAnh = $nv?->hinh_anh;
                         $vaiTroLabel = $item->vaiTro?->ten_vai_tro ?? '—';
+                        $loaiNv = $nv?->loai_nhan_vien ?? '';
+                        $loaiNvLabel = filled($loaiNv)
+                            ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
+                            : '';
                     @endphp
                     <tr>
                         <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -159,7 +163,30 @@
                             </div>
                             @endif
                         </td>
-                        <td class="nhan-su-sticky nhan-su-sticky-ho-ten"><span class="fw-medium">{{ $item->name ?? '—' }}</span></td>
+                        <td class="nhan-su-sticky nhan-su-sticky-ho-ten">
+                            <span class="fw-medium d-inline-flex align-items-center flex-wrap gap-1">
+                                <span>{{ $item->name ?? '—' }}</span>
+                                @if($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_FULL_TIME)
+                                    <i class="fa-solid fa-briefcase nhan-su-loai-nv-icon text-primary"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ $loaiNvLabel }}"
+                                       aria-label="{{ $loaiNvLabel }}"></i>
+                                @elseif($loaiNv === \App\Models\NhanVien::LOAI_NHAN_VIEN_PART_TIME)
+                                    <i class="fa-solid fa-clock nhan-su-loai-nv-icon text-warning"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="{{ $loaiNvLabel }}"
+                                       aria-label="{{ $loaiNvLabel }}"></i>
+                                @else
+                                    <i class="fa-solid fa-circle-exclamation nhan-su-loai-nv-icon text-danger"
+                                       data-bs-toggle="tooltip"
+                                       data-bs-placement="top"
+                                       title="Chưa phân loại"
+                                       aria-label="Chưa phân loại"></i>
+                                @endif
+                            </span>
+                        </td>
                         <td>{{ $nv?->gioi_tinh ?? '—' }}</td>
                         <td>{{ $nv?->ngay_sinh ? $nv->ngay_sinh->format('d/m/Y') : '—' }}</td>
                         <td>{{ $nv?->cccd ?? '—' }}</td>
@@ -860,6 +887,7 @@
     display: inline-flex;
     line-height: 0;
 }
+.nhan-su-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 </style>
 @endpush
 
