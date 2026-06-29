@@ -426,7 +426,8 @@
 .gio-ra { color: #e8590c; }
 .cham-cong-loai-nv-icon { font-size: 0.8rem; cursor: help; }
 .cham-cong-ngay-cell {
-    display: flex;
+    display: contents;
+    vertical-align: middle;
     flex-direction: column;
     align-items: center;
     gap: 0.125rem;

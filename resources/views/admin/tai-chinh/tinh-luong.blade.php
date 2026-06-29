@@ -300,15 +300,21 @@
                                     <button type="button"
                                             class="btn btn-sm btn-outline-secondary tinh-luong-xem-btn"
                                             data-user-id="{{ $u->id }}"
-                                            title="Xem lương">
-                                        <i class="fa-solid fa-eye"></i>
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Xem lương"
+                                            aria-label="Xem lương">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
                                     </button>
-                                    @if($daChotLuong ?? false)
+                                    @if(($daChotLuong ?? false) && !$daChuyenLuong)
                                         <button type="button"
-                                                class="btn btn-sm text-nowrap tinh-luong-chuyen-btn {{ $daChuyenLuong ? 'btn-success' : 'btn-outline-primary' }}"
+                                                class="btn btn-sm text-nowrap btn-outline-primary tinh-luong-chuyen-btn"
                                                 data-user-id="{{ $u->id }}"
-                                                title="{{ $daChuyenLuong ? 'Đã chuyển lương' : 'Chuyển lương' }}">
-                                            <i class="fa-solid {{ $daChuyenLuong ? 'fa-check' : 'fa-money-bill-transfer' }}"></i>
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                title="Chuyển lương"
+                                                aria-label="Chuyển lương">
+                                            <i class="fa-solid fa-money-bill-transfer" aria-hidden="true"></i>
                                         </button>
                                     @endif
                                 </div>
