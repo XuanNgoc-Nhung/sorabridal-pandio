@@ -307,6 +307,32 @@ class DiemDanhController extends Controller
 
         $laAdmin = VaiTro::isAdminMa((string) Auth::user()?->role);
 
+        $nhanVienIds = $nhanVien->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $thongKeCaTheoNgay = [];
+        foreach ($ngayTrongTuan as $day) {
+            $dateKey = $day->toDateString();
+            $demTheoCa = [];
+            $soDaDangKy = 0;
+
+            foreach ($nhanVienIds as $userId) {
+                $records = $bangCaLam[$dateKey][$userId] ?? [];
+                if ($records === []) {
+                    continue;
+                }
+
+                $soDaDangKy++;
+                foreach ($records as $record) {
+                    $caId = (int) $record->ca_lam_id;
+                    $demTheoCa[$caId] = ($demTheoCa[$caId] ?? 0) + 1;
+                }
+            }
+
+            $thongKeCaTheoNgay[$dateKey] = [
+                'dem_theo_ca' => $demTheoCa,
+                'chua_dang_ky' => count($nhanVienIds) - $soDaDangKy,
+            ];
+        }
+
         return view('admin.diem-danh.ca-lam', [
             'tuan' => $tuanBatDau->toDateString(),
             'tuanBatDau' => $tuanBatDau,
@@ -316,6 +342,7 @@ class DiemDanhController extends Controller
             'bangCaLam' => $bangCaLam,
             'danhSachCaLamViec' => $danhSachCaLamViec,
             'caLamTheoNhanVien' => $caLamTheoNhanVien,
+            'thongKeCaTheoNgay' => $thongKeCaTheoNgay,
             'search' => $tuKhoa,
             'laAdmin' => $laAdmin,
             'authUserId' => (int) Auth::id(),

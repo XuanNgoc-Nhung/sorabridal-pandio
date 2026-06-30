@@ -36,6 +36,15 @@
         '6' => 'Thứ bảy',
         '7' => 'Chủ nhật',
     ];
+    $thuVietTat = [
+        '1' => 'T2',
+        '2' => 'T3',
+        '3' => 'T4',
+        '4' => 'T5',
+        '5' => 'T6',
+        '6' => 'T7',
+        '7' => 'CN',
+    ];
 @endphp
 <div class="d-flex flex-column gap-3">
     <div class="card mb-0">
@@ -97,6 +106,88 @@
             <span class="badge bg-label-primary fw-normal">{{ count($nhanVien ?? []) }} nhân viên</span>
         </h5>
         <div class="card-body">
+        @php
+            $demTheoCaTuan = [];
+            $tongCaTuan = 0;
+            $chuaDangKyTuan = 0;
+            foreach ($thongKeCaTheoNgay ?? [] as $thongKeNgayItem) {
+                foreach ($thongKeNgayItem['dem_theo_ca'] ?? [] as $caId => $count) {
+                    $demTheoCaTuan[$caId] = ($demTheoCaTuan[$caId] ?? 0) + $count;
+                    $tongCaTuan += $count;
+                }
+                $chuaDangKyTuan += (int) ($thongKeNgayItem['chua_dang_ky'] ?? 0);
+            }
+            $tuanBatDauHienThi = ($tuanBatDau ?? now()->startOfWeek())->format('j/n');
+            $tuanKetThucHienThi = ($tuanKetThuc ?? now()->endOfWeek())->format('j/n');
+        @endphp
+        <div class="ca-lam-ngay-widgets mb-2">
+            <div class="ca-lam-ngay-widget ca-lam-ngay-widget-tuan"
+                 data-ngay="tuan"
+                 title="Tổng ca làm cả tuần — {{ ($tuanBatDau ?? now()->startOfWeek())->format('d/m/Y') }} → {{ ($tuanKetThuc ?? now()->endOfWeek())->format('d/m/Y') }}">
+                <div class="ca-lam-ngay-widget-head">
+                    <span class="ca-lam-ngay-widget-thu">Tuần</span>
+                    <span class="ca-lam-ngay-widget-date">{{ $tuanBatDauHienThi }}–{{ $tuanKetThucHienThi }}</span>
+                    <span class="ca-lam-ngay-widget-tong">{{ $tongCaTuan }}</span>
+                </div>
+                <div class="ca-lam-ngay-widget-body">
+                    @foreach(($danhSachCaLamViec ?? []) as $ca)
+                        @php
+                            $soLuongTuan = (int) ($demTheoCaTuan[$ca->id] ?? 0);
+                        @endphp
+                        <div class="ca-lam-ngay-widget-row"
+                             data-ca-id="{{ $ca->id }}"
+                             title="{{ $ca->ten_ca }} ({{ $ca->gioBatDauHienThi() }} – {{ $ca->gioKetThucHienThi() }})">
+                            <span class="ca-lam-ngay-widget-ca">{{ $ca->ten_ca }}</span>
+                            <span class="ca-lam-ngay-widget-num {{ $soLuongTuan > 0 ? 'has-value' : '' }}">{{ $soLuongTuan }}</span>
+                        </div>
+                    @endforeach
+                    <div class="ca-lam-ngay-widget-row ca-lam-ngay-widget-row-muted ca-lam-ngay-widget-row-chua-dk {{ $chuaDangKyTuan > 0 ? '' : 'd-none' }}"
+                         title="Chưa đăng ký ca">
+                        <span class="ca-lam-ngay-widget-ca">Chưa ĐK</span>
+                        <span class="ca-lam-ngay-widget-num has-warning">{{ $chuaDangKyTuan }}</span>
+                    </div>
+                </div>
+            </div>
+            @foreach(($ngayTrongTuan ?? []) as $day)
+                @php
+                    $dateKey = $day->toDateString();
+                    $isWeekend = in_array($day->dayOfWeekIso, [6, 7], true);
+                    $thongKeNgay = $thongKeCaTheoNgay[$dateKey] ?? ['dem_theo_ca' => [], 'chua_dang_ky' => count($nhanVien ?? [])];
+                    $demTheoCa = $thongKeNgay['dem_theo_ca'] ?? [];
+                    $chuaDangKy = (int) ($thongKeNgay['chua_dang_ky'] ?? 0);
+                    $tongCaNgay = array_sum($demTheoCa);
+                    $thuTen = $thuLabel[$day->dayOfWeekIso] ?? $day->isoFormat('dddd');
+                    $thuRutGon = $thuVietTat[$day->dayOfWeekIso] ?? $day->format('D');
+                @endphp
+                <div class="ca-lam-ngay-widget {{ $isWeekend ? 'ca-lam-ngay-widget-weekend' : '' }}"
+                     data-ngay="{{ $dateKey }}"
+                     title="{{ $thuTen }} — {{ $day->format('d/m/Y') }}">
+                    <div class="ca-lam-ngay-widget-head">
+                        <span class="ca-lam-ngay-widget-thu">{{ $thuRutGon }}</span>
+                        <span class="ca-lam-ngay-widget-date">{{ $day->format('j/n') }}</span>
+                        <span class="ca-lam-ngay-widget-tong">{{ $tongCaNgay }}</span>
+                    </div>
+                    <div class="ca-lam-ngay-widget-body">
+                        @foreach(($danhSachCaLamViec ?? []) as $ca)
+                            @php
+                                $soLuong = (int) ($demTheoCa[$ca->id] ?? 0);
+                            @endphp
+                            <div class="ca-lam-ngay-widget-row"
+                                 data-ca-id="{{ $ca->id }}"
+                                 title="{{ $ca->ten_ca }} ({{ $ca->gioBatDauHienThi() }} – {{ $ca->gioKetThucHienThi() }})">
+                                <span class="ca-lam-ngay-widget-ca">{{ $ca->ten_ca }}</span>
+                                <span class="ca-lam-ngay-widget-num {{ $soLuong > 0 ? 'has-value' : '' }}">{{ $soLuong }}</span>
+                            </div>
+                        @endforeach
+                        <div class="ca-lam-ngay-widget-row ca-lam-ngay-widget-row-muted ca-lam-ngay-widget-row-chua-dk {{ $chuaDangKy > 0 ? '' : 'd-none' }}"
+                             title="Chưa đăng ký ca">
+                            <span class="ca-lam-ngay-widget-ca">Chưa ĐK</span>
+                            <span class="ca-lam-ngay-widget-num has-warning">{{ $chuaDangKy }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
         <div class="table-responsive text-nowrap table-wrapper-bordered ca-lam-table-wrap">
             <table class="table table-bordered table-hover mb-0 ca-lam-table">
                 <thead class="table-light">
@@ -281,6 +372,122 @@
 [data-bs-theme='dark'] .ca-lam-table td:has(> select.js-ca-lam-tuan-select:disabled) .select2-container--default .select2-selection--single {
     background-color: rgba(255, 255, 255, 0.04);
 }
+.ca-lam-ngay-widgets {
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    min-width: 0;
+}
+@media (max-width: 767.98px) {
+    .ca-lam-ngay-widgets {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+.ca-lam-ngay-widget {
+    min-width: 0;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.375rem;
+    background-color: var(--bs-body-bg, #fff);
+    font-size: 12px;
+    line-height: 1.25;
+}
+.ca-lam-ngay-widget-head {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.35rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    background-color: var(--bs-light, #f8f9fa);
+    font-weight: 600;
+    white-space: nowrap;
+}
+[data-bs-theme='dark'] .ca-lam-ngay-widget-head {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+.ca-lam-ngay-widget-thu {
+    flex-shrink: 0;
+}
+.ca-lam-ngay-widget-date {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-weight: 500;
+}
+.ca-lam-ngay-widget-tong {
+    flex-shrink: 0;
+    min-width: 1.1rem;
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+    background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 0.68rem;
+    text-align: center;
+}
+.ca-lam-ngay-widget-body {
+    padding: 0.1rem 0;
+}
+.ca-lam-ngay-widget-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.2rem;
+    padding: 0.12rem 0.35rem;
+}
+.ca-lam-ngay-widget-row + .ca-lam-ngay-widget-row {
+    border-top: 1px dashed var(--bs-border-color-translucent, rgba(0, 0, 0, 0.08));
+}
+.ca-lam-ngay-widget-ca {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ca-lam-ngay-widget-num {
+    flex-shrink: 0;
+    min-width: 0.95rem;
+    font-weight: 600;
+    text-align: right;
+    color: var(--bs-secondary-color, #adb5bd);
+}
+.ca-lam-ngay-widget-num.has-value {
+    color: var(--bs-primary, #0d6efd);
+}
+.ca-lam-ngay-widget-num.has-warning {
+    color: var(--bs-warning, #ffc107);
+}
+.ca-lam-ngay-widget-row-muted .ca-lam-ngay-widget-ca {
+    color: var(--bs-secondary-color, #6c757d);
+    font-style: italic;
+}
+.ca-lam-ngay-widget-weekend {
+    border-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.35);
+    background-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.04);
+}
+.ca-lam-ngay-widget-weekend .ca-lam-ngay-widget-head {
+    background-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.1);
+}
+.ca-lam-ngay-widget-weekend .ca-lam-ngay-widget-tong {
+    background-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.15);
+    color: var(--bs-success, #198754);
+}
+.ca-lam-ngay-widget-tuan {
+    border-color: rgba(var(--bs-info-rgb, 13, 202, 240), 0.4);
+    background-color: rgba(var(--bs-info-rgb, 13, 202, 240), 0.05);
+}
+.ca-lam-ngay-widget-tuan .ca-lam-ngay-widget-head {
+    background-color: rgba(var(--bs-info-rgb, 13, 202, 240), 0.12);
+}
+.ca-lam-ngay-widget-tuan .ca-lam-ngay-widget-tong {
+    background-color: rgba(var(--bs-info-rgb, 13, 202, 240), 0.18);
+    color: var(--bs-info, #0dcaf0);
+}
+[data-bs-theme='dark'] .ca-lam-ngay-widget-tuan {
+    background-color: rgba(13, 202, 240, 0.06);
+}
+[data-bs-theme='dark'] .ca-lam-ngay-widget-weekend {
+    background-color: rgba(25, 135, 84, 0.06);
+}
 </style>
 @endpush
 
@@ -336,6 +543,79 @@
     function syncDaySelectsInRow($row, caLamId) {
         $row.find('.js-ca-lam-ngay-select:not(:disabled)').each(function () {
             setSelectValue($(this), caLamId);
+        });
+    }
+
+    function docThongKeTuBang() {
+        var theoNgay = {};
+
+        $('.ca-lam-ngay-widget[data-ngay]').each(function () {
+            var ngay = $(this).data('ngay');
+            if (ngay === 'tuan') {
+                return;
+            }
+            theoNgay[ngay] = { demTheoCa: {}, chuaDangKy: 0 };
+        });
+
+        $('.ca-lam-table tbody tr[data-user-id]').each(function () {
+            $(this).find('.js-ca-lam-ngay-select').each(function () {
+                var ngay = $(this).data('ngay');
+                var caId = $(this).val() || '';
+
+                if (! theoNgay[ngay]) {
+                    theoNgay[ngay] = { demTheoCa: {}, chuaDangKy: 0 };
+                }
+
+                if (caId) {
+                    theoNgay[ngay].demTheoCa[caId] = (theoNgay[ngay].demTheoCa[caId] || 0) + 1;
+                } else {
+                    theoNgay[ngay].chuaDangKy++;
+                }
+            });
+        });
+
+        theoNgay.tuan = { demTheoCa: {}, chuaDangKy: 0 };
+        Object.keys(theoNgay).forEach(function (ngay) {
+            if (ngay === 'tuan') {
+                return;
+            }
+
+            var data = theoNgay[ngay];
+            theoNgay.tuan.chuaDangKy += data.chuaDangKy;
+
+            Object.keys(data.demTheoCa).forEach(function (caId) {
+                theoNgay.tuan.demTheoCa[caId] = (theoNgay.tuan.demTheoCa[caId] || 0) + data.demTheoCa[caId];
+            });
+        });
+
+        return theoNgay;
+    }
+
+    function capNhatWidgetCaLam() {
+        var thongKe = docThongKeTuBang();
+
+        $('.ca-lam-ngay-widget').each(function () {
+            var $widget = $(this);
+            var ngay = $widget.data('ngay');
+            var data = thongKe[ngay] || { demTheoCa: {}, chuaDangKy: 0 };
+            var tong = 0;
+
+            $widget.find('.ca-lam-ngay-widget-row[data-ca-id]').each(function () {
+                var caId = String($(this).data('ca-id'));
+                var soLuong = data.demTheoCa[caId] || 0;
+                tong += soLuong;
+
+                var $num = $(this).find('.ca-lam-ngay-widget-num');
+                $num.text(soLuong);
+                $num.toggleClass('has-value', soLuong > 0);
+            });
+
+            $widget.find('.ca-lam-ngay-widget-tong').text(tong);
+
+            var chuaDk = data.chuaDangKy || 0;
+            var $chuaDkRow = $widget.find('.ca-lam-ngay-widget-row-chua-dk');
+            $chuaDkRow.find('.ca-lam-ngay-widget-num').text(chuaDk);
+            $chuaDkRow.toggleClass('d-none', chuaDk <= 0);
         });
     }
 
@@ -417,6 +697,7 @@
             ca_lam_id: caLamId || null,
         }, function () {
             syncDaySelectsInRow($row, caLamId);
+            capNhatWidgetCaLam();
         });
     });
 
@@ -431,6 +712,7 @@
             ca_lam_id: caLamId || null,
         }, function () {
             syncWeekSelectFromDays($row);
+            capNhatWidgetCaLam();
         });
     });
 })();
