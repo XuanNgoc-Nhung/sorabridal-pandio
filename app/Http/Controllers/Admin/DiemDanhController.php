@@ -305,6 +305,8 @@ class DiemDanhController extends Controller
             $caLamTheoNhanVien[$user->id] = count($uniqueCaIds) === 1 ? $uniqueCaIds[0] : null;
         }
 
+        $laAdmin = VaiTro::isAdminMa((string) Auth::user()?->role);
+
         return view('admin.diem-danh.ca-lam', [
             'tuan' => $tuanBatDau->toDateString(),
             'tuanBatDau' => $tuanBatDau,
@@ -315,6 +317,8 @@ class DiemDanhController extends Controller
             'danhSachCaLamViec' => $danhSachCaLamViec,
             'caLamTheoNhanVien' => $caLamTheoNhanVien,
             'search' => $tuKhoa,
+            'laAdmin' => $laAdmin,
+            'authUserId' => (int) Auth::id(),
         ]);
     }
 
@@ -337,9 +341,25 @@ class DiemDanhController extends Controller
             ], 422);
         }
 
+        $laAdmin = VaiTro::isAdminMa((string) Auth::user()?->role);
+
+        if (! $this->coTheCapNhatCaLamChoNhanVien((int) $user->id, $laAdmin)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn chỉ được đăng ký ca làm cho bản thân.',
+            ], 403);
+        }
+
         $tuanBatDau = Carbon::parse($validated['tuan'])->startOfWeek();
         $tuanKetThuc = (clone $tuanBatDau)->endOfWeek();
         $caLamId = $validated['ca_lam_id'] ?? null;
+
+        if (! $this->coTheCapNhatCaLamTuan($tuanBatDau)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ được đăng ký ca làm cho tuần tới.',
+            ], 422);
+        }
 
         $caLam = null;
         if ($caLamId !== null) {
@@ -395,8 +415,27 @@ class DiemDanhController extends Controller
             ], 422);
         }
 
-        $ngayLam = Carbon::parse($validated['ngay_lam'])->toDateString();
+        $laAdmin = VaiTro::isAdminMa((string) Auth::user()?->role);
+
+        if (! $this->coTheCapNhatCaLamChoNhanVien((int) $user->id, $laAdmin)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn chỉ được đăng ký ca làm cho bản thân.',
+            ], 403);
+        }
+
+        $ngayLamCarbon = Carbon::parse($validated['ngay_lam'])->startOfDay();
+        $ngayLam = $ngayLamCarbon->toDateString();
         $caLamId = $validated['ca_lam_id'] ?? null;
+
+        if (! $this->coTheCapNhatCaLamNgay($ngayLamCarbon, $laAdmin)) {
+            return response()->json([
+                'success' => false,
+                'message' => $laAdmin
+                    ? 'Không thể sửa ca làm cho ngày đã qua.'
+                    : 'Chỉ được đăng ký ca làm cho tuần tới.',
+            ], 422);
+        }
 
         $caLam = null;
         if ($caLamId !== null) {
@@ -420,6 +459,40 @@ class DiemDanhController extends Controller
                 : 'Đã cập nhật ca làm cho ngày.',
             'ca_lam' => $this->formatCaLamJson($caLam),
         ]);
+    }
+
+    private function coTheCapNhatCaLamChoNhanVien(int $nguoiDungId, bool $laAdmin): bool
+    {
+        if ($laAdmin) {
+            return true;
+        }
+
+        return (int) Auth::id() === $nguoiDungId;
+    }
+
+    private function coTheCapNhatCaLamTuan(Carbon $tuanBatDau): bool
+    {
+        $tuanKeTiepBatDau = now()->startOfWeek()->addWeek();
+
+        return $tuanBatDau->equalTo($tuanKeTiepBatDau);
+    }
+
+    private function coTheCapNhatCaLamNgay(Carbon $ngayLam, bool $laAdmin): bool
+    {
+        $homNay = now()->startOfDay();
+        $tuanNayBatDau = now()->startOfWeek();
+        $tuanKeTiepBatDau = (clone $tuanNayBatDau)->addWeek();
+        $tuanKeTiepKetThuc = (clone $tuanKeTiepBatDau)->endOfWeek();
+
+        if ($ngayLam->betweenIncluded($tuanKeTiepBatDau, $tuanKeTiepKetThuc)) {
+            return true;
+        }
+
+        if ($laAdmin && $ngayLam->betweenIncluded($tuanNayBatDau, $tuanNayBatDau->copy()->endOfWeek()) && $ngayLam->gte($homNay)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

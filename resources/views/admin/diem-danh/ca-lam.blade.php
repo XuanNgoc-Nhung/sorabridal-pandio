@@ -9,6 +9,24 @@
     $tuanTruoc = (clone $tuanCarbon)->subWeek()->toDateString();
     $tuanToi = (clone $tuanCarbon)->addWeek()->toDateString();
     $laTuanNay = $tuanLoc === now()->startOfWeek()->toDateString();
+    $tuanKeTiepLoc = now()->startOfWeek()->addWeek()->toDateString();
+    $laTuanKeTiep = $tuanLoc === $tuanKeTiepLoc;
+    $laAdmin = $laAdmin ?? false;
+    $nguoiDungHienTaiId = (int) ($authUserId ?? Auth::id());
+    $coTheSuaChoNhanVien = function (int $userId) use ($laAdmin, $nguoiDungHienTaiId): bool {
+        return $laAdmin || $userId === $nguoiDungHienTaiId;
+    };
+    $coTheSuaCaTuan = $laTuanKeTiep;
+    $coTheSuaCaNgay = function (\Illuminate\Support\Carbon $ngay) use ($laTuanKeTiep, $laTuanNay, $laAdmin) {
+        if ($laTuanKeTiep) {
+            return true;
+        }
+        if ($laTuanNay && $laAdmin && $ngay->copy()->startOfDay()->gte(now()->startOfDay())) {
+            return true;
+        }
+
+        return false;
+    };
     $thuLabel = [
         '1' => 'Thứ hai',
         '2' => 'Thứ ba',
@@ -104,6 +122,7 @@
                             $loaiNvLabel = filled($loaiNv)
                                 ? (\App\Models\NhanVien::LOAI_NHAN_VIEN_OPTIONS[$loaiNv] ?? $loaiNv)
                                 : '';
+                            $suaDuocTuan = $coTheSuaCaTuan && $coTheSuaChoNhanVien((int) $u->id);
                         @endphp
                         <tr data-user-id="{{ $u->id }}">
                             <td class="text-center align-middle ca-lam-sticky ca-lam-sticky-col-1">{{ $loop->iteration }}</td>
@@ -132,11 +151,12 @@
                                 </div>
                                 <div class="small text-muted">{{ $u->email }}</div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle {{ $suaDuocTuan ? '' : 'ca-lam-cell-locked' }}">
                                 <select class="form-select js-ca-lam-select js-ca-lam-tuan-select"
                                         data-user-id="{{ $u->id }}"
                                         data-tuan="{{ $tuanLoc }}"
                                         data-placeholder="Chọn ca làm"
+                                        @disabled(! $suaDuocTuan)
                                         style="width: 100%;">
                                     @include('admin.diem-danh.partials.ca-lam-select-options', ['selected' => $caLamDaChon])
                                 </select>
@@ -147,12 +167,14 @@
                                     $records = $bangCaLam[$dateKey][$u->id] ?? [];
                                     $caIds = collect($records)->pluck('ca_lam_id')->unique()->values();
                                     $caNgayDaChon = $caIds->count() === 1 ? $caIds->first() : null;
+                                    $suaDuocNgay = $coTheSuaCaNgay($day) && $coTheSuaChoNhanVien((int) $u->id);
                                 @endphp
-                                <td class="align-middle ca-lam-ngay-cell ca-lam-ngay-col" data-ngay="{{ $dateKey }}">
+                                <td class="align-middle ca-lam-ngay-cell ca-lam-ngay-col {{ $suaDuocNgay ? '' : 'ca-lam-cell-locked' }}" data-ngay="{{ $dateKey }}">
                                     <select class="form-select js-ca-lam-select js-ca-lam-ngay-select"
                                             data-user-id="{{ $u->id }}"
                                             data-ngay="{{ $dateKey }}"
                                             data-placeholder="Chọn ca"
+                                            @disabled(! $suaDuocNgay)
                                             style="width: 100%;">
                                         @include('admin.diem-danh.partials.ca-lam-select-options', ['selected' => $caNgayDaChon, 'chiTen' => true])
                                     </select>
@@ -243,6 +265,22 @@
     font-size: 14px;
 }
 .ca-lam-loai-nv-icon { font-size: 0.8rem; cursor: help; }
+.ca-lam-cell-locked .select2-container--default .select2-selection--single {
+    background-color: var(--bs-secondary-bg, #f5f5f9);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+[data-bs-theme='dark'] .ca-lam-cell-locked .select2-container--default .select2-selection--single {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+.ca-lam-table td:has(> select.js-ca-lam-tuan-select:disabled) .select2-container--default .select2-selection--single {
+    background-color: var(--bs-secondary-bg, #f5f5f9);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+[data-bs-theme='dark'] .ca-lam-table td:has(> select.js-ca-lam-tuan-select:disabled) .select2-container--default .select2-selection--single {
+    background-color: rgba(255, 255, 255, 0.04);
+}
 </style>
 @endpush
 
@@ -257,6 +295,16 @@
     var CAP_NHAT_TUAN_URL = @json(route('admin.ca-lam.cap-nhat-tuan'));
     var CAP_NHAT_NGAY_URL = @json(route('admin.ca-lam.cap-nhat-ngay'));
     var CSRF_TOKEN = (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token());
+    var LA_ADMIN = @json($laAdmin);
+    var NGUOI_DUNG_HIEN_TAI_ID = @json($nguoiDungHienTaiId);
+
+    function coTheSuaChoNhanVien(userId) {
+        if (LA_ADMIN) {
+            return true;
+        }
+
+        return Number(userId) === Number(NGUOI_DUNG_HIEN_TAI_ID);
+    }
 
     function setSelectValue($sel, value) {
         $sel.data('ca-lam-skip', true);
@@ -267,8 +315,12 @@
 
     function syncWeekSelectFromDays($row) {
         var $weekSel = $row.find('.js-ca-lam-tuan-select');
+        if ($weekSel.prop('disabled')) {
+            return;
+        }
+
         var values = [];
-        $row.find('.js-ca-lam-ngay-select').each(function () {
+        $row.find('.js-ca-lam-ngay-select:not(:disabled)').each(function () {
             values.push($(this).val() || '');
         });
 
@@ -282,7 +334,7 @@
     }
 
     function syncDaySelectsInRow($row, caLamId) {
-        $row.find('.js-ca-lam-ngay-select').each(function () {
+        $row.find('.js-ca-lam-ngay-select:not(:disabled)').each(function () {
             setSelectValue($(this), caLamId);
         });
     }
@@ -292,7 +344,11 @@
     }
 
     function handleSelectChange($sel, url, payload, onSuccess) {
-        if ($sel.data('ca-lam-skip') || $sel.data('ca-lam-loading')) {
+        if ($sel.data('ca-lam-skip') || $sel.data('ca-lam-loading') || $sel.prop('disabled')) {
+            return;
+        }
+
+        if (! coTheSuaChoNhanVien($sel.data('user-id'))) {
             return;
         }
 
@@ -322,7 +378,10 @@
                 setSelectValue($sel, prevValue);
             })
             .finally(function () {
-                $sel.data('ca-lam-loading', false).prop('disabled', false);
+                $sel.data('ca-lam-loading', false);
+                if (! $sel.data('ca-lam-locked')) {
+                    $sel.prop('disabled', false);
+                }
             });
     }
 
@@ -331,6 +390,10 @@
             var $el = $(this);
             if ($el.data('select2')) {
                 return;
+            }
+
+            if ($el.prop('disabled')) {
+                $el.data('ca-lam-locked', true);
             }
 
             $el.select2({
