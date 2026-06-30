@@ -10,6 +10,14 @@
         || request()->filled('phong_ban_id')
         || $sapXepTheo !== $sapXepTheoMacDinh
         || $thuTu !== 'asc';
+    $fmtHoaHongInput = static function (mixed $value): string {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $s = rtrim(rtrim(number_format((float) $value, 2, ',', ''), '0'), ',');
+
+        return $s === '' ? '0' : $s;
+    };
 @endphp
 <div class="d-flex flex-column gap-3">
     @if(session('success'))
@@ -231,11 +239,11 @@
                                             data-loai-nhan-vien="{{ e($nv?->loai_nhan_vien ?? '') }}"
                                             data-loai-hop-dong="{{ e($nv?->loai_hop_dong ?? '') }}"
                                             data-status="{{ $item->status !== null ? (string) $item->status : '' }}"
-                                            data-luong-cung="{{ $nv?->luong_cung ?? '' }}"
-                                            data-luong-mem="{{ $nv?->luong_mem ?? '' }}"
-                                            data-phu-cap="{{ $nv?->phu_cap ?? '' }}"
-                                            data-luong-co-ban="{{ $nv?->luong_co_ban ?? '' }}"
-                                            data-luong-tang-ca="{{ $nv?->luong_tang_ca ?? '' }}"
+                                            data-luong-cung="{{ $nv?->luong_cung !== null ? $nv->luong_cung : '' }}"
+                                            data-luong-mem="{{ $nv?->luong_mem !== null ? $nv->luong_mem : '' }}"
+                                            data-phu-cap="{{ $nv?->phu_cap !== null ? $nv->phu_cap : '' }}"
+                                            data-luong-co-ban="{{ $nv?->luong_co_ban !== null ? $nv->luong_co_ban : '' }}"
+                                            data-luong-tang-ca="{{ $nv?->luong_tang_ca !== null ? $nv->luong_tang_ca : '' }}"
                                             data-hoa-hong-hop-dong-cuoi="{{ $nv?->hoa_hong_hop_dong_cuoi !== null ? $nv->hoa_hong_hop_dong_cuoi : '' }}"
                                             data-hoa-hong-hop-dong-trang-phuc="{{ $nv?->hoa_hong_hop_dong_trang_phuc !== null ? $nv->hoa_hong_hop_dong_trang_phuc : '' }}"
                                             data-ngan-hang="{{ e($nv?->ngan_hang ?? '') }}"
@@ -460,32 +468,34 @@
                                 <h6 class="nhan-su-form-section-title">Lương &amp; thưởng</h6>
                                 <div class="row g-3">
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ)</label>
-                                        <input type="number" class="form-control" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung', 0) }}" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="them_luong_cung">Lương cứng (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="them_luong_cung" name="luong_cung" value="{{ old('luong_cung') !== null ? number_format((int) old('luong_cung'), 0, ',', '.') : '0' }}" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_luong_mem">Lương mềm (VNĐ)</label>
-                                        <input type="number" class="form-control" id="them_luong_mem" name="luong_mem" value="{{ old('luong_mem', 0) }}" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="them_luong_mem">Lương mềm (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="them_luong_mem" name="luong_mem" value="{{ old('luong_mem') !== null ? number_format((int) old('luong_mem'), 0, ',', '.') : '0' }}" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_phu_cap">Phụ cấp (VNĐ)</label>
-                                        <input type="number" class="form-control" id="them_phu_cap" name="phu_cap" value="{{ old('phu_cap', 0) }}" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="them_phu_cap">Phụ cấp (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="them_phu_cap" name="phu_cap" value="{{ old('phu_cap') !== null ? number_format((int) old('phu_cap'), 0, ',', '.') : '0' }}" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_luong_co_ban">Lương cơ bản (VNĐ)</label>
-                                        <input type="number" class="form-control" id="them_luong_co_ban" name="luong_co_ban" value="{{ old('luong_co_ban', 50000) }}" placeholder="50000" min="0" step="1000">
+                                        <label class="form-label" for="them_luong_co_ban">Lương cơ bản (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="them_luong_co_ban" name="luong_co_ban" value="{{ old('luong_co_ban') !== null ? number_format((int) old('luong_co_ban'), 0, ',', '.') : number_format(50000, 0, ',', '.') }}" placeholder="50.000" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_luong_tang_ca">Lương tăng ca (VNĐ)</label>
-                                        <input type="number" class="form-control" id="them_luong_tang_ca" name="luong_tang_ca" value="{{ old('luong_tang_ca', 80000) }}" placeholder="80000" min="0" step="1000">
+                                        <label class="form-label" for="them_luong_tang_ca">Lương tăng ca (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="them_luong_tang_ca" name="luong_tang_ca" value="{{ old('luong_tang_ca') !== null ? number_format((int) old('luong_tang_ca'), 0, ',', '.') : number_format(80000, 0, ',', '.') }}" placeholder="80.000" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
-                                        <input type="number" class="form-control" id="them_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" value="{{ old('hoa_hong_hop_dong_cuoi', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                        <label class="form-label" for="them_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-hoa-hong" id="them_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" value="{{ $fmtHoaHongInput(old('hoa_hong_hop_dong_cuoi', 1)) }}" placeholder="1,23" inputmode="decimal" autocomplete="off" title="Tỷ lệ từ 0 đến 100, tối đa 2 chữ số thập phân" required>
+                                        {{-- <small class="text-muted">0 – 100 (vd: 1,23)</small> --}}
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="them_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
-                                        <input type="number" class="form-control" id="them_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" value="{{ old('hoa_hong_hop_dong_trang_phuc', 1) }}" placeholder="1,00" min="0" step="0.01">
+                                        <label class="form-label" for="them_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-hoa-hong" id="them_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" value="{{ $fmtHoaHongInput(old('hoa_hong_hop_dong_trang_phuc', 1)) }}" placeholder="1,23" inputmode="decimal" autocomplete="off" title="Tỷ lệ từ 0 đến 100, tối đa 2 chữ số thập phân" required>
+                                        {{-- <small class="text-muted">0 – 100 (vd: 1,23)</small> --}}
                                     </div>
                                 </div>
                             </div>
@@ -665,32 +675,34 @@
                                 <h6 class="nhan-su-form-section-title">Lương &amp; thưởng</h6>
                                 <div class="row g-3">
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_luong_cung">Lương cứng (VNĐ)</label>
-                                        <input type="number" class="form-control" id="sua_luong_cung" name="luong_cung" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="sua_luong_cung">Lương cứng (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="sua_luong_cung" name="luong_cung" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_luong_mem">Lương mềm (VNĐ)</label>
-                                        <input type="number" class="form-control" id="sua_luong_mem" name="luong_mem" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="sua_luong_mem">Lương mềm (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="sua_luong_mem" name="luong_mem" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_phu_cap">Phụ cấp (VNĐ)</label>
-                                        <input type="number" class="form-control" id="sua_phu_cap" name="phu_cap" placeholder="0" min="0" step="1000">
+                                        <label class="form-label" for="sua_phu_cap">Phụ cấp (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="sua_phu_cap" name="phu_cap" placeholder="0" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_luong_co_ban">Lương cơ bản (VNĐ)</label>
-                                        <input type="number" class="form-control" id="sua_luong_co_ban" name="luong_co_ban" placeholder="50000" min="0" step="1000">
+                                        <label class="form-label" for="sua_luong_co_ban">Lương cơ bản (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="sua_luong_co_ban" name="luong_co_ban" placeholder="50.000" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_luong_tang_ca">Lương tăng ca (VNĐ)</label>
-                                        <input type="number" class="form-control" id="sua_luong_tang_ca" name="luong_tang_ca" placeholder="80000" min="0" step="1000">
+                                        <label class="form-label" for="sua_luong_tang_ca">Lương tăng ca (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-luong-vnd" id="sua_luong_tang_ca" name="luong_tang_ca" placeholder="80.000" inputmode="numeric" autocomplete="off" required>
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới</label>
-                                        <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" placeholder="1,00" min="0" step="0.01">
+                                        <label class="form-label" for="sua_hoa_hong_hop_dong_cuoi">Hoa hồng HĐ cưới <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-hoa-hong" id="sua_hoa_hong_hop_dong_cuoi" name="hoa_hong_hop_dong_cuoi" placeholder="1,23" inputmode="decimal" autocomplete="off" title="Tỷ lệ từ 0 đến 100, tối đa 2 chữ số thập phân" required>
+                                        {{-- <small class="text-muted">0 – 100 (vd: 1,23)</small> --}}
                                     </div>
                                     <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                                        <label class="form-label" for="sua_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục</label>
-                                        <input type="number" class="form-control" id="sua_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" placeholder="1,00" min="0" step="0.01">
+                                        <label class="form-label" for="sua_hoa_hong_hop_dong_trang_phuc">Hoa hồng HĐ trang phục <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-end input-hoa-hong" id="sua_hoa_hong_hop_dong_trang_phuc" name="hoa_hong_hop_dong_trang_phuc" placeholder="1,23" inputmode="decimal" autocomplete="off" title="Tỷ lệ từ 0 đến 100, tối đa 2 chữ số thập phân" required>
+                                        {{-- <small class="text-muted">0 – 100 (vd: 1,23)</small> --}}
                                     </div>
                                 </div>
                             </div>
@@ -992,6 +1004,177 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function setLuongInputValue(id, value) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (value === null || value === '') {
+            el.value = '';
+        } else {
+            el.value = formatLuongVnd(value);
+        }
+    }
+
+    function parseLuongVnd(v) {
+        var s = String(v || '').replace(/[^\d]/g, '');
+        if (!s) return '';
+        return String(parseInt(s, 10));
+    }
+
+    function formatLuongVnd(v) {
+        var s = String(v || '').replace(/[^\d]/g, '');
+        if (!s) return '';
+        var n = parseInt(s, 10);
+        if (!Number.isFinite(n)) return '';
+        return new Intl.NumberFormat('vi-VN').format(n);
+    }
+
+    function syncLuongVndInput(el) {
+        if (!el) return;
+        var raw = parseLuongVnd(el.value);
+        el.value = raw === '' ? '' : formatLuongVnd(raw);
+    }
+
+    function bindLuongVndInputs(root) {
+        var scope = root || document;
+        scope.querySelectorAll('.input-luong-vnd').forEach(function(el) {
+            if (el.dataset.luongVndBound === '1') return;
+            el.dataset.luongVndBound = '1';
+            el.addEventListener('input', function() { syncLuongVndInput(el); });
+            el.addEventListener('blur', function() { syncLuongVndInput(el); });
+            if (String(el.value || '').replace(/[^\d]/g, '')) syncLuongVndInput(el);
+        });
+    }
+
+    function stripLuongVndBeforeSubmit(form) {
+        if (!form) return;
+        form.querySelectorAll('.input-luong-vnd').forEach(function(el) {
+            el.value = parseLuongVnd(el.value);
+        });
+    }
+
+    function setHoaHongInputValue(id, value) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (value === null || value === '') {
+            el.value = '';
+        } else {
+            el.value = formatHoaHongDisplay(value);
+        }
+    }
+
+    function parseHoaHongToNumber(v) {
+        var s = String(v || '').trim().replace(/\s/g, '').replace(',', '.');
+        if (!s) return null;
+        if (!/^\d+(\.\d{0,2})?$/.test(s)) return NaN;
+        return parseFloat(s);
+    }
+
+    function formatHoaHongDisplay(v) {
+        if (v === null || v === undefined || v === '') return '';
+        var n = typeof v === 'number' ? v : parseHoaHongToNumber(String(v).replace('.', ','));
+        if (!Number.isFinite(n)) return '';
+        n = Math.round(n * 100) / 100;
+        var s = n.toFixed(2).replace(/(\.\d*[1-9])0+$/, '$1').replace(/\.0+$/, '');
+        return s.replace('.', ',');
+    }
+
+    function sanitizeHoaHongInput(el) {
+        var raw = String(el.value || '').replace(/\./g, ',').replace(/[^\d,]/g, '');
+        var parts = raw.split(',');
+        if (parts.length > 2) {
+            raw = parts[0] + ',' + parts.slice(1).join('');
+            parts = raw.split(',');
+        }
+        if (parts.length === 2) {
+            raw = parts[0] + ',' + parts[1].slice(0, 2);
+        }
+        el.value = raw;
+    }
+
+    function syncHoaHongInput(el) {
+        sanitizeHoaHongInput(el);
+        var n = parseHoaHongToNumber(el.value);
+        if (n === null) {
+            el.value = '';
+            return;
+        }
+        if (!Number.isFinite(n)) return;
+        if (n > 100) n = 100;
+        if (n < 0) n = 0;
+        el.value = formatHoaHongDisplay(n);
+    }
+
+    function bindHoaHongInputs(root) {
+        var scope = root || document;
+        scope.querySelectorAll('.input-hoa-hong').forEach(function(el) {
+            if (el.dataset.hoaHongBound === '1') return;
+            el.dataset.hoaHongBound = '1';
+            el.addEventListener('input', function() { sanitizeHoaHongInput(el); });
+            el.addEventListener('blur', function() { syncHoaHongInput(el); });
+            if (String(el.value || '').trim()) syncHoaHongInput(el);
+        });
+    }
+
+    function validateHoaHongInputs(form) {
+        var ok = true;
+        form.querySelectorAll('.input-hoa-hong').forEach(function(el) {
+            el.setCustomValidity('');
+            if (!String(el.value || '').trim()) return;
+            var n = parseHoaHongToNumber(el.value);
+            if (!Number.isFinite(n)) {
+                el.setCustomValidity('Hoa hồng phải là số từ 0 đến 100, tối đa 2 chữ số thập phân.');
+                ok = false;
+                return;
+            }
+            if (n < 0 || n > 100) {
+                el.setCustomValidity('Hoa hồng phải từ 0 đến 100.');
+                ok = false;
+            }
+        });
+        return ok;
+    }
+
+    function stripHoaHongBeforeSubmit(form) {
+        if (!form) return;
+        form.querySelectorAll('.input-hoa-hong').forEach(function(el) {
+            syncHoaHongInput(el);
+            var n = parseHoaHongToNumber(el.value);
+            if (n === null || !Number.isFinite(n)) {
+                el.value = '';
+                return;
+            }
+            if (n > 100) n = 100;
+            if (n < 0) n = 0;
+            el.value = String(Math.round(n * 100) / 100);
+        });
+    }
+
+    function prepareNhanSuFormSubmit(form) {
+        if (!form) return true;
+        form.querySelectorAll('.input-hoa-hong').forEach(function(el) { syncHoaHongInput(el); });
+        if (!validateHoaHongInputs(form)) {
+            form.reportValidity();
+            return false;
+        }
+        stripLuongVndBeforeSubmit(form);
+        stripHoaHongBeforeSubmit(form);
+        return true;
+    }
+
+    bindLuongVndInputs(document);
+    bindHoaHongInputs(document);
+    var formThemNhanSu = document.getElementById('formThemNhanSu');
+    if (formThemNhanSu) {
+        formThemNhanSu.addEventListener('submit', function(e) {
+            if (!prepareNhanSuFormSubmit(formThemNhanSu)) e.preventDefault();
+        });
+    }
+    if (formSua) {
+        formSua.addEventListener('submit', function(e) {
+            if (!prepareNhanSuFormSubmit(formSua)) e.preventDefault();
+        });
+    }
+
     if (modalSua) {
         modalSua.addEventListener('show.bs.modal', function(e) {
             var btn = e.relatedTarget;
@@ -1010,13 +1193,13 @@ document.addEventListener('DOMContentLoaded', function() {
             setAdminSelect2Value('sua_loai_nhan_vien', btn.getAttribute('data-loai-nhan-vien'));
             setAdminSelect2Value('sua_loai_hop_dong', btn.getAttribute('data-loai-hop-dong'));
             setAdminSelect2Value('sua_status', btn.getAttribute('data-status'));
-            document.getElementById('sua_luong_cung').value = btn.getAttribute('data-luong-cung') || '';
-            document.getElementById('sua_luong_mem').value = btn.getAttribute('data-luong-mem') || '';
-            document.getElementById('sua_phu_cap').value = btn.getAttribute('data-phu-cap') || '';
-            document.getElementById('sua_luong_co_ban').value = btn.getAttribute('data-luong-co-ban') || '';
-            document.getElementById('sua_luong_tang_ca').value = btn.getAttribute('data-luong-tang-ca') || '';
-            document.getElementById('sua_hoa_hong_hop_dong_cuoi').value = btn.getAttribute('data-hoa-hong-hop-dong-cuoi') || '1';
-            document.getElementById('sua_hoa_hong_hop_dong_trang_phuc').value = btn.getAttribute('data-hoa-hong-hop-dong-trang-phuc') || '1';
+            setLuongInputValue('sua_luong_cung', btn.getAttribute('data-luong-cung'));
+            setLuongInputValue('sua_luong_mem', btn.getAttribute('data-luong-mem'));
+            setLuongInputValue('sua_phu_cap', btn.getAttribute('data-phu-cap'));
+            setLuongInputValue('sua_luong_co_ban', btn.getAttribute('data-luong-co-ban'));
+            setLuongInputValue('sua_luong_tang_ca', btn.getAttribute('data-luong-tang-ca'));
+            setHoaHongInputValue('sua_hoa_hong_hop_dong_cuoi', btn.getAttribute('data-hoa-hong-hop-dong-cuoi'));
+            setHoaHongInputValue('sua_hoa_hong_hop_dong_trang_phuc', btn.getAttribute('data-hoa-hong-hop-dong-trang-phuc'));
             setAdminSelect2Value('sua_ngan_hang', btn.getAttribute('data-ngan-hang'));
             document.getElementById('sua_chi_nhanh').value = btn.getAttribute('data-chi-nhanh') || '';
             document.getElementById('sua_so_tai_khoan').value = btn.getAttribute('data-so-tai-khoan') || '';

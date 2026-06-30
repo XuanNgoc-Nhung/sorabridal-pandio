@@ -26,6 +26,20 @@ class NhanSuController extends Controller
 
     private const LICH_MODE_SHOP = 'shop';
 
+    private function chuanHoaHoaHongTrongRequest(Request $request): void
+    {
+        foreach (['hoa_hong_hop_dong_cuoi', 'hoa_hong_hop_dong_trang_phuc'] as $field) {
+            $raw = $request->input($field);
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+
+            $request->merge([
+                $field => str_replace(',', '.', trim((string) $raw)),
+            ]);
+        }
+    }
+
     private function lichModeNgayExpr(string $mode): string
     {
         return $mode === self::LICH_MODE_SHOP
@@ -488,6 +502,8 @@ class NhanSuController extends Controller
 
     public function store(Request $request)
     {
+        $this->chuanHoaHoaHongTrongRequest($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -504,13 +520,13 @@ class NhanSuController extends Controller
             'loai_nhan_vien' => 'required|string|in:'.implode(',', array_keys(NhanVien::LOAI_NHAN_VIEN_OPTIONS)),
             'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_HOP_DONG_OPTIONS)),
             'status' => 'nullable|integer|in:'.implode(',', array_keys(User::STATUS_OPTIONS)),
-            'luong_cung' => 'nullable|integer|min:0',
-            'luong_mem' => 'nullable|integer|min:0',
-            'phu_cap' => 'nullable|integer|min:0',
-            'luong_co_ban' => 'nullable|integer|min:0',
-            'luong_tang_ca' => 'nullable|integer|min:0',
-            'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
-            'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
+            'luong_cung' => 'required|integer|min:0',
+            'luong_mem' => 'required|integer|min:0',
+            'phu_cap' => 'required|integer|min:0',
+            'luong_co_ban' => 'required|integer|min:0',
+            'luong_tang_ca' => 'required|integer|min:0',
+            'hoa_hong_hop_dong_cuoi' => 'required|numeric|min:0|max:100|decimal:0,2',
+            'hoa_hong_hop_dong_trang_phuc' => 'required|numeric|min:0|max:100|decimal:0,2',
             'ngan_hang' => [
                 'nullable',
                 'string',
@@ -556,21 +572,30 @@ class NhanSuController extends Controller
             'loai_hop_dong.in' => 'Loại hợp đồng không hợp lệ.',
             'status.integer' => 'Trạng thái phải là số nguyên.',
             'status.in' => 'Trạng thái không hợp lệ.',
+            'luong_cung.required' => 'Vui lòng nhập lương cứng.',
             'luong_cung.integer' => 'Lương cứng phải là số nguyên.',
             'luong_cung.min' => 'Lương cứng không được âm.',
+            'luong_mem.required' => 'Vui lòng nhập lương mềm.',
             'luong_mem.integer' => 'Lương mềm phải là số nguyên.',
             'luong_mem.min' => 'Lương mềm không được âm.',
+            'phu_cap.required' => 'Vui lòng nhập phụ cấp.',
             'phu_cap.integer' => 'Phụ cấp phải là số nguyên.',
             'phu_cap.min' => 'Phụ cấp không được âm.',
+            'luong_co_ban.required' => 'Vui lòng nhập lương cơ bản.',
             'luong_co_ban.integer' => 'Lương cơ bản phải là số nguyên.',
             'luong_co_ban.min' => 'Lương cơ bản không được âm.',
+            'luong_tang_ca.required' => 'Vui lòng nhập lương tăng ca.',
             'luong_tang_ca.integer' => 'Lương tăng ca phải là số nguyên.',
             'luong_tang_ca.min' => 'Lương tăng ca không được âm.',
+            'hoa_hong_hop_dong_cuoi.required' => 'Vui lòng nhập hoa hồng hợp đồng cưới.',
             'hoa_hong_hop_dong_cuoi.numeric' => 'Hoa hồng hợp đồng cưới phải là số.',
             'hoa_hong_hop_dong_cuoi.min' => 'Hoa hồng hợp đồng cưới không được âm.',
+            'hoa_hong_hop_dong_cuoi.max' => 'Hoa hồng hợp đồng cưới không được vượt quá 100.',
             'hoa_hong_hop_dong_cuoi.decimal' => 'Hoa hồng hợp đồng cưới tối đa 2 chữ số thập phân.',
+            'hoa_hong_hop_dong_trang_phuc.required' => 'Vui lòng nhập hoa hồng hợp đồng trang phục.',
             'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
             'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
+            'hoa_hong_hop_dong_trang_phuc.max' => 'Hoa hồng hợp đồng trang phục không được vượt quá 100.',
             'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
             'ngan_hang.in' => 'Ngân hàng không hợp lệ.',
             'chi_nhanh.max' => 'Chi nhánh không được quá 255 ký tự.',
@@ -613,13 +638,13 @@ class NhanSuController extends Controller
                 'ngay_ky_hop_dong' => $request->input('ngay_ky_hop_dong'),
                 'loai_nhan_vien' => $request->input('loai_nhan_vien'),
                 'loai_hop_dong' => $request->input('loai_hop_dong'),
-                'luong_cung' => $request->input('luong_cung', 0),
-                'luong_mem' => $request->input('luong_mem', 0),
-                'phu_cap' => $request->input('phu_cap', 0),
-                'luong_co_ban' => $request->input('luong_co_ban', 50000),
-                'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
-                'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
-                'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
+                'luong_cung' => (int) $validated['luong_cung'],
+                'luong_mem' => (int) $validated['luong_mem'],
+                'phu_cap' => (int) $validated['phu_cap'],
+                'luong_co_ban' => (int) $validated['luong_co_ban'],
+                'luong_tang_ca' => (int) $validated['luong_tang_ca'],
+                'hoa_hong_hop_dong_cuoi' => $validated['hoa_hong_hop_dong_cuoi'],
+                'hoa_hong_hop_dong_trang_phuc' => $validated['hoa_hong_hop_dong_trang_phuc'],
                 'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
                 'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
                 'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
@@ -638,6 +663,8 @@ class NhanSuController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $this->chuanHoaHoaHongTrongRequest($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
@@ -652,13 +679,13 @@ class NhanSuController extends Controller
             'loai_nhan_vien' => 'required|string|in:'.implode(',', array_keys(NhanVien::LOAI_NHAN_VIEN_OPTIONS)),
             'loai_hop_dong' => 'nullable|string|in:'.implode(',', array_keys(NhanVien::LOAI_HOP_DONG_OPTIONS)),
             'status' => 'nullable|integer|in:'.implode(',', array_keys(User::STATUS_OPTIONS)),
-            'luong_cung' => 'nullable|integer|min:0',
-            'luong_mem' => 'nullable|integer|min:0',
-            'phu_cap' => 'nullable|integer|min:0',
-            'luong_co_ban' => 'nullable|integer|min:0',
-            'luong_tang_ca' => 'nullable|integer|min:0',
-            'hoa_hong_hop_dong_cuoi' => 'nullable|numeric|min:0|decimal:0,2',
-            'hoa_hong_hop_dong_trang_phuc' => 'nullable|numeric|min:0|decimal:0,2',
+            'luong_cung' => 'required|integer|min:0',
+            'luong_mem' => 'required|integer|min:0',
+            'phu_cap' => 'required|integer|min:0',
+            'luong_co_ban' => 'required|integer|min:0',
+            'luong_tang_ca' => 'required|integer|min:0',
+            'hoa_hong_hop_dong_cuoi' => 'required|numeric|min:0|max:100|decimal:0,2',
+            'hoa_hong_hop_dong_trang_phuc' => 'required|numeric|min:0|max:100|decimal:0,2',
             'ngan_hang' => [
                 'nullable',
                 'string',
@@ -698,21 +725,30 @@ class NhanSuController extends Controller
             'loai_hop_dong.in' => 'Loại hợp đồng không hợp lệ.',
             'status.integer' => 'Trạng thái phải là số nguyên.',
             'status.in' => 'Trạng thái không hợp lệ.',
+            'luong_cung.required' => 'Vui lòng nhập lương cứng.',
             'luong_cung.integer' => 'Lương cứng phải là số nguyên.',
             'luong_cung.min' => 'Lương cứng không được âm.',
+            'luong_mem.required' => 'Vui lòng nhập lương mềm.',
             'luong_mem.integer' => 'Lương mềm phải là số nguyên.',
             'luong_mem.min' => 'Lương mềm không được âm.',
+            'phu_cap.required' => 'Vui lòng nhập phụ cấp.',
             'phu_cap.integer' => 'Phụ cấp phải là số nguyên.',
             'phu_cap.min' => 'Phụ cấp không được âm.',
+            'luong_co_ban.required' => 'Vui lòng nhập lương cơ bản.',
             'luong_co_ban.integer' => 'Lương cơ bản phải là số nguyên.',
             'luong_co_ban.min' => 'Lương cơ bản không được âm.',
+            'luong_tang_ca.required' => 'Vui lòng nhập lương tăng ca.',
             'luong_tang_ca.integer' => 'Lương tăng ca phải là số nguyên.',
             'luong_tang_ca.min' => 'Lương tăng ca không được âm.',
+            'hoa_hong_hop_dong_cuoi.required' => 'Vui lòng nhập hoa hồng hợp đồng cưới.',
             'hoa_hong_hop_dong_cuoi.numeric' => 'Hoa hồng hợp đồng cưới phải là số.',
             'hoa_hong_hop_dong_cuoi.min' => 'Hoa hồng hợp đồng cưới không được âm.',
+            'hoa_hong_hop_dong_cuoi.max' => 'Hoa hồng hợp đồng cưới không được vượt quá 100.',
             'hoa_hong_hop_dong_cuoi.decimal' => 'Hoa hồng hợp đồng cưới tối đa 2 chữ số thập phân.',
+            'hoa_hong_hop_dong_trang_phuc.required' => 'Vui lòng nhập hoa hồng hợp đồng trang phục.',
             'hoa_hong_hop_dong_trang_phuc.numeric' => 'Hoa hồng hợp đồng trang phục phải là số.',
             'hoa_hong_hop_dong_trang_phuc.min' => 'Hoa hồng hợp đồng trang phục không được âm.',
+            'hoa_hong_hop_dong_trang_phuc.max' => 'Hoa hồng hợp đồng trang phục không được vượt quá 100.',
             'hoa_hong_hop_dong_trang_phuc.decimal' => 'Hoa hồng hợp đồng trang phục tối đa 2 chữ số thập phân.',
             'ngan_hang.in' => 'Ngân hàng không hợp lệ.',
             'chi_nhanh.max' => 'Chi nhánh không được quá 255 ký tự.',
@@ -756,13 +792,13 @@ class NhanSuController extends Controller
                     'ngay_ky_hop_dong' => $request->input('ngay_ky_hop_dong'),
                     'loai_nhan_vien' => $request->input('loai_nhan_vien'),
                     'loai_hop_dong' => $request->input('loai_hop_dong'),
-                    'luong_cung' => $request->filled('luong_cung') ? (int) $request->input('luong_cung') : ($nhanVien->luong_cung ?? 0),
-                    'luong_mem' => $request->filled('luong_mem') ? (int) $request->input('luong_mem') : ($nhanVien->luong_mem ?? 0),
-                    'phu_cap' => $request->filled('phu_cap') ? (int) $request->input('phu_cap') : ($nhanVien->phu_cap ?? 0),
-                    'luong_co_ban' => $request->filled('luong_co_ban') ? (int) $request->input('luong_co_ban') : $nhanVien->luong_co_ban,
-                    'luong_tang_ca' => $request->filled('luong_tang_ca') ? (int) $request->input('luong_tang_ca') : $nhanVien->luong_tang_ca,
-                    'hoa_hong_hop_dong_cuoi' => $request->filled('hoa_hong_hop_dong_cuoi') ? $request->input('hoa_hong_hop_dong_cuoi') : ($nhanVien->hoa_hong_hop_dong_cuoi ?? 1),
-                    'hoa_hong_hop_dong_trang_phuc' => $request->filled('hoa_hong_hop_dong_trang_phuc') ? $request->input('hoa_hong_hop_dong_trang_phuc') : ($nhanVien->hoa_hong_hop_dong_trang_phuc ?? 1),
+                    'luong_cung' => (int) $validated['luong_cung'],
+                    'luong_mem' => (int) $validated['luong_mem'],
+                    'phu_cap' => (int) $validated['phu_cap'],
+                    'luong_co_ban' => (int) $validated['luong_co_ban'],
+                    'luong_tang_ca' => (int) $validated['luong_tang_ca'],
+                    'hoa_hong_hop_dong_cuoi' => $validated['hoa_hong_hop_dong_cuoi'],
+                    'hoa_hong_hop_dong_trang_phuc' => $validated['hoa_hong_hop_dong_trang_phuc'],
                     'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
                     'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
                     'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
@@ -781,13 +817,13 @@ class NhanSuController extends Controller
                     'ngay_ky_hop_dong' => $request->input('ngay_ky_hop_dong'),
                     'loai_nhan_vien' => $request->input('loai_nhan_vien'),
                     'loai_hop_dong' => $request->input('loai_hop_dong'),
-                    'luong_cung' => $request->input('luong_cung', 0),
-                    'luong_mem' => $request->input('luong_mem', 0),
-                    'phu_cap' => $request->input('phu_cap', 0),
-                    'luong_co_ban' => $request->input('luong_co_ban', 50000),
-                    'luong_tang_ca' => $request->input('luong_tang_ca', 80000),
-                    'hoa_hong_hop_dong_cuoi' => $request->input('hoa_hong_hop_dong_cuoi', 1),
-                    'hoa_hong_hop_dong_trang_phuc' => $request->input('hoa_hong_hop_dong_trang_phuc', 1),
+                    'luong_cung' => (int) $validated['luong_cung'],
+                    'luong_mem' => (int) $validated['luong_mem'],
+                    'phu_cap' => (int) $validated['phu_cap'],
+                    'luong_co_ban' => (int) $validated['luong_co_ban'],
+                    'luong_tang_ca' => (int) $validated['luong_tang_ca'],
+                    'hoa_hong_hop_dong_cuoi' => $validated['hoa_hong_hop_dong_cuoi'],
+                    'hoa_hong_hop_dong_trang_phuc' => $validated['hoa_hong_hop_dong_trang_phuc'],
                     'ngan_hang' => $request->filled('ngan_hang') ? $request->input('ngan_hang') : null,
                     'chi_nhanh' => $request->filled('chi_nhanh') ? $request->input('chi_nhanh') : null,
                     'so_tai_khoan' => $request->filled('so_tai_khoan') ? $request->input('so_tai_khoan') : null,
