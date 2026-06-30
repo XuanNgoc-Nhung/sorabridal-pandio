@@ -7,14 +7,18 @@ use App\Models\Concept;
 use App\Support\AdminPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ConceptController extends Controller
 {
     public function concept(Request $request)
     {
+        $diaDiemKeys = array_keys(config('concept.dia_diem', []));
+
         $validated = $request->validate([
             'search' => 'nullable|string|max:200',
             'trang_thai' => 'nullable|in:0,1',
+            'dia_diem' => 'nullable|string|in:'.implode(',', $diaDiemKeys),
             'sap_xep_theo' => 'nullable|string|in:'.implode(',', array_keys(Concept::SAP_XEP_OPTIONS)),
             'thu_tu' => 'nullable|in:asc,desc',
         ]);
@@ -29,6 +33,11 @@ class ConceptController extends Controller
 
         if ($request->filled('trang_thai') && in_array((string) $request->input('trang_thai'), ['0', '1'], true)) {
             $query->where('trang_thai', (int) $request->input('trang_thai'));
+        }
+
+        $diaDiem = $validated['dia_diem'] ?? null;
+        if ($diaDiem !== null && in_array($diaDiem, $diaDiemKeys, true)) {
+            $query->where('dia_diem', $diaDiem);
         }
 
         $sapXepTheo = $validated['sap_xep_theo'] ?? Concept::SAP_XEP_MAC_DINH;
@@ -53,8 +62,13 @@ class ConceptController extends Controller
     {
         $validated = $request->validate([
             'ten_concept' => 'required|string|max:255',
+            'ma_concept' => ['required', 'string', 'max:50', Rule::unique('concept', 'ma_concept')],
+            'dia_diem' => 'required|string|in:'.implode(',', array_keys(config('concept.dia_diem', []))),
             'hinh_anh' => 'nullable|image|max:10240',
             'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'ma_concept.required' => 'Vui lòng nhập mã concept.',
+            'ma_concept.unique' => 'Mã concept đã tồn tại, vui lòng chọn mã khác.',
         ]);
 
         $hinhAnhPath = null;
@@ -64,6 +78,8 @@ class ConceptController extends Controller
 
         Concept::create([
             'ten_concept' => $validated['ten_concept'],
+            'ma_concept' => $validated['ma_concept'],
+            'dia_diem' => $validated['dia_diem'],
             'hinh_anh' => $hinhAnhPath,
             'trang_thai' => (int) $validated['trang_thai'],
         ]);
@@ -77,12 +93,19 @@ class ConceptController extends Controller
     {
         $validated = $request->validate([
             'ten_concept' => 'required|string|max:255',
+            'ma_concept' => ['required', 'string', 'max:50', Rule::unique('concept', 'ma_concept')->ignore($concept->id)],
+            'dia_diem' => 'required|string|in:'.implode(',', array_keys(config('concept.dia_diem', []))),
             'hinh_anh' => 'nullable|image|max:10240',
             'trang_thai' => 'required|integer|in:0,1',
+        ], [
+            'ma_concept.required' => 'Vui lòng nhập mã concept.',
+            'ma_concept.unique' => 'Mã concept đã tồn tại, vui lòng chọn mã khác.',
         ]);
 
         $updateData = [
             'ten_concept' => $validated['ten_concept'],
+            'ma_concept' => $validated['ma_concept'],
+            'dia_diem' => $validated['dia_diem'],
             'trang_thai' => (int) $validated['trang_thai'],
         ];
 

@@ -5,8 +5,10 @@
     $sapXepTheoMacDinh = \App\Models\Concept::SAP_XEP_MAC_DINH;
     $sapXepTheo = request('sap_xep_theo', $sapXepTheoMacDinh);
     $thuTu = request('thu_tu', 'asc');
+    $diaDiemOptions = config('concept.dia_diem', []);
     $hasFilter = request()->filled('search')
         || request()->filled('trang_thai')
+        || request()->filled('dia_diem')
         || $sapXepTheo !== $sapXepTheoMacDinh
         || $thuTu !== 'asc';
 @endphp
@@ -44,6 +46,15 @@
                         <option value="">-- Tất cả --</option>
                         @foreach(\App\Models\Concept::TRANG_THAI_LABELS as $value => $label)
                             <option value="{{ $value }}" @selected((string) request('trang_thai') === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label" for="filter_dia_diem">Địa điểm</label>
+                    <select class="select2-admin form-select" id="filter_dia_diem" name="dia_diem" data-placeholder="Tất cả">
+                        <option value="">-- Tất cả --</option>
+                        @foreach($diaDiemOptions as $value => $label)
+                            <option value="{{ $value }}" @selected(request('dia_diem') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -94,7 +105,9 @@
                     <tr>
                         <th class="text-center" style="width: 50px;">STT</th>
                         <th style="width: 120px;">Hình ảnh</th>
+                        <th style="width: 130px;">Mã concept</th>
                         <th>Tên concept</th>
+                        <th class="text-center" style="width: 130px;">Địa điểm</th>
                         <th class="text-center" style="width: 120px;">Đã sử dụng</th>
                         <th class="text-center" style="width: 120px;">Trạng thái</th>
                         <th class="text-center" style="width: 120px;">Thao tác</th>
@@ -106,6 +119,7 @@
                             $isActive = (int)($item->trang_thai ?? 0) === \App\Models\Concept::TRANG_THAI_ACTIVE;
                             $trangThaiLabel = $isActive ? 'Đang hoạt động' : 'Ngưng hoạt động';
                             $trangThaiBadge = $isActive ? 'bg-label-success' : 'bg-label-secondary';
+                            $diaDiemLabel = $diaDiemOptions[$item->dia_diem ?? ''] ?? '—';
                         @endphp
                         <tr>
                             <td class="text-center">{{ ($danhSach->currentPage() - 1) * $danhSach->perPage() + $index + 1 }}</td>
@@ -118,7 +132,11 @@
                                     </div>
                                 @endif
                             </td>
+                            <td><span class="fw-medium">{{ $item->ma_concept ?? '—' }}</span></td>
                             <td><span class="fw-medium">{{ $item->ten_concept ?? '—' }}</span></td>
+                            <td class="text-center">
+                                <span class="fw-medium">{{ $diaDiemLabel }}</span>
+                            </td>
                             <td class="text-center">
                                 <span class="fw-medium">{{ (int) ($item->so_luot_su_dung ?? 0) }}</span>
                             </td>
@@ -136,7 +154,9 @@
                                            data-bs-toggle="modal"
                                            data-bs-target="#modalSuaConcept"
                                        data-url="{{ route('admin.concept.concept.update', $item) }}"
+                                           data-ma="{{ e($item->ma_concept ?? '') }}"
                                            data-ten="{{ e($item->ten_concept ?? '') }}"
+                                           data-dia-diem="{{ e($item->dia_diem ?? '') }}"
                                            data-trang-thai="{{ (int)($item->trang_thai ?? 1) }}"
                                            data-hinh-anh="{{ !empty($item->hinh_anh) ? asset('storage/' . $item->hinh_anh) : '' }}">
                                             <i class="fa-solid fa-pen me-2"></i> Sửa
@@ -155,7 +175,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Chưa có dữ liệu concept.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">Chưa có dữ liệu concept.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -193,14 +213,15 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         {{-- Cột trái: Hình ảnh --}}
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-lg-5">
                             <div class="sticky-lg-top">
                                 <label class="form-label" for="them_hinh_anh">Hình ảnh</label>
-                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2">
-                                    <div id="them_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
-                                        —
+                                <div class="concept-image-frame rounded border overflow-hidden mb-2">
+                                    <div id="them_hinh_anh_placeholder" class="concept-image-placeholder">
+                                        <i class="fa-regular fa-image fa-2x mb-2"></i>
+                                        <span>Chưa có hình ảnh</span>
                                     </div>
-                                    <img id="them_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: cover;">
+                                    <img id="them_hinh_anh_preview" src="" alt="Preview" class="concept-image-preview d-none">
                                 </div>
                                 <input type="file" class="form-control" id="them_hinh_anh" name="hinh_anh" accept="image/*">
                                 <small class="text-muted d-block mt-1">Mọi loại ảnh — tối đa 10MB</small>
@@ -208,10 +229,21 @@
                             </div>
                         </div>
 
-                        {{-- Cột phải: Tên + Trạng thái --}}
-                        <div class="col-12 col-lg-8">
+                        {{-- Cột phải: Mã + Tên + Địa điểm / Trạng thái --}}
+                        <div class="col-12 col-lg-7">
                             <div class="row g-3">
-                                <div class="col-12 col-sm-12">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="them_ma_concept">Mã concept <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="them_ma_concept"
+                                           name="ma_concept"
+                                           value="{{ old('ma_concept') }}"
+                                           placeholder="Ví dụ: CP001"
+                                           required>
+                                </div>
+
+                                <div class="col-12 col-md-6">
                                     <label class="form-label" for="them_ten_concept">Tên concept <span class="text-danger">*</span></label>
                                     <input type="text"
                                            class="form-control"
@@ -222,7 +254,20 @@
                                            required>
                                 </div>
 
-                                <div class="col-12 col-sm-12">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="them_dia_diem">Địa điểm <span class="text-danger">*</span></label>
+                                    @php
+                                        $themDiaDiem = old('dia_diem');
+                                    @endphp
+                                    <select class="select2-admin form-select" id="them_dia_diem" name="dia_diem" required data-placeholder="Chọn địa điểm">
+                                        <option value=""></option>
+                                        @foreach($diaDiemOptions as $value => $label)
+                                            <option value="{{ $value }}" @selected($themDiaDiem === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-12 col-md-6">
                                     <label class="form-label" for="them_trang_thai">Trạng thái <span class="text-danger">*</span></label>
                                     @php
                                         $themTrangThai = (int) old('trang_thai', 1);
@@ -280,14 +325,15 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         {{-- Cột trái: Hình ảnh --}}
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-lg-5">
                             <div class="sticky-lg-top">
-                                <div class="text-muted small mb-2">Hình ảnh</div>
-                                <div class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden mb-2">
-                                    <div id="sua_hinh_anh_placeholder" class="text-center text-muted py-4 px-3">
-                                        —
+                                <label class="form-label">Hình ảnh</label>
+                                <div class="concept-image-frame rounded border overflow-hidden mb-2">
+                                    <div id="sua_hinh_anh_placeholder" class="concept-image-placeholder">
+                                        <i class="fa-regular fa-image fa-2x mb-2"></i>
+                                        <span>Chưa có hình ảnh</span>
                                     </div>
-                                    <img id="sua_hinh_anh_preview" src="" alt="Preview" class="rounded w-100 d-none" style="max-height: 240px; object-fit: cover;">
+                                    <img id="sua_hinh_anh_preview" src="" alt="Preview" class="concept-image-preview d-none">
                                 </div>
                                 <label class="form-label" for="sua_hinh_anh">Hình ảnh mới (tuỳ chọn)</label>
                                 <input type="file" class="form-control" id="sua_hinh_anh" name="hinh_anh" accept="image/*">
@@ -296,10 +342,20 @@
                             </div>
                         </div>
 
-                        {{-- Cột phải: Tên + Trạng thái --}}
-                        <div class="col-12 col-lg-8">
+                        {{-- Cột phải: Mã + Tên + Địa điểm / Trạng thái --}}
+                        <div class="col-12 col-lg-7">
                             <div class="row g-3">
-                                <div class="col-12 col-sm-12">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="sua_ma_concept">Mã concept <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="sua_ma_concept"
+                                           name="ma_concept"
+                                           placeholder="Ví dụ: CP001"
+                                           required>
+                                </div>
+
+                                <div class="col-12 col-md-6">
                                     <label class="form-label" for="sua_ten_concept">Tên concept <span class="text-danger">*</span></label>
                                     <input type="text"
                                            class="form-control"
@@ -310,7 +366,17 @@
                                            required>
                                 </div>
 
-                                <div class="col-12 col-sm-12">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="sua_dia_diem">Địa điểm <span class="text-danger">*</span></label>
+                                    <select class="select2-admin form-select" id="sua_dia_diem" name="dia_diem" required data-placeholder="Chọn địa điểm">
+                                        <option value=""></option>
+                                        @foreach($diaDiemOptions as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-12 col-md-6">
                                     <label class="form-label" for="sua_trang_thai">Trạng thái <span class="text-danger">*</span></label>
                                     @php
                                         $suaTrangThai = (int) old('trang_thai', 1);
@@ -373,11 +439,33 @@
 }
 .table-wrapper-bordered .table {
     border-collapse: collapse;
-    min-width: 800px;
+    min-width: 980px;
 }
 .table-wrapper-bordered .table th,
 .table-wrapper-bordered .table td {
     border: 1px solid var(--bs-border-color, #dee2e6);
+}
+.concept-image-frame {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    background: var(--bs-light, #f8f9fa);
+}
+.concept-image-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--bs-secondary-color, #adb5bd);
+    font-size: 0.875rem;
+}
+.concept-image-preview {
+    display: block;
+    width: 100%;
+    min-height: 320px;
+    object-fit: cover;
 }
 </style>
 @endpush
@@ -589,10 +677,22 @@ document.addEventListener('DOMContentLoaded', function () {
             var url = btn.getAttribute('data-url');
             if (url) formSua.action = url;
 
+            var ma = btn.getAttribute('data-ma') || '';
             var ten = btn.getAttribute('data-ten') || '';
+            var diaDiem = btn.getAttribute('data-dia-diem') || '';
             var trangThai = btn.getAttribute('data-trang-thai') || '1';
+            document.getElementById('sua_ma_concept').value = ma;
             document.getElementById('sua_ten_concept').value = ten;
             document.getElementById('sua_trang_thai').value = trangThai;
+
+            var $ = window.jQuery || window.$;
+            var suaDiaDiemEl = document.getElementById('sua_dia_diem');
+            if (suaDiaDiemEl) {
+                suaDiaDiemEl.value = diaDiem;
+                if ($ && $.fn && $.fn.select2) {
+                    $('#sua_dia_diem').trigger('change');
+                }
+            }
 
             var hinhAnh = btn.getAttribute('data-hinh-anh') || '';
             var previewImg = document.getElementById('sua_hinh_anh_preview');

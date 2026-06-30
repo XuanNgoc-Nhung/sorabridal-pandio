@@ -46,6 +46,8 @@ class Concept extends Model
      */
     protected $fillable = [
         'ten_concept',
+        'ma_concept',
+        'dia_diem',
         'hinh_anh',
         'trang_thai',
     ];
